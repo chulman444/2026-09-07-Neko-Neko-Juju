@@ -1,8 +1,11 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { TimerBar } from '@/shared/ui';
 import { GameBoardWidget } from '@/widgets/game-board';
 import { useBoardStore, type TileCoord } from '@/entities/board';
 import { useGameTimer } from '../model/useGameTimer';
+import { useComboSystem } from '../model/useComboSystem';
+import { ComboBar } from './ComboBar';
+import { ComboTuner } from './ComboTuner';
 
 export const GamePage: React.FC = () => {
   const [score, setScore] = useState<number>(0);
@@ -23,28 +26,48 @@ export const GamePage: React.FC = () => {
     autoStart: true,
   });
 
+  const {
+    comboCount,
+    comboPct,
+    config: comboConfig,
+    setConfig: setComboConfig,
+    registerMatch,
+    resetCombo,
+    setPaused: setComboPaused,
+  } = useComboSystem();
+
+  // Keep combo system pause state in sync with game timer pause state
+  useEffect(() => {
+    setComboPaused(isPaused || isDefeated);
+  }, [isPaused, isDefeated, setComboPaused]);
+
   const handleTilesCleared = useCallback(
     (tiles: TileCoord[], _sum: number) => {
-      // Award score based on tiles cleared (10 points per tile)
+      // Base score
       const points = tiles.length * 10;
       setScore((prev) => prev + points);
-      // Small bonus time reward (+1.5 seconds per tile cleared)
-      addTime(tiles.length * 1.5);
+      
+      // Update combo system and get the bonus time for the main timer
+      const comboBonusTime = registerMatch();
+      
+      // Award time: base reward per tile + combo bonus
+      addTime(tiles.length * 1.5 + comboBonusTime);
     },
-    [addTime]
+    [addTime, registerMatch]
   );
 
   const handleResetGame = useCallback(() => {
     generateNewBoard();
     setScore(0);
     resetTimer();
-  }, [generateNewBoard, resetTimer]);
+    resetCombo();
+  }, [generateNewBoard, resetTimer, resetCombo]);
 
   return (
-    <div className="flex flex-col items-center w-full min-h-[calc(100vh-60px)] px-4 py-6 select-none">
+    <div className="flex flex-col items-center w-full min-h-[calc(100vh-60px)] px-4 py-6 select-none relative">
       {/* Game Header Bar */}
-      <header className="flex flex-wrap items-center justify-between w-full max-w-[720px] gap-4 mb-6 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm border border-amber-900/10 dark:border-zinc-700 p-4 rounded-2xl shadow-sm">
-        <div className="flex items-center gap-3">
+      <header className="flex flex-wrap items-start justify-between w-full max-w-[720px] gap-4 mb-6 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm border border-amber-900/10 dark:border-zinc-700 p-4 rounded-2xl shadow-sm">
+        <div className="flex flex-col items-start gap-3">
           <span className="text-xl font-black tracking-tight text-neko-primary">
             Neko Neko Juju
           </span>
@@ -53,14 +76,15 @@ export const GamePage: React.FC = () => {
           </div>
         </div>
 
-        {/* Center TimerBar */}
-        <div className="flex items-center">
+        {/* Center TimerBar & ComboBar */}
+        <div className="flex flex-col items-center gap-1.5 flex-1 min-w-[200px]">
           <TimerBar
             countdown={countdown}
             initialCountdown={initialCountdown}
             defeatThreshold={defeatThreshold}
             isPaused={isPaused}
           />
+          <ComboBar comboCount={comboCount} comboPct={comboPct} />
         </div>
 
         {/* Controls */}
@@ -105,6 +129,9 @@ export const GamePage: React.FC = () => {
           className={isPaused || isDefeated ? 'opacity-80' : ''}
         />
       </main>
+
+      {/* Dev Tools Overlay */}
+      <ComboTuner config={comboConfig} onChange={setComboConfig} />
     </div>
   );
 };
