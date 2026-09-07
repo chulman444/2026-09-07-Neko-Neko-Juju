@@ -2,21 +2,22 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 
 export interface UseGameTimerOptions {
   initialCountdown?: number;
-  defeatThreshold?: number;
+  maxCountdown?: number;
   autoStart?: boolean;
 }
 
 export const useGameTimer = ({
   initialCountdown = 60,
-  defeatThreshold = 15,
+  maxCountdown = 60,
   autoStart = true,
 }: UseGameTimerOptions = {}) => {
   const [countdown, setCountdown] = useState<number>(initialCountdown);
   const [isPaused, setIsPaused] = useState<boolean>(!autoStart);
-  const [isDefeated, setIsDefeated] = useState<boolean>(false);
+  const [isDepleted, setIsDepleted] = useState<boolean>(false);
 
   const isPausedRef = useRef<boolean>(!autoStart);
-  const isDefeatedRef = useRef<boolean>(false);
+  const isDepletedRef = useRef<boolean>(false);
+  const maxCountdownRef = useRef<number>(maxCountdown);
   const lastTimeRef = useRef<number | null>(null);
   const animFrameRef = useRef<number | null>(null);
 
@@ -25,22 +26,27 @@ export const useGameTimer = ({
   }, [isPaused]);
 
   useEffect(() => {
-    isDefeatedRef.current = isDefeated;
-  }, [isDefeated]);
+    isDepletedRef.current = isDepleted;
+  }, [isDepleted]);
+
+  useEffect(() => {
+    maxCountdownRef.current = maxCountdown;
+  }, [maxCountdown]);
 
   useEffect(() => {
     lastTimeRef.current = performance.now();
 
     const loop = (now: number) => {
-      if (lastTimeRef.current !== null && !isPausedRef.current && !isDefeatedRef.current) {
+      if (lastTimeRef.current !== null && !isPausedRef.current && !isDepletedRef.current) {
         const deltaSeconds = (now - lastTimeRef.current) / 1000;
         setCountdown((prev) => {
           const next = prev - deltaSeconds;
-          if (next <= -defeatThreshold) {
-            setIsDefeated(true);
-            return -defeatThreshold;
+          if (next <= 0) {
+            setIsDepleted(true);
+            return 0;
           }
-          return next;
+          // Clamp down if maxCountdown drops below current time via tuner
+          return Math.min(next, maxCountdownRef.current);
         });
       }
 
@@ -55,11 +61,11 @@ export const useGameTimer = ({
         cancelAnimationFrame(animFrameRef.current);
       }
     };
-  }, [defeatThreshold]);
+  }, []);
 
   const pause = useCallback(() => setIsPaused(true), []);
   const resume = useCallback(() => {
-    if (!isDefeatedRef.current) {
+    if (!isDepletedRef.current) {
       lastTimeRef.current = performance.now();
       setIsPaused(false);
     }
@@ -67,7 +73,7 @@ export const useGameTimer = ({
 
   const togglePause = useCallback(() => {
     setIsPaused((prev) => {
-      if (isDefeatedRef.current) return prev;
+      if (isDepletedRef.current) return prev;
       if (prev) {
         lastTimeRef.current = performance.now();
         return false;
@@ -78,8 +84,8 @@ export const useGameTimer = ({
 
   const addTime = useCallback((seconds: number) => {
     setCountdown((prev) => {
-      if (isDefeatedRef.current) return prev;
-      return prev + seconds;
+      if (isDepletedRef.current) return prev; // Cannot resuscitate
+      return Math.min(prev + seconds, maxCountdownRef.current);
     });
   }, []);
 
@@ -87,7 +93,7 @@ export const useGameTimer = ({
     (newInitial?: number) => {
       const val = newInitial ?? initialCountdown;
       setCountdown(val);
-      setIsDefeated(false);
+      setIsDepleted(false);
       lastTimeRef.current = performance.now();
     },
     [initialCountdown]
@@ -95,10 +101,9 @@ export const useGameTimer = ({
 
   return {
     countdown,
-    initialCountdown,
-    defeatThreshold,
+    maxCountdown,
     isPaused,
-    isDefeated,
+    isDepleted,
     pause,
     resume,
     togglePause,

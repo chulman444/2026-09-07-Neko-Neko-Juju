@@ -5,24 +5,23 @@ import { useBoardStore, type TileCoord } from '@/entities/board';
 import { useGameTimer } from '../model/useGameTimer';
 import { useComboSystem } from '../model/useComboSystem';
 import { ComboBar } from './ComboBar';
-import { ComboTuner } from './ComboTuner';
+import { DevTuner } from './DevTuner';
 
 export const GamePage: React.FC = () => {
   const [score, setScore] = useState<number>(0);
+  const [maxCountdown, setMaxCountdown] = useState<number>(60);
   const generateNewBoard = useBoardStore((state) => state.generateNewBoard);
 
   const {
     countdown,
-    initialCountdown,
-    defeatThreshold,
     isPaused,
-    isDefeated,
+    isDepleted,
     togglePause,
     addTime,
     reset: resetTimer,
   } = useGameTimer({
-    initialCountdown: 60,
-    defeatThreshold: 15,
+    initialCountdown: maxCountdown,
+    maxCountdown,
     autoStart: true,
   });
 
@@ -38,8 +37,8 @@ export const GamePage: React.FC = () => {
 
   // Keep combo system pause state in sync with game timer pause state
   useEffect(() => {
-    setComboPaused(isPaused || isDefeated);
-  }, [isPaused, isDefeated, setComboPaused]);
+    setComboPaused(isPaused || isDepleted);
+  }, [isPaused, isDepleted, setComboPaused]);
 
   const handleTilesCleared = useCallback(
     (tiles: TileCoord[], _sum: number) => {
@@ -59,9 +58,9 @@ export const GamePage: React.FC = () => {
   const handleResetGame = useCallback(() => {
     generateNewBoard();
     setScore(0);
-    resetTimer();
+    resetTimer(maxCountdown);
     resetCombo();
-  }, [generateNewBoard, resetTimer, resetCombo]);
+  }, [generateNewBoard, resetTimer, resetCombo, maxCountdown]);
 
   return (
     <div className="flex flex-col items-center w-full min-h-[calc(100vh-60px)] px-4 py-6 select-none relative">
@@ -80,8 +79,7 @@ export const GamePage: React.FC = () => {
         <div className="flex flex-col items-center gap-1.5 flex-1 min-w-[200px]">
           <TimerBar
             countdown={countdown}
-            initialCountdown={initialCountdown}
-            defeatThreshold={defeatThreshold}
+            maxCountdown={maxCountdown}
             isPaused={isPaused}
           />
           <ComboBar comboCount={comboCount} comboPct={comboPct} />
@@ -92,8 +90,7 @@ export const GamePage: React.FC = () => {
           <button
             type="button"
             onClick={togglePause}
-            disabled={isDefeated}
-            className="px-3 py-1.5 text-xs font-bold rounded-lg border border-amber-900/20 bg-amber-50 hover:bg-amber-100 text-amber-950 dark:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-3 py-1.5 text-xs font-bold rounded-lg border border-amber-900/20 bg-amber-50 hover:bg-amber-100 text-amber-950 dark:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700 transition cursor-pointer"
           >
             {isPaused ? '▶ Resume' : '⏸ Pause'}
           </button>
@@ -109,29 +106,20 @@ export const GamePage: React.FC = () => {
 
       {/* Main Play Area */}
       <main className="relative flex flex-col items-center justify-center">
-        {isDefeated && (
-          <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-black/60 backdrop-blur-xs rounded-xl text-white">
-            <h2 className="text-2xl font-bold mb-2 text-red-400">Time's Up!</h2>
-            <p className="text-sm text-zinc-300 mb-4">Final Score: {score}</p>
-            <button
-              type="button"
-              onClick={handleResetGame}
-              className="px-5 py-2 text-sm font-bold bg-amber-400 hover:bg-amber-300 text-zinc-950 rounded-xl transition cursor-pointer"
-            >
-              Play Again
-            </button>
-          </div>
-        )}
-
         <GameBoardWidget
-          interactive={!isPaused && !isDefeated}
+          interactive={!isPaused}
           onTilesCleared={handleTilesCleared}
-          className={isPaused || isDefeated ? 'opacity-80' : ''}
+          className={isPaused ? 'opacity-80' : ''}
         />
       </main>
 
       {/* Dev Tools Overlay */}
-      <ComboTuner config={comboConfig} onChange={setComboConfig} />
+      <DevTuner 
+        comboConfig={comboConfig} 
+        onComboChange={setComboConfig}
+        maxCountdown={maxCountdown}
+        onMaxCountdownChange={setMaxCountdown}
+      />
     </div>
   );
 };
