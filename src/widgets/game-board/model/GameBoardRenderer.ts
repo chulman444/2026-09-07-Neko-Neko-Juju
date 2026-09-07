@@ -253,76 +253,128 @@ export class GameBoardRenderer {
     }
   }
 
-  // Layer 5: Selection Indicators (Border bounding box & diagonal ray)
+  // Layer 5: Drag Box & Ray Indicators
   private drawSelectionIndicators(): void {
-    const { activeAction, startTile, currentTile, dragCurrent, isSquare, dirX, dirY, isShiftPressed } =
-      this.interaction;
     const { cols, rows } = this.board;
+    const {
+      activeAction,
+      isShiftPressed,
+      dragStart,
+      dragCurrent,
+      startTile,
+      currentTile,
+      isSquare,
+      dirX,
+      dirY,
+    } = this.interaction;
 
     if (activeAction === 'box') {
-      const minCol = Math.min(startTile.col, currentTile.col);
-      const maxCol = Math.max(startTile.col, currentTile.col);
-      const minRow = Math.min(startTile.row, currentTile.row);
-      const maxRow = Math.max(startTile.row, currentTile.row);
+      const x = Math.min(dragStart.x, dragCurrent.x);
+      const y = Math.min(dragStart.y, dragCurrent.y);
+      const w = Math.abs(dragCurrent.x - dragStart.x);
+      const h = Math.abs(dragCurrent.y - dragStart.y);
 
-      const boxX = minCol * this.pitch;
-      const boxY = minRow * this.pitch;
-      const boxW = (maxCol - minCol + 1) * this.pitch;
-      const boxH = (maxRow - minRow + 1) * this.pitch;
+      // Only draw the drag box strokeRect if actively extending/dragging beyond a click threshold
+      if (w > 4 || h > 4) {
+        this.ctx.strokeStyle = this.boxActiveColor;
+        this.ctx.lineWidth = 2;
+        this.ctx.strokeRect(x, y, w, h);
+      }
 
-      this.ctx.lineWidth = 2.5;
-      this.ctx.strokeStyle = this.boxActiveColor;
-      this.ctx.setLineDash([4, 4]);
-      this.ctx.strokeRect(boxX, boxY, boxW, boxH);
-      this.ctx.setLineDash([]);
-
-      if (isSquare && this.visualConfig.groupingMode === 'auto-square') {
+      if (this.visualConfig.groupingMode === 'auto-square' && isSquare) {
         const startCenterX = (startTile.col + 0.5) * this.pitch;
         const startCenterY = (startTile.row + 0.5) * this.pitch;
         const furthestCornerX = (currentTile.col + (dirX > 0 ? 1 : 0)) * this.pitch;
         const furthestCornerY = (currentTile.row + (dirY > 0 ? 1 : 0)) * this.pitch;
 
-        this.ctx.lineWidth = 2;
-        this.ctx.strokeStyle = this.diagActiveColor;
-        this.ctx.beginPath();
-        this.ctx.moveTo(startCenterX, startCenterY);
-        this.ctx.lineTo(furthestCornerX, furthestCornerY);
-        this.ctx.stroke();
-      }
-    } else if (activeAction === 'diagonal') {
-      const startCenterX = (startTile.col + 0.5) * this.pitch;
-      const startCenterY = (startTile.row + 0.5) * this.pitch;
-
-      if (!isShiftPressed) {
-        const dx = dragCurrent.x - startCenterX;
-        const dy = dragCurrent.y - startCenterY;
-        const rDirX = dx >= 0 ? 1 : -1;
-        const rDirY = dy >= 0 ? 1 : -1;
-
-        const avgDist = (Math.abs(dx) + Math.abs(dy)) / 2;
-        const steps = Math.max(0, Math.round(avgDist / this.pitch));
-
-        const maxStepsX = rDirX > 0 ? cols - 1 - startTile.col : startTile.col;
-        const maxStepsY = rDirY > 0 ? rows - 1 - startTile.row : startTile.row;
-        const actualSteps = Math.min(steps, Math.min(maxStepsX, maxStepsY));
-
-        const targetCol = startTile.col + rDirX * actualSteps;
-        const targetRow = startTile.row + rDirY * actualSteps;
-
-        const furthestCornerX = (targetCol + (rDirX > 0 ? 1 : 0)) * this.pitch;
-        const furthestCornerY = (targetRow + (rDirY > 0 ? 1 : 0)) * this.pitch;
+        const maxExtension = Math.max(this.canvas.width, this.canvas.height) * 2;
+        const rayEndX = (currentTile.col + 0.5) * this.pitch + dirX * maxExtension;
+        const rayEndY = (currentTile.row + 0.5) * this.pitch + dirY * maxExtension;
 
         this.ctx.lineWidth = 3;
         this.ctx.strokeStyle = this.diagActiveColor;
+
+        this.ctx.setLineDash([]);
         this.ctx.beginPath();
         this.ctx.moveTo(startCenterX, startCenterY);
         this.ctx.lineTo(furthestCornerX, furthestCornerY);
         this.ctx.stroke();
+
+        this.ctx.setLineDash([6, 6]);
+        this.ctx.beginPath();
+        this.ctx.moveTo(furthestCornerX, furthestCornerY);
+        this.ctx.lineTo(rayEndX, rayEndY);
+        this.ctx.stroke();
+        this.ctx.setLineDash([]);
 
         this.ctx.fillStyle = this.diagActiveColor;
         this.ctx.beginPath();
         this.ctx.arc(furthestCornerX, furthestCornerY, 5, 0, Math.PI * 2);
         this.ctx.fill();
+      }
+    } else if (activeAction === 'diagonal') {
+      const startCenterX = (startTile.col + 0.5) * this.pitch;
+      const startCenterY = (startTile.row + 0.5) * this.pitch;
+      const distFromStart = Math.hypot(dragCurrent.x - startCenterX, dragCurrent.y - startCenterY);
+
+      if (distFromStart > 4) {
+        if (isShiftPressed) {
+          this.ctx.lineWidth = 3;
+          this.ctx.strokeStyle = this.diagActiveColor;
+          this.ctx.setLineDash([]);
+          this.ctx.beginPath();
+          this.ctx.moveTo(startCenterX, startCenterY);
+          this.ctx.lineTo(dragCurrent.x, dragCurrent.y);
+          this.ctx.stroke();
+
+          this.ctx.fillStyle = this.diagActiveColor;
+          this.ctx.beginPath();
+          this.ctx.arc(dragCurrent.x, dragCurrent.y, 5, 0, Math.PI * 2);
+          this.ctx.fill();
+        } else {
+          const dx = dragCurrent.x - startCenterX;
+          const dy = dragCurrent.y - startCenterY;
+          const rDirX = dx >= 0 ? 1 : -1;
+          const rDirY = dy >= 0 ? 1 : -1;
+
+          const avgDist = (Math.abs(dx) + Math.abs(dy)) / 2;
+          const steps = Math.max(0, Math.round(avgDist / this.pitch));
+
+          const maxStepsX = rDirX > 0 ? cols - 1 - startTile.col : startTile.col;
+          const maxStepsY = rDirY > 0 ? rows - 1 - startTile.row : startTile.row;
+          const actualSteps = Math.min(steps, Math.min(maxStepsX, maxStepsY));
+
+          const targetCol = startTile.col + rDirX * actualSteps;
+          const targetRow = startTile.row + rDirY * actualSteps;
+
+          const furthestCornerX = (targetCol + (rDirX > 0 ? 1 : 0)) * this.pitch;
+          const furthestCornerY = (targetRow + (rDirY > 0 ? 1 : 0)) * this.pitch;
+
+          const maxExtension = Math.max(this.canvas.width, this.canvas.height) * 2;
+          const rayEndX = (targetCol + 0.5) * this.pitch + rDirX * maxExtension;
+          const rayEndY = (targetRow + 0.5) * this.pitch + rDirY * maxExtension;
+
+          this.ctx.lineWidth = 3;
+          this.ctx.strokeStyle = this.diagActiveColor;
+
+          this.ctx.setLineDash([]);
+          this.ctx.beginPath();
+          this.ctx.moveTo(startCenterX, startCenterY);
+          this.ctx.lineTo(furthestCornerX, furthestCornerY);
+          this.ctx.stroke();
+
+          this.ctx.setLineDash([6, 6]);
+          this.ctx.beginPath();
+          this.ctx.moveTo(furthestCornerX, furthestCornerY);
+          this.ctx.lineTo(rayEndX, rayEndY);
+          this.ctx.stroke();
+          this.ctx.setLineDash([]);
+
+          this.ctx.fillStyle = this.diagActiveColor;
+          this.ctx.beginPath();
+          this.ctx.arc(furthestCornerX, furthestCornerY, 5, 0, Math.PI * 2);
+          this.ctx.fill();
+        }
       }
     }
   }
@@ -360,7 +412,6 @@ export class GameBoardRenderer {
     const { textColor, textBorderColor } = this.visualConfig;
     const headSize = shapeSize * 0.95;
     const headOffset = (shapeSize - headSize) / 2;
-    const hasCatHead = gameAssets.catHead.complete && gameAssets.catHead.naturalWidth > 0;
 
     for (let i = 0; i < clearingAnimations.length; i++) {
       const anim = clearingAnimations[i];
@@ -374,51 +425,37 @@ export class GameBoardRenderer {
       const cx = (anim.col + 0.5) * this.pitch;
       const cy = (anim.row + 0.5) * this.pitch;
 
-      if (anim.type === 'munching') {
-        const bounceCount = (anim.duration / 1000) * (anim.bounceSpeed / 10);
-        const currentBounce = Math.sin(progress * Math.PI * bounceCount);
-        const yOffset = -Math.abs(currentBounce) * (shapeSize * 0.3);
-        const scale = 1 + Math.abs(currentBounce) * 0.2;
+      let opacity = 1;
+      let bounceOffset = 0;
 
-        this.ctx.save();
-        this.ctx.translate(cx, cy);
-        this.ctx.scale(scale, scale);
-        this.ctx.translate(-cx, -cy);
-
-        if (hasCatHead) {
-          this.ctx.drawImage(
-            gameAssets.catHead,
-            cellX + headOffset,
-            cellY + headOffset + yOffset,
-            headSize,
-            headSize
-          );
-        }
-
-        this.ctx.font = `900 ${textSize}px 'Segoe UI', sans-serif`;
-        this.ctx.lineWidth = 3;
-        this.ctx.strokeStyle = textBorderColor;
-        this.ctx.strokeText(anim.val.toString(), cx, cy + yOffset + 2);
-
-        this.ctx.fillStyle = textColor;
-        this.ctx.fillText(anim.val.toString(), cx, cy + yOffset + 2);
-
-        this.ctx.restore();
+      if (anim.type === 'fadeout') {
+        opacity = Math.max(0, 1 - progress);
       } else {
-        const alpha = Math.max(0, 1 - progress);
-        this.ctx.save();
-        this.ctx.globalAlpha = alpha;
+        const bounceCycleMs = (anim.bounceSpeed || 80) * 2;
+        const bounceCycle = (elapsed % bounceCycleMs) / bounceCycleMs;
+        const bounceFactor = Math.sin(bounceCycle * Math.PI * 2);
+        bounceOffset = bounceFactor * (shapeSize * 0.15);
+        opacity = progress > 0.6 ? Math.max(0, (1 - progress) / 0.4) : 1;
+      }
 
-        if (hasCatHead) {
-          this.ctx.drawImage(
-            gameAssets.catHead,
-            cellX + headOffset,
-            cellY + headOffset,
-            headSize,
-            headSize
-          );
-        }
+      this.ctx.save();
+      this.ctx.globalAlpha = opacity;
 
+      if (gameAssets.bowl.complete && gameAssets.bowl.naturalWidth > 0) {
+        this.ctx.drawImage(gameAssets.bowl, cellX, cellY, shapeSize, shapeSize);
+      }
+
+      if (gameAssets.catHead.complete && gameAssets.catHead.naturalWidth > 0) {
+        this.ctx.drawImage(
+          gameAssets.catHead,
+          cellX + headOffset,
+          cellY + headOffset + bounceOffset - shapeSize * 0.05,
+          headSize,
+          headSize
+        );
+      }
+
+      if (anim.val !== undefined) {
         this.ctx.font = `900 ${textSize}px 'Segoe UI', sans-serif`;
         this.ctx.lineWidth = 3;
         this.ctx.strokeStyle = textBorderColor;
@@ -426,9 +463,9 @@ export class GameBoardRenderer {
 
         this.ctx.fillStyle = textColor;
         this.ctx.fillText(anim.val.toString(), cx, cy + 2);
-
-        this.ctx.restore();
       }
+
+      this.ctx.restore();
     }
   }
 }
