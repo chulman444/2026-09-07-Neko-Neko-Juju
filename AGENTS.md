@@ -1,5 +1,11 @@
 # Agent Guidelines (`AGENTS.md`)
 
+## Interaction & Workflow Rules
+- **No unsolicited edits**: Always diagnose, explain, or propose solutions first.
+- **Strict Permission**: NEVER create, modify, or delete files, or execute modifying shell commands, without the user's explicit confirmation (e.g., "go ahead", "apply this fix").
+
+---
+
 ## 1. Project Overview & Tech Stack
 - **Framework & Build**: React 19 + TypeScript + Vite
 - **Styling**: Tailwind CSS v4 (CSS-first configuration via `@theme` in the `app/` layer; do NOT create legacy `tailwind.config.ts` or `postcss.config.js`)
