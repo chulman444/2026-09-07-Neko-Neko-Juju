@@ -10,7 +10,9 @@
 
 ## 2. Common Commands & Environment Notes
 - **Dev Server**: `npm run dev` (or `npm.cmd run dev`)
-- **Build & Typecheck**: `npm run build` (runs `tsc -b && vite build`)
+- **Storybook**: `npm run storybook` (or `npm.cmd run storybook`)
+- **Build App**: `npm run build` (runs `tsc -b && vite build`)
+- **Build Storybook**: `npm run build-storybook`
 - **Lint**: `npm run lint`
 - **Windows Quirks**: Always use `npm.cmd` if running into PowerShell script execution policy (`PSSecurityException`) issues.
 
@@ -62,8 +64,33 @@ Code can only import from layers strictly below it. Never import upwards or hori
 
 ---
 
-## 5. Verification & Definition of Done
+## 5. Storybook & Testing Guidelines (FSD)
+
+### 5.1 Strict Colocation & Public API
+- **Colocate stories and tests beside components**: Every story (`*.stories.tsx`) and unit test (`*.test.tsx`) must reside directly beside the code it tests within the slice segment (e.g. `ui/` or `model/`).
+- **Never create centralized test or story dumps**: Do NOT create `src/stories/` or root `tests/` folders for component or unit tests.
+- **Never export stories or tests from `index.ts`**: The public API (`index.ts`) is strictly for runtime production code. Stories and tests must never be re-exported.
+
+### 5.2 Naming & Title Hierarchy
+- **File Naming**: `<ComponentName>.stories.tsx` (e.g., `GameBoardCanvas.stories.tsx`).
+- **Sidebar Title**: Always mirror the FSD layer and slice hierarchy in the `title` field:
+  - `Pages/<PageName>/<ComponentName>`
+  - `Widgets/<WidgetName>/<ComponentName>`
+  - `Features/<FeatureName>/<ComponentName>`
+  - `Entities/<EntityName>/<ComponentName>`
+  - `Shared/<ComponentName>`
+
+### 5.3 Modern CSF 3 & Interaction Standards
+- **CSF 3 Syntax**: Use Component Story Format 3 (`satisfies Meta<typeof Component>`, `type Story = StoryObj<typeof meta>`). Never use legacy CSF 2 templates (`.bind({})`).
+- **Mock Actions**: Use `fn()` from `@storybook/test` for event handler props (`onClick`, `onTileMatch`, `onTimeUp`) so interactions log in Storybook's Actions panel.
+- **Strict Layering for Mock Data**: Stories must respect FSD import boundaries. A story in `shared/` must never import mock data from `entities/`. Mock data must be defined within the slice or its immediate test scope.
+- **Use Decorators for Providers**: If a component requires providers (e.g., routing, themes, or stores), configure them via Storybook `decorators` rather than wrapping within `render`.
+
+---
+
+## 6. Verification & Definition of Done
 Before completing any task:
 1. Verify TypeScript compiles and builds cleanly: `npm.cmd run build`.
-2. Check for lint or type errors and resolve them immediately.
-3. Ensure no FSD layer boundary violations or deep slice imports are introduced.
+2. Check for lint or type errors and resolve them immediately: `npm.cmd run lint`.
+3. If story files or Storybook configs were modified, verify Storybook builds cleanly: `npm.cmd run build-storybook`.
+4. Ensure no FSD layer boundary violations or deep slice imports are introduced.
