@@ -10,12 +10,12 @@ import { DevTuner } from './DevTuner';
 export const GamePage: React.FC = () => {
   const [score, setScore] = useState<number>(0);
   const [maxCountdown, setMaxCountdown] = useState<number>(60);
+  const [baseSecondsPerTile, setBaseSecondsPerTile] = useState<number>(0);
   const generateNewBoard = useBoardStore((state) => state.generateNewBoard);
 
   const {
     countdown,
     isPaused,
-    isDepleted,
     togglePause,
     addTime,
     reset: resetTimer,
@@ -35,10 +35,10 @@ export const GamePage: React.FC = () => {
     setPaused: setComboPaused,
   } = useComboSystem();
 
-  // Keep combo system pause state in sync with game timer pause state
+  // Keep combo system pause state in sync with game timer pause state (continues running even if timer is depleted)
   useEffect(() => {
-    setComboPaused(isPaused || isDepleted);
-  }, [isPaused, isDepleted, setComboPaused]);
+    setComboPaused(isPaused);
+  }, [isPaused, setComboPaused]);
 
   const handleTilesCleared = useCallback(
     (tiles: TileCoord[], _sum: number) => {
@@ -50,9 +50,9 @@ export const GamePage: React.FC = () => {
       const comboBonusTime = registerMatch();
       
       // Award time: base reward per tile + combo bonus
-      addTime(tiles.length * 1.5 + comboBonusTime);
+      addTime(tiles.length * baseSecondsPerTile + comboBonusTime);
     },
-    [addTime, registerMatch]
+    [addTime, registerMatch, baseSecondsPerTile]
   );
 
   const handleResetGame = useCallback(() => {
@@ -119,6 +119,8 @@ export const GamePage: React.FC = () => {
         onComboChange={setComboConfig}
         maxCountdown={maxCountdown}
         onMaxCountdownChange={setMaxCountdown}
+        baseSecondsPerTile={baseSecondsPerTile}
+        onBaseSecondsPerTileChange={setBaseSecondsPerTile}
       />
     </div>
   );

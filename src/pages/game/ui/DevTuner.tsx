@@ -6,11 +6,17 @@ interface DevTunerProps {
   onComboChange: (newConfig: ComboConfig) => void;
   maxCountdown: number;
   onMaxCountdownChange: (max: number) => void;
+  baseSecondsPerTile: number;
+  onBaseSecondsPerTileChange: (sec: number) => void;
 }
 
 export const DevTuner: React.FC<DevTunerProps> = ({ 
-  comboConfig, onComboChange, 
-  maxCountdown, onMaxCountdownChange 
+  comboConfig, 
+  onComboChange, 
+  maxCountdown, 
+  onMaxCountdownChange,
+  baseSecondsPerTile,
+  onBaseSecondsPerTileChange,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -41,21 +47,17 @@ export const DevTuner: React.FC<DevTunerProps> = ({
       <div className="flex flex-col gap-3">
         {/* Game Timer Config */}
         <h4 className="font-semibold text-[11px] text-zinc-400 uppercase tracking-wider">Game Timer</h4>
-        <label className="flex flex-col gap-1">
-          <div className="flex justify-between">
-            <span>Max Timer Cap (s)</span>
-            <span className="font-mono text-xs">{maxCountdown}s</span>
-          </div>
+        <div className="grid grid-cols-2 gap-2 items-center">
+          <span className="text-xs">Max Timer Cap (s)</span>
           <input
-            type="range"
-            min="10"
-            max="300"
+            type="number"
+            min="5"
             step="5"
             value={maxCountdown}
-            onChange={(e) => onMaxCountdownChange(parseFloat(e.target.value))}
-            className="accent-emerald-500 cursor-pointer"
+            onChange={(e) => onMaxCountdownChange(Math.max(1, parseFloat(e.target.value) || 0))}
+            className="bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-white w-full text-xs font-mono"
           />
-        </label>
+        </div>
 
         <hr className="border-zinc-700 my-1" />
 
@@ -110,7 +112,19 @@ export const DevTuner: React.FC<DevTunerProps> = ({
         </label>
 
         <hr className="border-zinc-700 my-1" />
-        <h4 className="font-semibold text-[11px] text-zinc-400 uppercase tracking-wider">Main Timer Refill (Seconds)</h4>
+        <h4 className="font-semibold text-[11px] text-zinc-400 uppercase tracking-wider">Timer Refills (Seconds)</h4>
+
+        <div className="grid grid-cols-2 gap-2 items-center">
+          <span className="text-xs">Base Refill / Tile</span>
+          <input
+            type="number"
+            min="0"
+            step="0.1"
+            value={baseSecondsPerTile}
+            onChange={(e) => onBaseSecondsPerTileChange(Math.max(0, parseFloat(e.target.value) || 0))}
+            className="bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-white w-full text-xs font-mono"
+          />
+        </div>
 
         <div className="grid grid-cols-2 gap-2 items-center">
           <span className="text-xs">Tier 1 (x1 - x4)</span>
@@ -120,7 +134,7 @@ export const DevTuner: React.FC<DevTunerProps> = ({
             step="0.5"
             value={comboConfig.tier1Refill}
             onChange={(e) => handleComboChange('tier1Refill', parseFloat(e.target.value))}
-            className="bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-white w-full text-xs"
+            className="bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-white w-full text-xs font-mono"
           />
         </div>
         <div className="grid grid-cols-2 gap-2 items-center">
@@ -131,7 +145,7 @@ export const DevTuner: React.FC<DevTunerProps> = ({
             step="0.5"
             value={comboConfig.tier2Refill}
             onChange={(e) => handleComboChange('tier2Refill', parseFloat(e.target.value))}
-            className="bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-white w-full text-xs"
+            className="bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-white w-full text-xs font-mono"
           />
         </div>
         <div className="grid grid-cols-2 gap-2 items-center">
@@ -142,7 +156,7 @@ export const DevTuner: React.FC<DevTunerProps> = ({
             step="0.5"
             value={comboConfig.tier3Refill}
             onChange={(e) => handleComboChange('tier3Refill', parseFloat(e.target.value))}
-            className="bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-white w-full text-xs"
+            className="bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-white w-full text-xs font-mono"
           />
         </div>
       </div>
