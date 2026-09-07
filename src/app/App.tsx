@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { HomePage } from '@/pages/home'
+import { GamePage } from '@/pages/game'
 import { ViteWelcomePage } from '@/pages/vite-welcome'
 
 type ActivePage = 'project' | 'vite-welcome'
@@ -60,7 +60,7 @@ export const App = () => {
       </header>
 
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-        {activePage === 'project' ? <HomePage /> : <ViteWelcomePage />}
+        {activePage === 'project' ? <GamePage /> : <ViteWelcomePage />}
       </main>
     </div>
   )
