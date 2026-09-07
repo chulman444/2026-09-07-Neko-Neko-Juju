@@ -43,6 +43,11 @@ Code can only import from layers strictly below it. Never import upwards or hori
   - *Incorrect*: `import { UserCard } from '@/entities/user/ui/UserCard'`
 - **No Cross-Slice Imports in Same Layer**: Slices in `features` cannot import from other `features`. Slices in `entities` cannot import from other `entities`. Composition must happen in a higher layer (`widgets`, `pages`, or `app`).
 
+### 3.4 Avoid Premature Lower-Layer Decomposition
+- **Keep code as high as practical first**: When introducing new functionality, keep it local to its immediate scope (`pages`, `widgets`, or `features`). Do not anticipate abstractions.
+- **No premature `entities` or `shared`**: Do NOT extract components, state, or helpers into `entities/` or `shared/` until there is demonstrable domain justification or concrete reuse across multiple slices.
+- **Colocation before extraction**: Colocate UI, state, and helper functions directly within the relevant feature or widget slice until repetition or distinct business domain boundaries naturally emerge (avoid "Excessive Entities" anti-pattern).
+
 ---
 
 ## 4. Code Style & TypeScript Standards
