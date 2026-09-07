@@ -41,4 +41,6 @@ export interface BoardVisualConfig {
   munchDuration: number;
   fadeoutDuration: number;
   munchSpeed: number;
+  twoClickSelection?: boolean;
+  hoverLiveSelection?: boolean;
 }

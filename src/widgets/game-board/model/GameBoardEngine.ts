@@ -50,6 +50,8 @@ export class GameBoardEngine {
       munchDuration: options.visualConfig?.munchDuration ?? 600,
       fadeoutDuration: options.visualConfig?.fadeoutDuration ?? 400,
       munchSpeed: options.visualConfig?.munchSpeed ?? 80,
+      twoClickSelection: options.visualConfig?.twoClickSelection ?? true,
+      hoverLiveSelection: options.visualConfig?.hoverLiveSelection ?? true,
     };
 
     const ctxAccess: BoardContextAccess = {
@@ -72,6 +74,10 @@ export class GameBoardEngine {
   public setTargetSum(targetSum: number): void {
     this.targetSum = targetSum;
     this.renderer.setTargetSum(targetSum);
+  }
+
+  public setVisualConfig(config: Partial<BoardVisualConfig>): void {
+    Object.assign(this.visualConfig, config);
   }
 
   public setMatrixOverride(matrix?: number[][]): void {

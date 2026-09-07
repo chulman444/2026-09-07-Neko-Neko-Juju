@@ -55,7 +55,7 @@ export class GameBoardInteraction {
     this.canvas.addEventListener('pointerdown', this.handlePointerDown);
     window.addEventListener('pointermove', this.handlePointerMove);
     window.addEventListener('pointerup', this.handlePointerUp);
-    window.addEventListener('pointercancel', this.handlePointerUp);
+    window.addEventListener('pointercancel', this.handlePointerCancel);
     this.canvas.addEventListener('contextmenu', this.handleContextMenu);
     window.addEventListener('keydown', this.handleKeyDown);
     window.addEventListener('keyup', this.handleKeyUp);
@@ -65,7 +65,7 @@ export class GameBoardInteraction {
     this.canvas.removeEventListener('pointerdown', this.handlePointerDown);
     window.removeEventListener('pointermove', this.handlePointerMove);
     window.removeEventListener('pointerup', this.handlePointerUp);
-    window.removeEventListener('pointercancel', this.handlePointerUp);
+    window.removeEventListener('pointercancel', this.handlePointerCancel);
     this.canvas.removeEventListener('contextmenu', this.handleContextMenu);
     window.removeEventListener('keydown', this.handleKeyDown);
     window.removeEventListener('keyup', this.handleKeyUp);
@@ -111,6 +111,10 @@ export class GameBoardInteraction {
     }
   };
 
+  private handlePointerCancel = (): void => {
+    this.isPointerDownOnCanvas = false;
+  };
+
   private handlePointerDown = (e: PointerEvent): void => {
     if (!this.ctxAccess.isInteractive()) return;
     if (e.pointerType === 'mouse' && e.button !== 0 && e.button !== 2) return;
@@ -139,8 +143,25 @@ export class GameBoardInteraction {
   };
 
   private handlePointerMove = (e: PointerEvent): void => {
-    if (!this.ctxAccess.isInteractive()) return;
-    if (!this.isPointerDownOnCanvas && this.selectMode !== 'tap') return;
+    if (!this.activeAction) return;
+    if (!this.ctxAccess.isInteractive()) {
+      this.resetSelectionState();
+      return;
+    }
+
+    const config = this.ctxAccess.getVisualConfig();
+
+    if (!this.isPointerDownOnCanvas) {
+      // If this is a mobile touch gesture or mouse drag outside canvas, ignore
+      if (e.pointerType === 'touch' || e.buttons !== 0) {
+        return;
+      }
+
+      // Only genuine PC mouse hover checks hoverLiveSelection
+      if (this.selectMode === 'tap' && config.hoverLiveSelection === false) {
+        return;
+      }
+    }
 
     this.isShiftPressed = e.shiftKey;
     const board = this.ctxAccess.getBoardState();
@@ -153,9 +174,52 @@ export class GameBoardInteraction {
     this.recalculateSelection();
   };
 
-  private handlePointerUp = (_e: PointerEvent): void => {
-    if (!this.isPointerDownOnCanvas && this.selectMode !== 'tap') return;
+  private handlePointerUp = (e: PointerEvent): void => {
+    if (!this.activeAction) return;
 
+    if (!this.isPointerDownOnCanvas) return;
+    this.isPointerDownOnCanvas = false;
+
+    const board = this.ctxAccess.getBoardState();
+    const pitch = getGridPitch(board.shapeSize, board.tileBorder);
+    const pos = getCanvasMousePos(this.canvas, e.clientX, e.clientY);
+    const endTile = getTileFromCanvasPos(pos, board.cols, board.rows, pitch);
+    const config = this.ctxAccess.getVisualConfig();
+
+    if (this.selectMode === 'tap') {
+      if (endTile.col === this.startTile.col && endTile.row === this.startTile.row) {
+        this.resetSelectionState();
+      } else {
+        this.dragCurrent = pos;
+        this.currentTile = endTile;
+        this.recalculateSelection();
+        this.evaluateSelection();
+        this.resetSelectionState();
+      }
+      return;
+    }
+
+    if (endTile.col === this.startTile.col && endTile.row === this.startTile.row) {
+      if (config.twoClickSelection !== false) {
+        this.selectMode = 'tap';
+        const centerPos = {
+          x: (this.startTile.col + 0.5) * pitch,
+          y: (this.startTile.row + 0.5) * pitch,
+        };
+        this.dragStart = centerPos;
+        this.dragCurrent = centerPos;
+        this.currentTile = this.startTile;
+        this.recalculateSelection();
+      } else {
+        this.resetSelectionState();
+      }
+    } else {
+      this.evaluateSelection();
+      this.resetSelectionState();
+    }
+  };
+
+  private evaluateSelection(): void {
     const targetSum = this.ctxAccess.getTargetSum();
     const config = this.ctxAccess.getVisualConfig();
 
@@ -185,9 +249,7 @@ export class GameBoardInteraction {
     if (matchedTiles) {
       this.ctxAccess.onClear(matchedTiles, matchedSum);
     }
-
-    this.resetSelectionState();
-  };
+  }
 
   private recalculateSelection(): void {
     const board = this.ctxAccess.getBoardState();

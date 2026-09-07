@@ -10,6 +10,10 @@ export interface GameBoardWidgetProps {
   interactive?: boolean;
   /** Target sum required to clear tiles (default 10) */
   targetSum?: number;
+  /** Whether two-click / tap selection is enabled (default true) */
+  twoClickSelection?: boolean;
+  /** Whether hovering over tiles in tap mode live updates the preview (default true) */
+  hoverLiveSelection?: boolean;
   /** Highlighted tile coordinates (e.g. for hint system) */
   highlightedTiles?: TileCoord[];
   /** Board background color override */
@@ -25,6 +29,8 @@ export const GameBoardWidget: React.FC<GameBoardWidgetProps> = ({
   matrix,
   interactive = true,
   targetSum = 10,
+  twoClickSelection = true,
+  hoverLiveSelection = true,
   highlightedTiles = [],
   gameBg = '#fbf2df',
   onTilesCleared,
@@ -56,7 +62,7 @@ export const GameBoardWidget: React.FC<GameBoardWidgetProps> = ({
       targetSum,
       matrix,
       highlightedTiles,
-      visualConfig: { gameBg },
+      visualConfig: { gameBg, twoClickSelection, hoverLiveSelection },
       onTilesCleared,
       onSelectionChange,
     });
@@ -82,6 +88,12 @@ export const GameBoardWidget: React.FC<GameBoardWidgetProps> = ({
       engineRef.current.setTargetSum(targetSum);
     }
   }, [targetSum]);
+
+  useEffect(() => {
+    if (engineRef.current) {
+      engineRef.current.setVisualConfig({ gameBg, twoClickSelection, hoverLiveSelection });
+    }
+  }, [gameBg, twoClickSelection, hoverLiveSelection]);
 
   const lastMatrixPropRef = useRef<number[][] | undefined>(matrix ? matrix.map((r) => [...r]) : undefined);
 
