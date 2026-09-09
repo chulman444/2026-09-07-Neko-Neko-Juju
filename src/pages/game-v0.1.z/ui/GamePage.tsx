@@ -1,20 +1,19 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { TimerBar } from '@/shared/ui';
 import { GameBoardWidget } from '@/widgets/game-board';
-import { SolverPanelWidget } from '@/widgets/solver-panel';
 import { useBoardStore, type TileCoord } from '@/entities/board';
 import { useSolverStore } from '@/features/look-ahead-solver';
 import { Link } from '@/shared/lib/router';
 import { useGameTimer } from '../model/useGameTimer';
 import { useComboSystem } from '../model/useComboSystem';
 import { ComboBar } from './ComboBar';
-import { DevTuner } from './DevTuner';
+import { SidePanel } from './SidePanel';
 
 export const GamePage: React.FC = () => {
   const [score, setScore] = useState<number>(0);
   const [maxCountdown, setMaxCountdown] = useState<number>(60);
   const [baseSecondsPerTile, setBaseSecondsPerTile] = useState<number>(0);
-  const [showSolverPanel, setShowSolverPanel] = useState<boolean>(false);
+  const [showSidePanel, setShowSidePanel] = useState<boolean>(false);
   const [highlightedTiles, setHighlightedTiles] = useState<TileCoord[]>([]);
 
   const generateNewBoard = useBoardStore((state) => state.generateNewBoard);
@@ -108,6 +107,17 @@ export const GamePage: React.FC = () => {
         <div className="flex items-center gap-2">
           <button
             type="button"
+            onClick={() => setShowSidePanel((prev) => !prev)}
+            className={`px-3 py-1.5 text-xs font-bold rounded-lg border transition cursor-pointer ${
+              showSidePanel
+                ? 'bg-amber-200/80 text-amber-950 border-amber-400 dark:bg-zinc-700 dark:text-white dark:border-zinc-500'
+                : 'border-amber-900/20 bg-amber-50 hover:bg-amber-100 text-amber-950 dark:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700'
+            }`}
+          >
+            🛠️ Dev Tools
+          </button>
+          <button
+            type="button"
             onClick={togglePause}
             className="px-3 py-1.5 text-xs font-bold rounded-lg border border-amber-900/20 bg-amber-50 hover:bg-amber-100 text-amber-950 dark:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700 transition cursor-pointer"
           >
@@ -134,9 +144,15 @@ export const GamePage: React.FC = () => {
           />
         </div>
 
-        {showSolverPanel && (
-          <SolverPanelWidget
-            onClose={() => setShowSolverPanel(false)}
+        {showSidePanel && (
+          <SidePanel
+            onClose={() => setShowSidePanel(false)}
+            comboConfig={comboConfig}
+            onComboChange={setComboConfig}
+            maxCountdown={maxCountdown}
+            onMaxCountdownChange={setMaxCountdown}
+            baseSecondsPerTile={baseSecondsPerTile}
+            onBaseSecondsPerTileChange={setBaseSecondsPerTile}
             onHighlightTiles={setHighlightedTiles}
             onClearMatch={(match) => {
               const coords: TileCoord[] = match.required.map((t) => ({ col: t.col, row: t.row }));
@@ -145,18 +161,6 @@ export const GamePage: React.FC = () => {
           />
         )}
       </main>
-
-      {/* Dev Tools Overlay */}
-      <DevTuner 
-        comboConfig={comboConfig} 
-        onComboChange={setComboConfig}
-        maxCountdown={maxCountdown}
-        onMaxCountdownChange={setMaxCountdown}
-        baseSecondsPerTile={baseSecondsPerTile}
-        onBaseSecondsPerTileChange={setBaseSecondsPerTile}
-        showSolverPanel={showSolverPanel}
-        onToggleSolverPanel={setShowSolverPanel}
-      />
     </div>
   );
 };
