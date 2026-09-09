@@ -1,7 +1,9 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { TimerBar } from '@/shared/ui';
 import { GameBoardWidget } from '@/widgets/game-board';
+import { SolverPanelWidget } from '@/widgets/solver-panel';
 import { useBoardStore, type TileCoord } from '@/entities/board';
+import { useSolverStore } from '@/features/look-ahead-solver';
 import { useGameTimer } from '../model/useGameTimer';
 import { useComboSystem } from '../model/useComboSystem';
 import { ComboBar } from './ComboBar';
@@ -11,7 +13,11 @@ export const GamePage: React.FC = () => {
   const [score, setScore] = useState<number>(0);
   const [maxCountdown, setMaxCountdown] = useState<number>(60);
   const [baseSecondsPerTile, setBaseSecondsPerTile] = useState<number>(0);
+  const [showSolverPanel, setShowSolverPanel] = useState<boolean>(false);
+  const [highlightedTiles, setHighlightedTiles] = useState<TileCoord[]>([]);
+
   const generateNewBoard = useBoardStore((state) => state.generateNewBoard);
+  const cascadeSolverTiles = useSolverStore((state) => state.cascadeTiles);
 
   const {
     countdown,
@@ -51,8 +57,11 @@ export const GamePage: React.FC = () => {
       
       // Award time: base reward per tile + combo bonus
       addTime(tiles.length * baseSecondsPerTile + comboBonusTime);
+
+      // Cascade in solver store
+      cascadeSolverTiles(tiles.map((t) => ({ row: t.row, col: t.col })));
     },
-    [addTime, registerMatch, baseSecondsPerTile]
+    [addTime, registerMatch, baseSecondsPerTile, cascadeSolverTiles]
   );
 
   const handleResetGame = useCallback(() => {
@@ -60,6 +69,7 @@ export const GamePage: React.FC = () => {
     setScore(0);
     resetTimer(maxCountdown);
     resetCombo();
+    setHighlightedTiles([]);
   }, [generateNewBoard, resetTimer, resetCombo, maxCountdown]);
 
   return (
@@ -105,12 +115,26 @@ export const GamePage: React.FC = () => {
       </header>
 
       {/* Main Play Area */}
-      <main className="relative flex flex-col items-center justify-center">
-        <GameBoardWidget
-          interactive={!isPaused}
-          onTilesCleared={handleTilesCleared}
-          className={isPaused ? 'opacity-80' : ''}
-        />
+      <main className="relative flex flex-col lg:flex-row items-center lg:items-start justify-center gap-6 w-full max-w-7xl">
+        <div className="flex flex-col items-center">
+          <GameBoardWidget
+            interactive={!isPaused}
+            highlightedTiles={highlightedTiles}
+            onTilesCleared={handleTilesCleared}
+            className={isPaused ? 'opacity-80' : ''}
+          />
+        </div>
+
+        {showSolverPanel && (
+          <SolverPanelWidget
+            onClose={() => setShowSolverPanel(false)}
+            onHighlightTiles={setHighlightedTiles}
+            onClearMatch={(match) => {
+              const coords: TileCoord[] = match.required.map((t) => ({ col: t.col, row: t.row }));
+              handleTilesCleared(coords, 10);
+            }}
+          />
+        )}
       </main>
 
       {/* Dev Tools Overlay */}
@@ -121,6 +145,8 @@ export const GamePage: React.FC = () => {
         onMaxCountdownChange={setMaxCountdown}
         baseSecondsPerTile={baseSecondsPerTile}
         onBaseSecondsPerTileChange={setBaseSecondsPerTile}
+        showSolverPanel={showSolverPanel}
+        onToggleSolverPanel={setShowSolverPanel}
       />
     </div>
   );

@@ -8,6 +8,8 @@ interface DevTunerProps {
   onMaxCountdownChange: (max: number) => void;
   baseSecondsPerTile: number;
   onBaseSecondsPerTileChange: (sec: number) => void;
+  showSolverPanel?: boolean;
+  onToggleSolverPanel?: (show: boolean) => void;
 }
 
 export const DevTuner: React.FC<DevTunerProps> = ({ 
@@ -17,6 +19,8 @@ export const DevTuner: React.FC<DevTunerProps> = ({
   onMaxCountdownChange,
   baseSecondsPerTile,
   onBaseSecondsPerTileChange,
+  showSolverPanel = false,
+  onToggleSolverPanel,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -159,6 +163,19 @@ export const DevTuner: React.FC<DevTunerProps> = ({
             className="bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-white w-full text-xs font-mono"
           />
         </div>
+
+        <hr className="border-zinc-700 my-1" />
+        <h4 className="font-semibold text-[11px] text-zinc-400 uppercase tracking-wider">Dev Panels</h4>
+
+        <label className="flex items-center justify-between cursor-pointer py-1">
+          <span className="text-xs text-amber-300 font-semibold">🔍 Look-Ahead Solver</span>
+          <input
+            type="checkbox"
+            checked={showSolverPanel}
+            onChange={(e) => onToggleSolverPanel?.(e.target.checked)}
+            className="rounded accent-amber-500 w-4 h-4 cursor-pointer"
+          />
+        </label>
       </div>
     </div>
   );
