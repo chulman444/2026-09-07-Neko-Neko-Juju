@@ -4,6 +4,7 @@ import { GameBoardWidget } from '@/widgets/game-board';
 import { SolverPanelWidget } from '@/widgets/solver-panel';
 import { useBoardStore, type TileCoord } from '@/entities/board';
 import { useSolverStore } from '@/features/look-ahead-solver';
+import { Link } from '@/shared/lib/router';
 import { useGameTimer } from '../model/useGameTimer';
 import { useComboSystem } from '../model/useComboSystem';
 import { ComboBar } from './ComboBar';
@@ -73,13 +74,21 @@ export const GamePage: React.FC = () => {
   }, [generateNewBoard, resetTimer, resetCombo, maxCountdown]);
 
   return (
-    <div className="flex flex-col items-center w-full min-h-[calc(100vh-60px)] px-4 py-6 select-none relative">
+    <div className="flex flex-col items-center w-full min-h-screen px-4 py-6 select-none relative">
       {/* Game Header Bar */}
       <header className="flex flex-wrap items-start justify-between w-full max-w-[720px] gap-4 mb-6 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm border border-amber-900/10 dark:border-zinc-700 p-4 rounded-2xl shadow-sm">
         <div className="flex flex-col items-start gap-3">
-          <span className="text-xl font-black tracking-tight text-neko-primary">
-            Neko Neko Juju
-          </span>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/"
+              className="text-xs font-semibold px-2.5 py-1 rounded-lg border border-amber-900/15 dark:border-zinc-700 bg-amber-50/50 hover:bg-amber-100 dark:bg-zinc-800/60 dark:hover:bg-zinc-800 text-amber-950 dark:text-zinc-200 transition cursor-pointer"
+            >
+              ← Home
+            </Link>
+            <span className="text-xl font-black tracking-tight text-neko-primary">
+              Neko Neko Juju
+            </span>
+          </div>
           <div className="text-sm font-semibold px-3 py-1 bg-amber-50 dark:bg-zinc-800 text-amber-900 dark:text-amber-200 border border-amber-200 dark:border-zinc-700 rounded-lg">
             Score: <span className="font-bold">{score}</span>
           </div>
