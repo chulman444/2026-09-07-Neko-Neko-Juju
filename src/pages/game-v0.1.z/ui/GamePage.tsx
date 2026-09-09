@@ -134,33 +134,47 @@ export const GamePage: React.FC = () => {
       </header>
 
       {/* Main Play Area */}
-      <main className="relative flex flex-col lg:flex-row items-center lg:items-start justify-center gap-6 w-full max-w-7xl">
-        <div className="flex flex-col items-center">
-          <GameBoardWidget
-            interactive={!isPaused}
-            highlightedTiles={highlightedTiles}
-            onTilesCleared={handleTilesCleared}
-            className={isPaused ? 'opacity-80' : ''}
-          />
-        </div>
-
-        {showSidePanel && (
-          <SidePanel
-            onClose={() => setShowSidePanel(false)}
-            comboConfig={comboConfig}
-            onComboChange={setComboConfig}
-            maxCountdown={maxCountdown}
-            onMaxCountdownChange={setMaxCountdown}
-            baseSecondsPerTile={baseSecondsPerTile}
-            onBaseSecondsPerTileChange={setBaseSecondsPerTile}
-            onHighlightTiles={setHighlightedTiles}
-            onClearMatch={(match) => {
-              const coords: TileCoord[] = match.required.map((t) => ({ col: t.col, row: t.row }));
-              handleTilesCleared(coords, 10);
-            }}
-          />
-        )}
+      <main className="flex items-center justify-center w-full max-w-7xl">
+        <GameBoardWidget
+          interactive={!isPaused}
+          highlightedTiles={highlightedTiles}
+          onTilesCleared={handleTilesCleared}
+          className={isPaused ? 'opacity-80' : ''}
+        />
       </main>
+
+      {/* Floating Edge Trigger when SidePanel is closed */}
+      {!showSidePanel && (
+        <button
+          type="button"
+          onClick={() => setShowSidePanel(true)}
+          className="fixed top-1/2 right-0 -translate-y-1/2 z-40 bg-zinc-900/90 hover:bg-zinc-800 text-amber-400 p-2.5 rounded-l-xl border-l border-y border-zinc-700 shadow-xl cursor-pointer transition flex flex-col items-center gap-1 group"
+          title="Open Development Tools"
+          aria-label="Open Dev Tools Side Panel"
+        >
+          <span className="text-sm group-hover:scale-110 transition-transform">⚙️</span>
+          <span className="text-[10px] font-bold text-zinc-300 [writing-mode:vertical-rl] tracking-wider uppercase">
+            Tools
+          </span>
+        </button>
+      )}
+
+      {/* Full-Height Viewport Docked Side Panel */}
+      <SidePanel
+        isOpen={showSidePanel}
+        onClose={() => setShowSidePanel(false)}
+        comboConfig={comboConfig}
+        onComboChange={setComboConfig}
+        maxCountdown={maxCountdown}
+        onMaxCountdownChange={setMaxCountdown}
+        baseSecondsPerTile={baseSecondsPerTile}
+        onBaseSecondsPerTileChange={setBaseSecondsPerTile}
+        onHighlightTiles={setHighlightedTiles}
+        onClearMatch={(match) => {
+          const coords: TileCoord[] = match.required.map((t) => ({ col: t.col, row: t.row }));
+          handleTilesCleared(coords, 10);
+        }}
+      />
     </div>
   );
 };
