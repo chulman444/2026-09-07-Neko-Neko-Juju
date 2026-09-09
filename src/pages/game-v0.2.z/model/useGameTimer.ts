@@ -83,9 +83,15 @@ export const useGameTimer = ({
   }, []);
 
   const addTime = useCallback((seconds: number) => {
+    if (seconds <= 0) return;
     setCountdown((prev) => {
-      if (isDepletedRef.current) return prev; // Cannot resuscitate
-      return Math.min(prev + seconds, maxCountdownRef.current);
+      const next = Math.min(prev + seconds, maxCountdownRef.current);
+      if (next > 0 && isDepletedRef.current) {
+        setIsDepleted(false);
+        isDepletedRef.current = false;
+        lastTimeRef.current = performance.now();
+      }
+      return next;
     });
   }, []);
 

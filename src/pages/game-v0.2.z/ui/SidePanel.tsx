@@ -12,6 +12,10 @@ export interface SidePanelProps {
   onComboChange: (newConfig: ComboConfig) => void;
   maxCountdown: number;
   onMaxCountdownChange: (max: number) => void;
+  maxFreeHints: number;
+  onMaxFreeHintsChange: (n: number) => void;
+  freeHintInterval: number;
+  onFreeHintIntervalChange: (t: number) => void;
   baseSecondsPerTile: number;
   onBaseSecondsPerTileChange: (sec: number) => void;
   retryAllowed: boolean;
@@ -30,6 +34,10 @@ export const SidePanel: React.FC<SidePanelProps> = ({
   onComboChange,
   maxCountdown,
   onMaxCountdownChange,
+  maxFreeHints,
+  onMaxFreeHintsChange,
+  freeHintInterval,
+  onFreeHintIntervalChange,
   baseSecondsPerTile,
   onBaseSecondsPerTileChange,
   retryAllowed,
@@ -95,6 +103,10 @@ export const SidePanel: React.FC<SidePanelProps> = ({
             onComboChange={onComboChange}
             maxCountdown={maxCountdown}
             onMaxCountdownChange={onMaxCountdownChange}
+            maxFreeHints={maxFreeHints}
+            onMaxFreeHintsChange={onMaxFreeHintsChange}
+            freeHintInterval={freeHintInterval}
+            onFreeHintIntervalChange={onFreeHintIntervalChange}
             baseSecondsPerTile={baseSecondsPerTile}
             onBaseSecondsPerTileChange={onBaseSecondsPerTileChange}
             retryAllowed={retryAllowed}

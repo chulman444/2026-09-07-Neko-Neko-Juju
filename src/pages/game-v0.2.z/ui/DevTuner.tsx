@@ -7,6 +7,10 @@ export interface DevTunerProps {
   onComboChange: (newConfig: ComboConfig) => void;
   maxCountdown: number;
   onMaxCountdownChange: (max: number) => void;
+  maxFreeHints: number;
+  onMaxFreeHintsChange: (n: number) => void;
+  freeHintInterval: number;
+  onFreeHintIntervalChange: (t: number) => void;
   baseSecondsPerTile: number;
   onBaseSecondsPerTileChange: (sec: number) => void;
   retryAllowed: boolean;
@@ -20,6 +24,10 @@ export const DevTuner: React.FC<DevTunerProps> = ({
   onComboChange,
   maxCountdown,
   onMaxCountdownChange,
+  maxFreeHints,
+  onMaxFreeHintsChange,
+  freeHintInterval,
+  onFreeHintIntervalChange,
   baseSecondsPerTile,
   onBaseSecondsPerTileChange,
   retryAllowed,
@@ -48,16 +56,36 @@ export const DevTuner: React.FC<DevTunerProps> = ({
       {/* Game Timer Config */}
       <div>
         <h4 className="font-bold text-[11px] text-amber-400/90 uppercase tracking-wider mb-2">
-          Game Timer
+          Game Timer & Phase 1 Hints
         </h4>
-        <div className="grid grid-cols-2 gap-2 items-center bg-zinc-800/60 p-3 rounded-xl border border-zinc-700/70">
-          <span className="text-xs font-medium text-zinc-300">Max Timer Cap (s)</span>
+        <div className="grid grid-cols-2 gap-3 items-center bg-zinc-800/60 p-3 rounded-xl border border-zinc-700/70">
+          <span className="text-xs font-medium text-zinc-300">Initial Timer Cap (s)</span>
           <input
             type="number"
-            min="5"
-            step="5"
+            min="1"
+            step="1"
             value={maxCountdown}
             onChange={(e) => onMaxCountdownChange(Math.max(1, parseFloat(e.target.value) || 0))}
+            className="bg-zinc-800 border border-zinc-700 rounded-lg px-2.5 py-1 text-right text-xs font-mono text-white focus:border-amber-500 focus:outline-none"
+          />
+
+          <span className="text-xs font-medium text-zinc-300">Max Free Hints (N)</span>
+          <input
+            type="number"
+            min="0"
+            step="1"
+            value={maxFreeHints}
+            onChange={(e) => onMaxFreeHintsChange(Math.max(0, parseInt(e.target.value, 10) || 0))}
+            className="bg-zinc-800 border border-zinc-700 rounded-lg px-2.5 py-1 text-right text-xs font-mono text-white focus:border-amber-500 focus:outline-none"
+          />
+
+          <span className="text-xs font-medium text-zinc-300">Hint Interval (T, s)</span>
+          <input
+            type="number"
+            min="1"
+            step="1"
+            value={freeHintInterval}
+            onChange={(e) => onFreeHintIntervalChange(Math.max(1, parseFloat(e.target.value) || 0))}
             className="bg-zinc-800 border border-zinc-700 rounded-lg px-2.5 py-1 text-right text-xs font-mono text-white focus:border-amber-500 focus:outline-none"
           />
         </div>
