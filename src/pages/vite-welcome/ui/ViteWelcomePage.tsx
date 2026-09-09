@@ -47,15 +47,21 @@ export const ViteWelcomePage = () => {
               Play Latest (/game)
             </Link>
             <Link
-              href="/game-v0.1.z"
+              href="/game-v0.2.z"
               className="flex-1 min-w-[140px] text-center px-4 py-2.5 rounded-xl font-semibold text-sm bg-white dark:bg-zinc-900 border border-amber-900/20 dark:border-zinc-700 text-amber-950 dark:text-zinc-200 hover:bg-amber-100/50 dark:hover:bg-zinc-800 transition cursor-pointer"
             >
-              v0.1.z (/game-v0.1.z)
+              v0.2.z (/game-v0.2.z)
+            </Link>
+            <Link
+              href="/game-v0.1.z"
+              className="w-full text-center px-3 py-1.5 rounded-lg font-medium text-xs text-zinc-500 hover:text-amber-950 dark:text-zinc-400 dark:hover:text-zinc-200 hover:bg-amber-100/30 dark:hover:bg-zinc-800/40 transition cursor-pointer"
+            >
+              ← Previous version: v0.1.z (/game-v0.1.z)
             </Link>
           </div>
           <div className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1 flex items-center gap-1.5">
             <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span>Active target: <strong>v0.1.z</strong> (Baseline + Floating Tuner)</span>
+            <span>Active target: <strong>v0.2.z</strong> (SidePanel Dev Tools + Combo System)</span>
           </div>
         </div>
       </section>
