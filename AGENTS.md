@@ -3,6 +3,7 @@
 ## Interaction & Workflow Rules
 - **No unsolicited edits**: Always diagnose, explain, or propose solutions first.
 - **Strict Permission**: NEVER create, modify, or delete files, or execute modifying shell commands, without the user's explicit confirmation (e.g., "go ahead", "apply this fix").
+- **Plan As Single Source of Truth**: When requirements or user feedback change the direction of a task, immediately rewrite and update `implementation_plan.md` in that exact same turn before asking for confirmation or proceeding to execution. Never leave an outdated plan in place while discussing changes in chat.
 
 ---
 
