@@ -76,7 +76,9 @@ export const useBoardStore = create<BoardState>((set, get) => ({
   setSeed: (seed) => {
     const { cols, rows, minNum, maxNum, seedHistory } = get();
     const matrix = createBoardMatrix(cols, rows, minNum, maxNum, seed);
-    const updatedHistory = [seed, ...seedHistory.filter((s) => s !== seed)].slice(0, 50);
+    const updatedHistory = seedHistory.includes(seed)
+      ? seedHistory
+      : [seed, ...seedHistory].slice(0, 50);
     set({ seed, matrix, seedHistory: updatedHistory, clearingAnimations: [] });
   },
 
@@ -84,7 +86,9 @@ export const useBoardStore = create<BoardState>((set, get) => ({
     const { cols, rows, minNum, maxNum, seedHistory } = get();
     const newSeed = forcedSeed || generateSeed();
     const matrix = createBoardMatrix(cols, rows, minNum, maxNum, newSeed);
-    const updatedHistory = [newSeed, ...seedHistory.filter((s) => s !== newSeed)].slice(0, 50);
+    const updatedHistory = seedHistory.includes(newSeed)
+      ? seedHistory
+      : [newSeed, ...seedHistory].slice(0, 50);
     set({ seed: newSeed, matrix, seedHistory: updatedHistory, clearingAnimations: [] });
   },
 
