@@ -14,6 +14,10 @@ export interface SidePanelProps {
   onMaxCountdownChange: (max: number) => void;
   baseSecondsPerTile: number;
   onBaseSecondsPerTileChange: (sec: number) => void;
+  retryAllowed: boolean;
+  onRetryAllowedChange: (allowed: boolean) => void;
+  onLoadSeed: (seed: string) => void;
+  onRollNewSeed: () => void;
   onHighlightTiles?: (tiles: TileCoord[]) => void;
   onClearMatch?: (match: SolverCombination) => void;
   defaultTab?: 'tuner' | 'solver';
@@ -28,6 +32,10 @@ export const SidePanel: React.FC<SidePanelProps> = ({
   onMaxCountdownChange,
   baseSecondsPerTile,
   onBaseSecondsPerTileChange,
+  retryAllowed,
+  onRetryAllowedChange,
+  onLoadSeed,
+  onRollNewSeed,
   onHighlightTiles,
   onClearMatch,
   defaultTab = 'tuner',
@@ -89,6 +97,10 @@ export const SidePanel: React.FC<SidePanelProps> = ({
             onMaxCountdownChange={onMaxCountdownChange}
             baseSecondsPerTile={baseSecondsPerTile}
             onBaseSecondsPerTileChange={onBaseSecondsPerTileChange}
+            retryAllowed={retryAllowed}
+            onRetryAllowedChange={onRetryAllowedChange}
+            onLoadSeed={onLoadSeed}
+            onRollNewSeed={onRollNewSeed}
           />
         ) : (
           <div className="w-full">

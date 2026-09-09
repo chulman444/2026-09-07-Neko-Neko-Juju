@@ -15,9 +15,17 @@ export const GamePage: React.FC = () => {
   const [baseSecondsPerTile, setBaseSecondsPerTile] = useState<number>(0);
   const [showSidePanel, setShowSidePanel] = useState<boolean>(false);
   const [highlightedTiles, setHighlightedTiles] = useState<TileCoord[]>([]);
+  const [retryAllowed, setRetryAllowed] = useState<boolean>(true);
 
   const generateNewBoard = useBoardStore((state) => state.generateNewBoard);
+  const restartCurrentBoard = useBoardStore((state) => state.restartCurrentBoard);
+  const setBoardSeed = useBoardStore((state) => state.setSeed);
   const cascadeSolverTiles = useSolverStore((state) => state.cascadeTiles);
+
+  // Initial calculation of solver engine on mount
+  useEffect(() => {
+    useSolverStore.getState().recalculate(useBoardStore.getState().matrix);
+  }, []);
 
   const {
     countdown,
@@ -64,13 +72,35 @@ export const GamePage: React.FC = () => {
     [addTime, registerMatch, baseSecondsPerTile, cascadeSolverTiles]
   );
 
-  const handleResetGame = useCallback(() => {
+  const handleRetryGame = useCallback(() => {
+    restartCurrentBoard();
+    setScore(0);
+    resetTimer(maxCountdown);
+    resetCombo();
+    setHighlightedTiles([]);
+    useSolverStore.getState().recalculate(useBoardStore.getState().matrix);
+  }, [restartCurrentBoard, resetTimer, resetCombo, maxCountdown]);
+
+  const handleNewGame = useCallback(() => {
     generateNewBoard();
     setScore(0);
     resetTimer(maxCountdown);
     resetCombo();
     setHighlightedTiles([]);
+    useSolverStore.getState().recalculate(useBoardStore.getState().matrix);
   }, [generateNewBoard, resetTimer, resetCombo, maxCountdown]);
+
+  const handleLoadSeed = useCallback(
+    (seedToLoad: string) => {
+      setBoardSeed(seedToLoad);
+      setScore(0);
+      resetTimer(maxCountdown);
+      resetCombo();
+      setHighlightedTiles([]);
+      useSolverStore.getState().recalculate(useBoardStore.getState().matrix);
+    },
+    [setBoardSeed, resetTimer, resetCombo, maxCountdown]
+  );
 
   return (
     <div className="flex flex-col items-center w-full min-h-screen px-4 py-6 select-none relative">
@@ -123,12 +153,23 @@ export const GamePage: React.FC = () => {
           >
             {isPaused ? '▶ Resume' : '⏸ Pause'}
           </button>
+          {retryAllowed && (
+            <button
+              type="button"
+              onClick={handleRetryGame}
+              className="px-3 py-1.5 text-xs font-bold rounded-lg border border-amber-600/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 transition cursor-pointer"
+              title="Restart current board with the same seed"
+            >
+              ↺ Retry
+            </button>
+          )}
           <button
             type="button"
-            onClick={handleResetGame}
+            onClick={handleNewGame}
             className="px-3 py-1.5 text-xs font-bold rounded-lg border border-neko-primary/30 bg-neko-primary/10 hover:bg-neko-primary/20 text-neko-primary transition cursor-pointer"
+            title="Start a new game with a fresh seed"
           >
-            🔄 Restart
+            ✨ New Game
           </button>
         </div>
       </header>
@@ -169,6 +210,10 @@ export const GamePage: React.FC = () => {
         onMaxCountdownChange={setMaxCountdown}
         baseSecondsPerTile={baseSecondsPerTile}
         onBaseSecondsPerTileChange={setBaseSecondsPerTile}
+        retryAllowed={retryAllowed}
+        onRetryAllowedChange={setRetryAllowed}
+        onLoadSeed={handleLoadSeed}
+        onRollNewSeed={handleNewGame}
         onHighlightTiles={setHighlightedTiles}
         onClearMatch={(match) => {
           const coords: TileCoord[] = match.required.map((t) => ({ col: t.col, row: t.row }));
