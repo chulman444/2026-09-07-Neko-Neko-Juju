@@ -22,11 +22,11 @@ export function setupAll29Families(): FamilyDef[] {
   const familyMap: Record<string, FamilyDef> = {};
   rawPartitions.forEach((partition) => {
     const uniqueDigits = [...new Set(partition)].sort((a, b) => b - a);
-    const familyKey = uniqueDigits.join('-');
+    const familyKey = `fam-${uniqueDigits.join('-')}`;
 
     if (!familyMap[familyKey]) {
       familyMap[familyKey] = {
-        name: `${familyKey}-Family`,
+        name: `${uniqueDigits.join('-')}-Family`,
         digits: uniqueDigits,
         signatures: [],
       };

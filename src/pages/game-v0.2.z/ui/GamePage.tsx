@@ -59,12 +59,14 @@ export const GamePage: React.FC = () => {
     }
 
     setHighlightedTiles((prev) => {
-      // Find a clearable combination whose tiles are not yet fully highlighted
-      const unhighlightedCombo = activeClearables.find((combo) =>
+      // Find all clearable combinations whose tiles are not yet fully highlighted
+      const unhighlightedCombos = activeClearables.filter((combo) =>
         combo.required.some((req) => !prev.some((p) => p.row === req.row && p.col === req.col))
       );
 
-      const targetCombo = unhighlightedCombo ?? activeClearables[0];
+      const candidates = unhighlightedCombos.length > 0 ? unhighlightedCombos : activeClearables;
+      const randomIndex = Math.floor(Math.random() * candidates.length);
+      const targetCombo = candidates[randomIndex];
       if (!targetCombo) return prev;
 
       const newCoords = targetCombo.required.map((t) => ({ row: t.row, col: t.col }));
