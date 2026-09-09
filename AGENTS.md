@@ -68,6 +68,7 @@ Code can only import from layers strictly below it. Never import upwards or hori
   - Utilities / Hooks / Models: camelCase (e.g., `useAuth.ts`, `formatDate.ts`)
   - Public API entry: `index.ts`
 - **Component Design**: Keep components small, declarative, and focused. Separate domain logic (`model/`) from rendering (`ui/`).
+- **Orchestrator vs. Content Separation**: Container/orchestrator components (such as panels, modals, drawers, tabs) must only handle layout frames, open/closed state, and tab orchestration. Never inline domain controls, sliders, or forms directly into orchestrators. Keep tool contents in their own focused components and compose them cleanly within the orchestrator.
 
 ---
 
