@@ -57,10 +57,16 @@ export const useHintTimer = ({
 
   useEffect(() => {
     isMainTimerDepletedRef.current = isMainTimerDepleted;
+    if (isMainTimerDepleted) {
+      lastTimeRef.current = performance.now();
+    }
   }, [isMainTimerDepleted]);
 
   useEffect(() => {
     isPausedRef.current = isPaused;
+    if (!isPaused) {
+      lastTimeRef.current = performance.now();
+    }
   }, [isPaused]);
 
   useEffect(() => {

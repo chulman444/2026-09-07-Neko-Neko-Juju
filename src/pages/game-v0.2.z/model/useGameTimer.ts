@@ -63,22 +63,25 @@ export const useGameTimer = ({
     };
   }, []);
 
-  const pause = useCallback(() => setIsPaused(true), []);
+  const pause = useCallback(() => {
+    setIsPaused(true);
+    isPausedRef.current = true;
+  }, []);
+
   const resume = useCallback(() => {
-    if (!isDepletedRef.current) {
-      lastTimeRef.current = performance.now();
-      setIsPaused(false);
-    }
+    lastTimeRef.current = performance.now();
+    setIsPaused(false);
+    isPausedRef.current = false;
   }, []);
 
   const togglePause = useCallback(() => {
     setIsPaused((prev) => {
-      if (isDepletedRef.current) return prev;
-      if (prev) {
+      const next = !prev;
+      isPausedRef.current = next;
+      if (!next) {
         lastTimeRef.current = performance.now();
-        return false;
       }
-      return true;
+      return next;
     });
   }, []);
 
@@ -100,6 +103,9 @@ export const useGameTimer = ({
       const val = newInitial ?? initialCountdown;
       setCountdown(val);
       setIsDepleted(false);
+      isDepletedRef.current = false;
+      setIsPaused(false);
+      isPausedRef.current = false;
       lastTimeRef.current = performance.now();
     },
     [initialCountdown]
