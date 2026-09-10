@@ -170,8 +170,8 @@ export const useGameSessionStore = create<GameSessionState>((set, get) => ({
       comboRefillTime = state.comboConfig.tier3Refill;
     }
 
-    // Award base points
-    const points = clearedTileCount * 10;
+    // Award base points (1 tile = 1 point)
+    const points = clearedTileCount;
 
     // In Phase 1, award time
     let nextCountdown = state.countdown;

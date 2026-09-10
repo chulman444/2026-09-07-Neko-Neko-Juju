@@ -167,4 +167,16 @@ describe('gameSessionStore - Pause All Timers When Clearable Hints Exhausted', (
     expect(finalState.isPhase1Over).toBe(true);
     expect(finalState.hintCountdown).toBe(0);
   });
+
+  it('awards exactly 1 point per cleared tile without inflation', () => {
+    expect(useGameSessionStore.getState().score).toBe(0);
+
+    // Clear 2 tiles (e.g. 5+5)
+    useGameSessionStore.getState().registerMatch(2);
+    expect(useGameSessionStore.getState().score).toBe(2);
+
+    // Clear 4 tiles (e.g. 1+2+3+4)
+    useGameSessionStore.getState().registerMatch(4);
+    expect(useGameSessionStore.getState().score).toBe(6);
+  });
 });
