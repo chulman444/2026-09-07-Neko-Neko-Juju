@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import type { TileCoord } from '@/entities/board';
 import { SolverPanelWidget } from '@/widgets/solver-panel';
 import type { SolverCombination } from '@/features/look-ahead-solver';
-import type { ComboConfig } from '../model/useComboSystem';
+import type { ComboConfig } from '../model/gameSessionStore';
 import { DevTuner } from './DevTuner';
 
 export interface SidePanelProps {

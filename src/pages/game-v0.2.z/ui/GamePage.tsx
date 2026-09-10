@@ -4,167 +4,91 @@ import { GameBoardWidget } from '@/widgets/game-board';
 import { useBoardStore, type TileCoord } from '@/entities/board';
 import { useSolverStore } from '@/features/look-ahead-solver';
 import { Link } from '@/shared/lib/router';
-import { useGameTimer } from '../model/useGameTimer';
-import { useComboSystem } from '../model/useComboSystem';
-import { useHintTimer } from '../model/useHintTimer';
+import { useGameSessionStore } from '../model/gameSessionStore';
+import { useGameSessionDriver } from '../model/useGameSessionDriver';
 import { ComboBar } from './ComboBar';
 import { HintBar } from './HintBar';
 import { SidePanel } from './SidePanel';
 
 export const GamePage: React.FC = () => {
-  const [score, setScore] = useState<number>(0);
-  const [maxCountdown, setMaxCountdown] = useState<number>(6); // Changed default to 6s
-  const [baseSecondsPerTile, setBaseSecondsPerTile] = useState<number>(0);
   const [showSidePanel, setShowSidePanel] = useState<boolean>(false);
-  const [highlightedTiles, setHighlightedTiles] = useState<TileCoord[]>([]);
-  const [retryAllowed, setRetryAllowed] = useState<boolean>(true);
 
-  // Phase 1 Settings & State
-  const [maxFreeHints, setMaxFreeHints] = useState<number>(3);
-  const [freeHintInterval, setFreeHintInterval] = useState<number>(4);
-  const [noHintsAvailableMsg, setNoHintsAvailableMsg] = useState<string | null>(null);
+  // Mount 60fps simulation driver that ticks the store
+  useGameSessionDriver();
 
+  // Board Store Actions
   const generateNewBoard = useBoardStore((state) => state.generateNewBoard);
   const restartCurrentBoard = useBoardStore((state) => state.restartCurrentBoard);
   const setBoardSeed = useBoardStore((state) => state.setSeed);
 
-  // Initial calculation of solver engine on mount
+  // Initial solver recalculation on mount
   useEffect(() => {
     useSolverStore.getState().recalculate(useBoardStore.getState().matrix);
   }, []);
 
-  const {
-    countdown,
-    isPaused,
-    isDepleted,
-    pause: pauseTimer,
-    togglePause,
-    addTime,
-    reset: resetTimer,
-  } = useGameTimer({
-    initialCountdown: maxCountdown,
-    maxCountdown,
-    autoStart: true,
-  });
+  // Game Session State Selectors
+  const score = useGameSessionStore((state) => state.score);
+  const countdown = useGameSessionStore((state) => state.countdown);
+  const maxCountdown = useGameSessionStore((state) => state.maxCountdown);
+  const isPaused = useGameSessionStore((state) => state.isPaused);
+  const retryAllowed = useGameSessionStore((state) => state.retryAllowed);
+  const highlightedTiles = useGameSessionStore((state) => state.highlightedTiles);
+  const noHintsAvailableMsg = useGameSessionStore((state) => state.noHintsAvailableMsg);
 
-  const handleHintDepleted = useCallback(() => {
-    const solverState = useSolverStore.getState();
-    const activeClearables = solverState.combinations.filter((c) => c.isActive && c.blockers.length === 0);
+  // Hint State Selectors
+  const hintsRemaining = useGameSessionStore((state) => state.hintsRemaining);
+  const hintCountdown = useGameSessionStore((state) => state.hintCountdown);
+  const maxFreeHints = useGameSessionStore((state) => state.maxFreeHints);
+  const freeHintInterval = useGameSessionStore((state) => state.freeHintInterval);
+  const hintPhaseStarted = useGameSessionStore((state) => state.hintPhaseStarted);
+  const isPhase1Over = useGameSessionStore((state) => state.isPhase1Over);
 
-    if (activeClearables.length === 0) {
-      setNoHintsAvailableMsg('No more combinations available. Phase 1 halted.');
-      pauseTimer();
-      return;
-    }
+  // Combo State Selectors
+  const comboCount = useGameSessionStore((state) => state.comboCount);
+  const comboPct = useGameSessionStore((state) => state.comboPct);
+  const comboConfig = useGameSessionStore((state) => state.comboConfig);
+  const baseSecondsPerTile = useGameSessionStore((state) => state.baseSecondsPerTile);
 
-    setHighlightedTiles((prev) => {
-      // Find all clearable combinations whose tiles are not yet fully highlighted
-      const unhighlightedCombos = activeClearables.filter((combo) =>
-        combo.required.some((req) => !prev.some((p) => p.row === req.row && p.col === req.col))
-      );
-
-      const candidates = unhighlightedCombos.length > 0 ? unhighlightedCombos : activeClearables;
-      const randomIndex = Math.floor(Math.random() * candidates.length);
-      const targetCombo = candidates[randomIndex];
-      if (!targetCombo) return prev;
-
-      const newCoords = targetCombo.required.map((t) => ({ row: t.row, col: t.col }));
-      // Merge with previous hints so multiple hints can be visible at the same time
-      const merged = [...prev];
-      newCoords.forEach((coord) => {
-        if (!merged.some((m) => m.row === coord.row && m.col === coord.col)) {
-          merged.push(coord);
-        }
-      });
-      return merged;
-    });
-  }, [pauseTimer]);
-
-  const {
-    hintsRemaining,
-    hintCountdown,
-    hasStarted,
-    isPhase1Over,
-    reset: resetHintTimer,
-  } = useHintTimer({
-    totalHints: maxFreeHints,
-    intervalSeconds: freeHintInterval,
-    isMainTimerDepleted: isDepleted,
-    isPaused: isPaused || Boolean(noHintsAvailableMsg),
-    onHintDepleted: handleHintDepleted,
-  });
-
-  const {
-    comboCount,
-    comboPct,
-    config: comboConfig,
-    setConfig: setComboConfig,
-    registerMatch,
-    resetCombo,
-    setPaused: setComboPaused,
-  } = useComboSystem();
-
-  // Keep combo system pause state in sync with game timer pause state (continues running even if timer is depleted)
-  useEffect(() => {
-    setComboPaused(isPaused);
-  }, [isPaused, setComboPaused]);
+  // Store Actions
+  const togglePause = useGameSessionStore((state) => state.togglePause);
+  const registerMatch = useGameSessionStore((state) => state.registerMatch);
+  const removeClearedTiles = useGameSessionStore((state) => state.removeClearedTiles);
+  const setHighlightedTiles = useGameSessionStore((state) => state.setHighlightedTiles);
+  const resetSession = useGameSessionStore((state) => state.resetSession);
+  const setMaxCountdown = useGameSessionStore((state) => state.setMaxCountdown);
+  const setMaxFreeHints = useGameSessionStore((state) => state.setMaxFreeHints);
+  const setFreeHintInterval = useGameSessionStore((state) => state.setFreeHintInterval);
+  const setBaseSecondsPerTile = useGameSessionStore((state) => state.setBaseSecondsPerTile);
+  const setRetryAllowed = useGameSessionStore((state) => state.setRetryAllowed);
+  const setComboConfig = useGameSessionStore((state) => state.setComboConfig);
 
   const handleTilesCleared = useCallback(
     (tiles: TileCoord[], _sum: number) => {
-      // Base score
-      const points = tiles.length * 10;
-      setScore((prev) => prev + points);
-      
-      // Update combo system and get the bonus time for the main timer
-      const comboBonusTime = registerMatch();
-      
-      // Award time: base reward per tile + combo bonus (only in Phase 1)
-      if (!isPhase1Over) {
-        addTime(tiles.length * baseSecondsPerTile + comboBonusTime);
-      }
-      
-      // Only remove the tiles that were actually cleared, preserving any other active free hints
-      setHighlightedTiles((prev) =>
-        prev.filter((p) => !tiles.some((t) => t.row === p.row && t.col === p.col))
-      );
+      registerMatch(tiles.length);
+      removeClearedTiles(tiles);
     },
-    [addTime, registerMatch, baseSecondsPerTile, isPhase1Over]
+    [registerMatch, removeClearedTiles]
   );
 
   const handleRetryGame = useCallback(() => {
     restartCurrentBoard();
-    setScore(0);
-    resetTimer(maxCountdown);
-    resetHintTimer(maxFreeHints, freeHintInterval);
-    resetCombo();
-    setHighlightedTiles([]);
-    setNoHintsAvailableMsg(null);
+    resetSession();
     useSolverStore.getState().recalculate(useBoardStore.getState().matrix);
-  }, [restartCurrentBoard, resetTimer, resetHintTimer, resetCombo, maxCountdown, maxFreeHints, freeHintInterval]);
+  }, [restartCurrentBoard, resetSession]);
 
   const handleNewGame = useCallback(() => {
     generateNewBoard();
-    setScore(0);
-    resetTimer(maxCountdown);
-    resetHintTimer(maxFreeHints, freeHintInterval);
-    resetCombo();
-    setHighlightedTiles([]);
-    setNoHintsAvailableMsg(null);
+    resetSession();
     useSolverStore.getState().recalculate(useBoardStore.getState().matrix);
-  }, [generateNewBoard, resetTimer, resetHintTimer, resetCombo, maxCountdown, maxFreeHints, freeHintInterval]);
+  }, [generateNewBoard, resetSession]);
 
   const handleLoadSeed = useCallback(
     (seedToLoad: string) => {
       setBoardSeed(seedToLoad);
-      setScore(0);
-      resetTimer(maxCountdown);
-      resetHintTimer(maxFreeHints, freeHintInterval);
-      resetCombo();
-      setHighlightedTiles([]);
-      setNoHintsAvailableMsg(null);
+      resetSession();
       useSolverStore.getState().recalculate(useBoardStore.getState().matrix);
     },
-    [setBoardSeed, resetTimer, resetHintTimer, resetCombo, maxCountdown, maxFreeHints, freeHintInterval]
+    [setBoardSeed, resetSession]
   );
 
   return (
@@ -201,7 +125,7 @@ export const GamePage: React.FC = () => {
             hintsRemaining={hintsRemaining}
             hintCountdown={hintCountdown}
             hintInterval={freeHintInterval}
-            hasStarted={hasStarted}
+            hasStarted={hintPhaseStarted}
             isPhase1Over={isPhase1Over}
           />
           {noHintsAvailableMsg ? (

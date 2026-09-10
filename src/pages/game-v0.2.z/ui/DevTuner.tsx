@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useBoardStore } from '@/entities/board';
-import type { ComboConfig } from '../model/useComboSystem';
+import type { ComboConfig } from '../model/gameSessionStore';
 
 export interface DevTunerProps {
   comboConfig: ComboConfig;
