@@ -1,20 +1,27 @@
 import React from 'react';
+import { useGameSessionStore } from '../model/gameSessionStore';
 
 export interface HintBarProps {
-  hintsRemaining: number;
-  hintCountdown: number;
-  hintInterval: number;
-  hasStarted: boolean;
+  hintsRemaining?: number;
+  hintCountdown?: number;
+  hintInterval?: number;
+  hasStarted?: boolean;
   isPhase1Over?: boolean;
 }
 
-export const HintBar: React.FC<HintBarProps> = ({
-  hintsRemaining,
-  hintCountdown,
-  hintInterval,
-  hasStarted,
-  isPhase1Over = false,
-}) => {
+export const HintBar: React.FC<HintBarProps> = (props) => {
+  const storeHintsRemaining = useGameSessionStore((state) => state.hintsRemaining);
+  const storeHintCountdown = useGameSessionStore((state) => state.hintCountdown);
+  const storeHintInterval = useGameSessionStore((state) => state.freeHintInterval);
+  const storeHasStarted = useGameSessionStore((state) => state.hintPhaseStarted);
+  const storeIsPhase1Over = useGameSessionStore((state) => state.isPhase1Over);
+
+  const hintsRemaining = props.hintsRemaining ?? storeHintsRemaining;
+  const hintCountdown = props.hintCountdown ?? storeHintCountdown;
+  const hintInterval = props.hintInterval ?? storeHintInterval;
+  const hasStarted = props.hasStarted ?? storeHasStarted;
+  const isPhase1Over = props.isPhase1Over ?? storeIsPhase1Over;
+
   // If game is still on initial standby before the first depletion, the bar stays full at 100%.
   // Once started, it displays the active or paused countdown percentage.
   const widthPct = !hasStarted && !isPhase1Over

@@ -19,48 +19,27 @@ export const GamePage: React.FC = () => {
   // Board Store Actions
   const generateNewBoard = useBoardStore((state) => state.generateNewBoard);
   const restartCurrentBoard = useBoardStore((state) => state.restartCurrentBoard);
-  const setBoardSeed = useBoardStore((state) => state.setSeed);
 
   // Initial solver recalculation on mount
   useEffect(() => {
     useSolverStore.getState().recalculate(useBoardStore.getState().matrix);
   }, []);
 
-  // Game Session State Selectors
+  // Game Session Selectors (Only what GamePage itself needs)
   const score = useGameSessionStore((state) => state.score);
   const countdown = useGameSessionStore((state) => state.countdown);
   const maxCountdown = useGameSessionStore((state) => state.maxCountdown);
   const isPaused = useGameSessionStore((state) => state.isPaused);
+  const isPhase1Over = useGameSessionStore((state) => state.isPhase1Over);
   const retryAllowed = useGameSessionStore((state) => state.retryAllowed);
   const highlightedTiles = useGameSessionStore((state) => state.highlightedTiles);
   const noHintsAvailableMsg = useGameSessionStore((state) => state.noHintsAvailableMsg);
-
-  // Hint State Selectors
-  const hintsRemaining = useGameSessionStore((state) => state.hintsRemaining);
-  const hintCountdown = useGameSessionStore((state) => state.hintCountdown);
-  const maxFreeHints = useGameSessionStore((state) => state.maxFreeHints);
-  const freeHintInterval = useGameSessionStore((state) => state.freeHintInterval);
-  const hintPhaseStarted = useGameSessionStore((state) => state.hintPhaseStarted);
-  const isPhase1Over = useGameSessionStore((state) => state.isPhase1Over);
-
-  // Combo State Selectors
-  const comboCount = useGameSessionStore((state) => state.comboCount);
-  const comboPct = useGameSessionStore((state) => state.comboPct);
-  const comboConfig = useGameSessionStore((state) => state.comboConfig);
-  const baseSecondsPerTile = useGameSessionStore((state) => state.baseSecondsPerTile);
 
   // Store Actions
   const togglePause = useGameSessionStore((state) => state.togglePause);
   const registerMatch = useGameSessionStore((state) => state.registerMatch);
   const removeClearedTiles = useGameSessionStore((state) => state.removeClearedTiles);
-  const setHighlightedTiles = useGameSessionStore((state) => state.setHighlightedTiles);
   const resetSession = useGameSessionStore((state) => state.resetSession);
-  const setMaxCountdown = useGameSessionStore((state) => state.setMaxCountdown);
-  const setMaxFreeHints = useGameSessionStore((state) => state.setMaxFreeHints);
-  const setFreeHintInterval = useGameSessionStore((state) => state.setFreeHintInterval);
-  const setBaseSecondsPerTile = useGameSessionStore((state) => state.setBaseSecondsPerTile);
-  const setRetryAllowed = useGameSessionStore((state) => state.setRetryAllowed);
-  const setComboConfig = useGameSessionStore((state) => state.setComboConfig);
 
   const handleTilesCleared = useCallback(
     (tiles: TileCoord[], _sum: number) => {
@@ -81,15 +60,6 @@ export const GamePage: React.FC = () => {
     resetSession();
     useSolverStore.getState().recalculate(useBoardStore.getState().matrix);
   }, [generateNewBoard, resetSession]);
-
-  const handleLoadSeed = useCallback(
-    (seedToLoad: string) => {
-      setBoardSeed(seedToLoad);
-      resetSession();
-      useSolverStore.getState().recalculate(useBoardStore.getState().matrix);
-    },
-    [setBoardSeed, resetSession]
-  );
 
   return (
     <div className="flex flex-col items-center w-full min-h-screen px-4 py-6 select-none relative">
@@ -121,19 +91,13 @@ export const GamePage: React.FC = () => {
               isPaused={isPaused}
             />
           </div>
-          <HintBar
-            hintsRemaining={hintsRemaining}
-            hintCountdown={hintCountdown}
-            hintInterval={freeHintInterval}
-            hasStarted={hintPhaseStarted}
-            isPhase1Over={isPhase1Over}
-          />
+          <HintBar />
           {noHintsAvailableMsg ? (
             <div className="text-[10px] font-bold text-zinc-500 bg-zinc-200/50 dark:bg-zinc-800/50 px-2 py-0.5 rounded-full border border-zinc-300 dark:border-zinc-700">
               {noHintsAvailableMsg}
             </div>
           ) : (
-            <ComboBar comboCount={comboCount} comboPct={comboPct} />
+            <ComboBar />
           )}
         </div>
 
@@ -208,25 +172,6 @@ export const GamePage: React.FC = () => {
       <SidePanel
         isOpen={showSidePanel}
         onClose={() => setShowSidePanel(false)}
-        comboConfig={comboConfig}
-        onComboChange={setComboConfig}
-        maxCountdown={maxCountdown}
-        onMaxCountdownChange={setMaxCountdown}
-        maxFreeHints={maxFreeHints}
-        onMaxFreeHintsChange={setMaxFreeHints}
-        freeHintInterval={freeHintInterval}
-        onFreeHintIntervalChange={setFreeHintInterval}
-        baseSecondsPerTile={baseSecondsPerTile}
-        onBaseSecondsPerTileChange={setBaseSecondsPerTile}
-        retryAllowed={retryAllowed}
-        onRetryAllowedChange={setRetryAllowed}
-        onLoadSeed={handleLoadSeed}
-        onRollNewSeed={handleNewGame}
-        onHighlightTiles={setHighlightedTiles}
-        onClearMatch={(match) => {
-          const coords: TileCoord[] = match.required.map((t) => ({ col: t.col, row: t.row }));
-          handleTilesCleared(coords, 10);
-        }}
       />
     </div>
   );

@@ -2,55 +2,32 @@ import React, { useState } from 'react';
 import type { TileCoord } from '@/entities/board';
 import { SolverPanelWidget } from '@/widgets/solver-panel';
 import type { SolverCombination } from '@/features/look-ahead-solver';
-import type { ComboConfig } from '../model/gameSessionStore';
+import { useGameSessionStore } from '../model/gameSessionStore';
 import { DevTuner } from './DevTuner';
 
 export interface SidePanelProps {
   isOpen: boolean;
   onClose: () => void;
-  comboConfig: ComboConfig;
-  onComboChange: (newConfig: ComboConfig) => void;
-  maxCountdown: number;
-  onMaxCountdownChange: (max: number) => void;
-  maxFreeHints: number;
-  onMaxFreeHintsChange: (n: number) => void;
-  freeHintInterval: number;
-  onFreeHintIntervalChange: (t: number) => void;
-  baseSecondsPerTile: number;
-  onBaseSecondsPerTileChange: (sec: number) => void;
-  retryAllowed: boolean;
-  onRetryAllowedChange: (allowed: boolean) => void;
-  onLoadSeed: (seed: string) => void;
-  onRollNewSeed: () => void;
-  onHighlightTiles?: (tiles: TileCoord[]) => void;
-  onClearMatch?: (match: SolverCombination) => void;
   defaultTab?: 'tuner' | 'solver';
 }
 
 export const SidePanel: React.FC<SidePanelProps> = ({
   isOpen,
   onClose,
-  comboConfig,
-  onComboChange,
-  maxCountdown,
-  onMaxCountdownChange,
-  maxFreeHints,
-  onMaxFreeHintsChange,
-  freeHintInterval,
-  onFreeHintIntervalChange,
-  baseSecondsPerTile,
-  onBaseSecondsPerTileChange,
-  retryAllowed,
-  onRetryAllowedChange,
-  onLoadSeed,
-  onRollNewSeed,
-  onHighlightTiles,
-  onClearMatch,
   defaultTab = 'tuner',
 }) => {
   const [activeTab, setActiveTab] = useState<'tuner' | 'solver'>(defaultTab);
+  const setHighlightedTiles = useGameSessionStore((state) => state.setHighlightedTiles);
+  const registerMatch = useGameSessionStore((state) => state.registerMatch);
+  const removeClearedTiles = useGameSessionStore((state) => state.removeClearedTiles);
 
   if (!isOpen) return null;
+
+  const handleClearMatch = (match: SolverCombination) => {
+    const coords: TileCoord[] = match.required.map((t) => ({ col: t.col, row: t.row }));
+    registerMatch(coords.length);
+    removeClearedTiles(coords);
+  };
 
   return (
     <aside
@@ -98,27 +75,12 @@ export const SidePanel: React.FC<SidePanelProps> = ({
       {/* Orchestrated Tool Content Area */}
       <div className="flex-1 overflow-y-auto p-4 text-zinc-200">
         {activeTab === 'tuner' ? (
-          <DevTuner
-            comboConfig={comboConfig}
-            onComboChange={onComboChange}
-            maxCountdown={maxCountdown}
-            onMaxCountdownChange={onMaxCountdownChange}
-            maxFreeHints={maxFreeHints}
-            onMaxFreeHintsChange={onMaxFreeHintsChange}
-            freeHintInterval={freeHintInterval}
-            onFreeHintIntervalChange={onFreeHintIntervalChange}
-            baseSecondsPerTile={baseSecondsPerTile}
-            onBaseSecondsPerTileChange={onBaseSecondsPerTileChange}
-            retryAllowed={retryAllowed}
-            onRetryAllowedChange={onRetryAllowedChange}
-            onLoadSeed={onLoadSeed}
-            onRollNewSeed={onRollNewSeed}
-          />
+          <DevTuner />
         ) : (
           <div className="w-full">
             <SolverPanelWidget
-              onHighlightTiles={onHighlightTiles}
-              onClearMatch={onClearMatch}
+              onHighlightTiles={setHighlightedTiles}
+              onClearMatch={handleClearMatch}
               className="w-full border-0 shadow-none p-0 bg-transparent"
             />
           </div>

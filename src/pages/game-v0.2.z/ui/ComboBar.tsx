@@ -1,11 +1,18 @@
 import React from 'react';
+import { useGameSessionStore } from '../model/gameSessionStore';
 
-interface ComboBarProps {
-  comboCount: number;
-  comboPct: number;
+export interface ComboBarProps {
+  comboCount?: number;
+  comboPct?: number;
 }
 
-export const ComboBar: React.FC<ComboBarProps> = ({ comboCount, comboPct }) => {
+export const ComboBar: React.FC<ComboBarProps> = (props) => {
+  const storeComboCount = useGameSessionStore((state) => state.comboCount);
+  const storeComboPct = useGameSessionStore((state) => state.comboPct);
+
+  const comboCount = props.comboCount ?? storeComboCount;
+  const comboPct = props.comboPct ?? storeComboPct;
+
   if (comboCount === 0) {
     return <div className="h-6" aria-hidden="true" />; // Placeholder to prevent layout shift
   }

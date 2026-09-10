@@ -1,52 +1,54 @@
 import React, { useState } from 'react';
 import { useBoardStore } from '@/entities/board';
-import type { ComboConfig } from '../model/gameSessionStore';
+import { useSolverStore } from '@/features/look-ahead-solver';
+import { useGameSessionStore, type ComboConfig } from '../model/gameSessionStore';
 
-export interface DevTunerProps {
-  comboConfig: ComboConfig;
-  onComboChange: (newConfig: ComboConfig) => void;
-  maxCountdown: number;
-  onMaxCountdownChange: (max: number) => void;
-  maxFreeHints: number;
-  onMaxFreeHintsChange: (n: number) => void;
-  freeHintInterval: number;
-  onFreeHintIntervalChange: (t: number) => void;
-  baseSecondsPerTile: number;
-  onBaseSecondsPerTileChange: (sec: number) => void;
-  retryAllowed: boolean;
-  onRetryAllowedChange: (allowed: boolean) => void;
-  onLoadSeed: (seed: string) => void;
-  onRollNewSeed: () => void;
-}
-
-export const DevTuner: React.FC<DevTunerProps> = ({
-  comboConfig,
-  onComboChange,
-  maxCountdown,
-  onMaxCountdownChange,
-  maxFreeHints,
-  onMaxFreeHintsChange,
-  freeHintInterval,
-  onFreeHintIntervalChange,
-  baseSecondsPerTile,
-  onBaseSecondsPerTileChange,
-  retryAllowed,
-  onRetryAllowedChange,
-  onLoadSeed,
-  onRollNewSeed,
-}) => {
+export const DevTuner: React.FC = () => {
+  // Board Store
   const currentSeed = useBoardStore((state) => state.seed);
   const seedHistory = useBoardStore((state) => state.seedHistory);
+  const setBoardSeed = useBoardStore((state) => state.setSeed);
+  const generateNewBoard = useBoardStore((state) => state.generateNewBoard);
+
+  // Game Session Store State
+  const maxCountdown = useGameSessionStore((state) => state.maxCountdown);
+  const maxFreeHints = useGameSessionStore((state) => state.maxFreeHints);
+  const freeHintInterval = useGameSessionStore((state) => state.freeHintInterval);
+  const baseSecondsPerTile = useGameSessionStore((state) => state.baseSecondsPerTile);
+  const retryAllowed = useGameSessionStore((state) => state.retryAllowed);
+  const comboConfig = useGameSessionStore((state) => state.comboConfig);
+
+  // Game Session Store Actions
+  const setMaxCountdown = useGameSessionStore((state) => state.setMaxCountdown);
+  const setMaxFreeHints = useGameSessionStore((state) => state.setMaxFreeHints);
+  const setFreeHintInterval = useGameSessionStore((state) => state.setFreeHintInterval);
+  const setBaseSecondsPerTile = useGameSessionStore((state) => state.setBaseSecondsPerTile);
+  const setRetryAllowed = useGameSessionStore((state) => state.setRetryAllowed);
+  const setComboConfig = useGameSessionStore((state) => state.setComboConfig);
+  const resetSession = useGameSessionStore((state) => state.resetSession);
+
   const [customSeedInput, setCustomSeedInput] = useState<string>('');
 
   const handleComboChange = (key: keyof ComboConfig, value: number) => {
-    onComboChange({ ...comboConfig, [key]: value });
+    setComboConfig({ ...comboConfig, [key]: value });
+  };
+
+  const handleLoadSeed = (seedToLoad: string) => {
+    setBoardSeed(seedToLoad);
+    resetSession();
+    useSolverStore.getState().recalculate(useBoardStore.getState().matrix);
+  };
+
+  const handleRollNewSeed = () => {
+    generateNewBoard();
+    resetSession();
+    useSolverStore.getState().recalculate(useBoardStore.getState().matrix);
   };
 
   const handleLoadCustomSeed = () => {
     const trimmed = customSeedInput.trim();
     if (trimmed) {
-      onLoadSeed(trimmed);
+      handleLoadSeed(trimmed);
       setCustomSeedInput('');
     }
   };
@@ -65,7 +67,7 @@ export const DevTuner: React.FC<DevTunerProps> = ({
             min="1"
             step="1"
             value={maxCountdown}
-            onChange={(e) => onMaxCountdownChange(Math.max(1, parseFloat(e.target.value) || 0))}
+            onChange={(e) => setMaxCountdown(parseFloat(e.target.value) || 0)}
             className="bg-zinc-800 border border-zinc-700 rounded-lg px-2.5 py-1 text-right text-xs font-mono text-white focus:border-amber-500 focus:outline-none"
           />
 
@@ -75,7 +77,7 @@ export const DevTuner: React.FC<DevTunerProps> = ({
             min="0"
             step="1"
             value={maxFreeHints}
-            onChange={(e) => onMaxFreeHintsChange(Math.max(0, parseInt(e.target.value, 10) || 0))}
+            onChange={(e) => setMaxFreeHints(parseInt(e.target.value, 10) || 0)}
             className="bg-zinc-800 border border-zinc-700 rounded-lg px-2.5 py-1 text-right text-xs font-mono text-white focus:border-amber-500 focus:outline-none"
           />
 
@@ -85,7 +87,17 @@ export const DevTuner: React.FC<DevTunerProps> = ({
             min="1"
             step="1"
             value={freeHintInterval}
-            onChange={(e) => onFreeHintIntervalChange(Math.max(1, parseFloat(e.target.value) || 0))}
+            onChange={(e) => setFreeHintInterval(parseFloat(e.target.value) || 0)}
+            className="bg-zinc-800 border border-zinc-700 rounded-lg px-2.5 py-1 text-right text-xs font-mono text-white focus:border-amber-500 focus:outline-none"
+          />
+
+          <span className="text-xs font-medium text-zinc-300">Reward Per Tile (s)</span>
+          <input
+            type="number"
+            min="0"
+            step="0.1"
+            value={baseSecondsPerTile}
+            onChange={(e) => setBaseSecondsPerTile(parseFloat(e.target.value) || 0)}
             className="bg-zinc-800 border border-zinc-700 rounded-lg px-2.5 py-1 text-right text-xs font-mono text-white focus:border-amber-500 focus:outline-none"
           />
         </div>
@@ -147,22 +159,12 @@ export const DevTuner: React.FC<DevTunerProps> = ({
         </div>
       </div>
 
-      {/* Timer Refills Config */}
+      {/* Combo Reward Refill Tiers */}
       <div>
         <h4 className="font-bold text-[11px] text-amber-400/90 uppercase tracking-wider mb-2">
-          Timer Refills (Seconds)
+          Combo Timer Refill (Seconds)
         </h4>
-        <div className="grid grid-cols-2 gap-2 bg-zinc-800/60 p-3 rounded-xl border border-zinc-700/70 text-xs">
-          <span className="flex items-center text-zinc-300">Base Refill / Tile</span>
-          <input
-            type="number"
-            min="0"
-            step="0.1"
-            value={baseSecondsPerTile}
-            onChange={(e) => onBaseSecondsPerTileChange(Math.max(0, parseFloat(e.target.value) || 0))}
-            className="bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-right font-mono text-white focus:border-amber-500 focus:outline-none"
-          />
-
+        <div className="grid grid-cols-2 gap-3 text-xs bg-zinc-800/60 p-3 rounded-xl border border-zinc-700/70">
           <span className="flex items-center text-zinc-300">Tier 1 (x1 - x4)</span>
           <input
             type="number"
@@ -211,7 +213,7 @@ export const DevTuner: React.FC<DevTunerProps> = ({
             <input
               type="checkbox"
               checked={retryAllowed}
-              onChange={(e) => onRetryAllowedChange(e.target.checked)}
+              onChange={(e) => setRetryAllowed(e.target.checked)}
               className="sr-only peer"
             />
             <div className="w-9 h-5 bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-500"></div>
@@ -235,7 +237,7 @@ export const DevTuner: React.FC<DevTunerProps> = ({
           <div className="flex items-center gap-1.5">
             <input
               type="text"
-              placeholder="Custom seed..."
+              placeholder="Enter seed string..."
               value={customSeedInput}
               onChange={(e) => setCustomSeedInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleLoadCustomSeed()}
@@ -251,7 +253,7 @@ export const DevTuner: React.FC<DevTunerProps> = ({
             </button>
             <button
               type="button"
-              onClick={onRollNewSeed}
+              onClick={handleRollNewSeed}
               className="px-2.5 py-1 text-xs font-bold rounded-lg bg-zinc-750 hover:bg-zinc-700 text-zinc-200 border border-zinc-600 transition cursor-pointer shrink-0"
               title="Generate a brand-new random seed"
             >
@@ -286,7 +288,7 @@ export const DevTuner: React.FC<DevTunerProps> = ({
                     </div>
                     <button
                       type="button"
-                      onClick={() => onLoadSeed(s)}
+                      onClick={() => handleLoadSeed(s)}
                       className="px-2 py-0.5 text-[11px] font-semibold rounded bg-zinc-750 hover:bg-amber-500 hover:text-zinc-950 border border-zinc-600 text-zinc-200 transition cursor-pointer"
                       title={`Restart board with seed ${s}`}
                     >
