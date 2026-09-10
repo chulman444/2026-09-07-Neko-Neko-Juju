@@ -55,8 +55,9 @@ export const useBoardStore = create<BoardState>((set, get) => ({
   clearingAnimations: [],
 
   setDimensions: (cols, rows) => {
-    set({ cols, rows });
-    get().generateNewBoard();
+    const { minNum, maxNum, seed } = get();
+    const matrix = createBoardMatrix(cols, rows, minNum, maxNum, seed);
+    set({ cols, rows, matrix, clearingAnimations: [] });
   },
 
   setShapeSize: (shapeSize) => set({ shapeSize }),

@@ -179,4 +179,27 @@ describe('gameSessionStore - Pause All Timers When Clearable Hints Exhausted', (
     useGameSessionStore.getState().registerMatch(4);
     expect(useGameSessionStore.getState().score).toBe(6);
   });
+
+  it('updates timerMultiplier and clamps minimum to 0', () => {
+    useGameSessionStore.getState().setTimerMultiplier(0.15);
+    expect(useGameSessionStore.getState().timerMultiplier).toBe(0.15);
+
+    useGameSessionStore.getState().setTimerMultiplier(-1);
+    expect(useGameSessionStore.getState().timerMultiplier).toBe(0);
+  });
+
+  it('updates boardSizeRanges min and max independently for each tier', () => {
+    useGameSessionStore.getState().setBoardSizeRange('small', 0, 4);
+    useGameSessionStore.getState().setBoardSizeRange('small', 1, 7);
+    expect(useGameSessionStore.getState().boardSizeRanges.small).toEqual([4, 7]);
+
+    useGameSessionStore.getState().setBoardSizeRange('medium', 0, 10);
+    useGameSessionStore.getState().setBoardSizeRange('medium', 1, 13);
+    expect(useGameSessionStore.getState().boardSizeRanges.medium).toEqual([10, 13]);
+
+    useGameSessionStore.getState().setBoardSizeRange('large', 0, 16);
+    useGameSessionStore.getState().setBoardSizeRange('large', 1, 20);
+    expect(useGameSessionStore.getState().boardSizeRanges.large).toEqual([16, 20]);
+  });
 });
+

@@ -29,6 +29,12 @@ export const DEFAULT_COMBO_CONFIG: ComboConfig = {
   tier3Refill: 5,
 };
 
+export interface BoardSizeRanges {
+  small: [number, number];
+  medium: [number, number];
+  large: [number, number];
+}
+
 export interface GameSessionState {
   // Session & Meta
   score: number;
@@ -42,6 +48,10 @@ export interface GameSessionState {
   baseSecondsPerTile: number;
   isPaused: boolean;
   isDepleted: boolean;
+
+  // Board Size & Timer Multiplier Tuning
+  timerMultiplier: number;
+  boardSizeRanges: BoardSizeRanges;
 
   // Phase 1 Hint State
   maxFreeHints: number;
@@ -74,6 +84,8 @@ export interface GameSessionState {
   setBaseSecondsPerTile: (val: number) => void;
   setRetryAllowed: (val: boolean) => void;
   setComboConfig: (config: ComboConfig) => void;
+  setTimerMultiplier: (val: number) => void;
+  setBoardSizeRange: (tier: keyof BoardSizeRanges, index: 0 | 1, val: number) => void;
 
   // Lifecycle
   resetSession: () => void;
@@ -92,6 +104,14 @@ export const useGameSessionStore = create<GameSessionState>((set, get) => ({
   baseSecondsPerTile: 0,
   isPaused: false,
   isDepleted: false,
+
+  // Board Size & Timer Multiplier Initial State
+  timerMultiplier: 20 / 170,
+  boardSizeRanges: {
+    small: [3, 8],
+    medium: [9, 14],
+    large: [15, 20],
+  },
 
   // Phase 1 Hint Initial State
   maxFreeHints: 3,
@@ -369,6 +389,24 @@ export const useGameSessionStore = create<GameSessionState>((set, get) => ({
 
   setComboConfig: (config) => {
     set({ comboConfig: config });
+  },
+
+  setTimerMultiplier: (val) => {
+    set({ timerMultiplier: Math.max(0, val) });
+  },
+
+  setBoardSizeRange: (tier, index, val) => {
+    set((state) => {
+      const current = state.boardSizeRanges[tier];
+      const updated: [number, number] = [...current];
+      updated[index] = val;
+      return {
+        boardSizeRanges: {
+          ...state.boardSizeRanges,
+          [tier]: updated,
+        },
+      };
+    });
   },
 
   resetSession: () => {
