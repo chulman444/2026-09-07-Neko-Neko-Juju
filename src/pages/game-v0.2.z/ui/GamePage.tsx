@@ -27,7 +27,6 @@ export const GamePage: React.FC = () => {
   const generateNewBoard = useBoardStore((state) => state.generateNewBoard);
   const restartCurrentBoard = useBoardStore((state) => state.restartCurrentBoard);
   const setBoardSeed = useBoardStore((state) => state.setSeed);
-  const cascadeSolverTiles = useSolverStore((state) => state.cascadeTiles);
 
   // Initial calculation of solver engine on mount
   useEffect(() => {
@@ -123,16 +122,13 @@ export const GamePage: React.FC = () => {
       if (!isPhase1Over) {
         addTime(tiles.length * baseSecondsPerTile + comboBonusTime);
       }
-
-      // Cascade in solver store
-      cascadeSolverTiles(tiles.map((t) => ({ row: t.row, col: t.col })));
       
       // Only remove the tiles that were actually cleared, preserving any other active free hints
       setHighlightedTiles((prev) =>
         prev.filter((p) => !tiles.some((t) => t.row === p.row && t.col === p.col))
       );
     },
-    [addTime, registerMatch, baseSecondsPerTile, cascadeSolverTiles, isPhase1Over]
+    [addTime, registerMatch, baseSecondsPerTile, isPhase1Over]
   );
 
   const handleRetryGame = useCallback(() => {

@@ -26,6 +26,7 @@ export const useHintTimer = ({
   const countdownRef = useRef<number>(intervalSeconds);
   const intervalSecondsRef = useRef<number>(intervalSeconds);
   const isMainTimerDepletedRef = useRef<boolean>(isMainTimerDepleted);
+  const prevDepletedRef = useRef<boolean>(isMainTimerDepleted);
   const isPausedRef = useRef<boolean>(isPaused);
   const isPhase1OverRef = useRef<boolean>(false);
   const hasTriggeredFirstHintRef = useRef<boolean>(false);
@@ -81,9 +82,14 @@ export const useHintTimer = ({
     onPhase1OverRef.current = onPhase1Over;
   }, [onPhase1Over]);
 
-  // Immediate consumption of Hint #1 when main timer first hits 0
+  // Immediate consumption of Hint #1 when main timer first hits 0 (rising edge: false -> true)
   useEffect(() => {
+    const wasDepleted = prevDepletedRef.current;
+    prevDepletedRef.current = isMainTimerDepleted;
+
+    // Trigger only on rising edge (transition from running/not-depleted to depleted)
     if (
+      !wasDepleted &&
       isMainTimerDepleted &&
       !isPaused &&
       !isPhase1OverRef.current &&
@@ -175,6 +181,9 @@ export const useHintTimer = ({
       hasTriggeredFirstHintRef.current = false;
       setIsPhase1Over(false);
       isPhase1OverRef.current = false;
+      // Mark as depleted currently so any trailing depleted prop does not trigger as a rising edge
+      prevDepletedRef.current = true;
+      isMainTimerDepletedRef.current = false;
       lastTimeRef.current = performance.now();
     },
     [totalHints, intervalSeconds]
