@@ -200,6 +200,24 @@ describe('gameSessionStore - Pause All Timers When Clearable Hints Exhausted', (
     useGameSessionStore.getState().setBoardSizeRange('large', 0, 16);
     useGameSessionStore.getState().setBoardSizeRange('large', 1, 20);
     expect(useGameSessionStore.getState().boardSizeRanges.large).toEqual([16, 20]);
+
+    useGameSessionStore.getState().setBoardSizeRange('any', 0, 5);
+    useGameSessionStore.getState().setBoardSizeRange('any', 1, 19);
+    expect(useGameSessionStore.getState().boardSizeRanges.any).toEqual([5, 19]);
+  });
+
+  it('updates selectedSizeTier, bell curve parameters, and rollSeedOnGenerate', () => {
+    useGameSessionStore.getState().setSelectedSizeTier('any');
+    expect(useGameSessionStore.getState().selectedSizeTier).toBe('any');
+
+    useGameSessionStore.getState().setRatioMean(1.5);
+    expect(useGameSessionStore.getState().ratioMean).toBe(1.5);
+
+    useGameSessionStore.getState().setRatioSpread(0.2);
+    expect(useGameSessionStore.getState().ratioSpread).toBe(0.2);
+
+    useGameSessionStore.getState().setRollSeedOnGenerate(true);
+    expect(useGameSessionStore.getState().rollSeedOnGenerate).toBe(true);
   });
 });
 

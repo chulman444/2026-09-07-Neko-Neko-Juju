@@ -29,10 +29,13 @@ export const DEFAULT_COMBO_CONFIG: ComboConfig = {
   tier3Refill: 5,
 };
 
+export type BoardSizeTier = 'small' | 'medium' | 'large' | 'any';
+
 export interface BoardSizeRanges {
   small: [number, number];
   medium: [number, number];
   large: [number, number];
+  any: [number, number];
 }
 
 export interface GameSessionState {
@@ -52,6 +55,10 @@ export interface GameSessionState {
   // Board Size & Timer Multiplier Tuning
   timerMultiplier: number;
   boardSizeRanges: BoardSizeRanges;
+  selectedSizeTier: BoardSizeTier;
+  ratioMean: number;
+  ratioSpread: number;
+  rollSeedOnGenerate: boolean;
 
   // Phase 1 Hint State
   maxFreeHints: number;
@@ -85,7 +92,11 @@ export interface GameSessionState {
   setRetryAllowed: (val: boolean) => void;
   setComboConfig: (config: ComboConfig) => void;
   setTimerMultiplier: (val: number) => void;
-  setBoardSizeRange: (tier: keyof BoardSizeRanges, index: 0 | 1, val: number) => void;
+  setBoardSizeRange: (tier: BoardSizeTier, index: 0 | 1, val: number) => void;
+  setSelectedSizeTier: (tier: BoardSizeTier) => void;
+  setRatioMean: (val: number) => void;
+  setRatioSpread: (val: number) => void;
+  setRollSeedOnGenerate: (val: boolean) => void;
 
   // Lifecycle
   resetSession: () => void;
@@ -111,7 +122,12 @@ export const useGameSessionStore = create<GameSessionState>((set, get) => ({
     small: [3, 8],
     medium: [9, 14],
     large: [15, 20],
+    any: [3, 20],
   },
+  selectedSizeTier: 'medium',
+  ratioMean: 1.20,
+  ratioSpread: 0.30,
+  rollSeedOnGenerate: false,
 
   // Phase 1 Hint Initial State
   maxFreeHints: 3,
@@ -407,6 +423,22 @@ export const useGameSessionStore = create<GameSessionState>((set, get) => ({
         },
       };
     });
+  },
+
+  setSelectedSizeTier: (tier) => {
+    set({ selectedSizeTier: tier });
+  },
+
+  setRatioMean: (val) => {
+    set({ ratioMean: val });
+  },
+
+  setRatioSpread: (val) => {
+    set({ ratioSpread: Math.max(0.01, val) });
+  },
+
+  setRollSeedOnGenerate: (val) => {
+    set({ rollSeedOnGenerate: val });
   },
 
   resetSession: () => {

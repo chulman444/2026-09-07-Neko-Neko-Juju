@@ -3,6 +3,13 @@ import { useBoardStore } from '@/entities/board';
 import { useSolverStore, type HintAlgorithmMode } from '@/features/look-ahead-solver';
 import { useGameSessionStore, type ComboConfig } from '../model/gameSessionStore';
 
+function sampleNormal(mean: number, stdDev: number): number {
+  const u1 = Math.max(1e-7, Math.random());
+  const u2 = Math.random();
+  const z0 = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
+  return mean + z0 * stdDev;
+}
+
 export const DevTuner: React.FC = () => {
   // Board Store
   const cols = useBoardStore((state) => state.cols);
@@ -21,6 +28,10 @@ export const DevTuner: React.FC = () => {
   const maxCountdown = useGameSessionStore((state) => state.maxCountdown);
   const timerMultiplier = useGameSessionStore((state) => state.timerMultiplier);
   const boardSizeRanges = useGameSessionStore((state) => state.boardSizeRanges);
+  const selectedSizeTier = useGameSessionStore((state) => state.selectedSizeTier);
+  const ratioMean = useGameSessionStore((state) => state.ratioMean);
+  const ratioSpread = useGameSessionStore((state) => state.ratioSpread);
+  const rollSeedOnGenerate = useGameSessionStore((state) => state.rollSeedOnGenerate);
   const maxFreeHints = useGameSessionStore((state) => state.maxFreeHints);
   const freeHintInterval = useGameSessionStore((state) => state.freeHintInterval);
   const baseSecondsPerTile = useGameSessionStore((state) => state.baseSecondsPerTile);
@@ -32,6 +43,10 @@ export const DevTuner: React.FC = () => {
   const setMaxCountdown = useGameSessionStore((state) => state.setMaxCountdown);
   const setTimerMultiplier = useGameSessionStore((state) => state.setTimerMultiplier);
   const setBoardSizeRange = useGameSessionStore((state) => state.setBoardSizeRange);
+  const setSelectedSizeTier = useGameSessionStore((state) => state.setSelectedSizeTier);
+  const setRatioMean = useGameSessionStore((state) => state.setRatioMean);
+  const setRatioSpread = useGameSessionStore((state) => state.setRatioSpread);
+  const setRollSeedOnGenerate = useGameSessionStore((state) => state.setRollSeedOnGenerate);
   const setMaxFreeHints = useGameSessionStore((state) => state.setMaxFreeHints);
   const setFreeHintInterval = useGameSessionStore((state) => state.setFreeHintInterval);
   const setBaseSecondsPerTile = useGameSessionStore((state) => state.setBaseSecondsPerTile);
@@ -59,15 +74,42 @@ export const DevTuner: React.FC = () => {
     useSolverStore.getState().recalculate(useBoardStore.getState().matrix, useBoardStore.getState().seed);
   };
 
-  const handleGenerateBoardSize = (min: number, max: number) => {
-    const low = Math.min(min, max);
-    const high = Math.max(min, max);
+  const handleGenerateBoardSize = () => {
+    const [minVal, maxVal] = boardSizeRanges[selectedSizeTier];
+    const low = Math.min(minVal, maxVal);
+    const high = Math.max(minVal, maxVal);
     const baseSize = Math.floor(Math.random() * (high - low + 1)) + low;
-    // Probabilistic aspect ratio sampled from triangular distribution centered at 1.7 (spanning 1.3 to 2.1)
-    const ratioJitter = (Math.random() + Math.random() - 1) * 0.4;
-    const sampledRatio = 1.7 + ratioJitter;
-    const nextCols = Math.min(20, Math.max(3, Math.round(baseSize * sampledRatio)));
-    const nextRows = baseSize;
+
+    // Sample aspect ratio from normal distribution (bell curve)
+    const sampledRatio = Math.max(0.4, Math.min(2.5, sampleNormal(ratioMean, ratioSpread)));
+
+    let nextCols: number;
+    let nextRows: number;
+
+    if (sampledRatio >= 1.0) {
+      // Landscape or Square
+      nextRows = baseSize;
+      nextCols = Math.round(nextRows * sampledRatio);
+      if (nextCols > 20) {
+        nextRows = Math.max(3, Math.round(20 / sampledRatio));
+        nextCols = 20;
+      }
+    } else {
+      // Portrait
+      nextCols = baseSize;
+      nextRows = Math.round(nextCols / sampledRatio);
+      if (nextRows > 20) {
+        nextCols = Math.max(3, Math.round(20 * sampledRatio));
+        nextRows = 20;
+      }
+    }
+
+    nextCols = Math.min(20, Math.max(3, nextCols));
+    nextRows = Math.min(20, Math.max(3, nextRows));
+
+    if (rollSeedOnGenerate) {
+      generateNewBoard();
+    }
 
     handleUpdateDimensions(nextCols, nextRows);
   };
@@ -141,15 +183,39 @@ export const DevTuner: React.FC = () => {
             </div>
           </div>
 
-          {/* Tiers */}
-          <div className="flex flex-col gap-2">
-            {(['small', 'medium', 'large'] as const).map((tier) => {
+          {/* 4 Tiers with Radio Buttons */}
+          <div className="flex flex-col gap-1.5">
+            <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">
+              Size Tiers
+            </span>
+            {(['small', 'medium', 'large', 'any'] as const).map((tier) => {
               const [minVal, maxVal] = boardSizeRanges[tier];
+              const isSelected = selectedSizeTier === tier;
               const tierLabel = tier.charAt(0).toUpperCase() + tier.slice(1);
               return (
-                <div key={tier} className="flex items-center justify-between gap-2">
-                  <span className="text-xs font-semibold text-zinc-300 w-16">{tierLabel}</span>
-                  <div className="flex items-center gap-1.5 font-mono text-xs text-zinc-400">
+                <label
+                  key={tier}
+                  className={`flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg border transition cursor-pointer ${
+                    isSelected
+                      ? 'bg-amber-500/15 border-amber-500/40 text-amber-300 font-bold'
+                      : 'bg-zinc-850/40 border-zinc-750 text-zinc-300 hover:bg-zinc-800'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="boardSizeTier"
+                      checked={isSelected}
+                      onChange={() => setSelectedSizeTier(tier)}
+                      className="accent-amber-500 cursor-pointer"
+                    />
+                    <span className="text-xs">{tierLabel}</span>
+                  </div>
+
+                  <div
+                    className="flex items-center gap-1.5 font-mono text-xs text-zinc-400 font-normal"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <span>Min:</span>
                     <input
                       type="number"
@@ -169,28 +235,76 @@ export const DevTuner: React.FC = () => {
                       className="w-12 bg-zinc-850 border border-zinc-700 rounded px-1.5 py-0.5 text-right font-mono text-xs text-white focus:border-amber-500 focus:outline-none"
                     />
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => handleGenerateBoardSize(minVal, maxVal)}
-                    className="px-2.5 py-1 text-xs font-bold rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 transition cursor-pointer shrink-0"
-                    title={`Generate random ${tierLabel} board maintaining seed string`}
-                  >
-                    🎲 {tierLabel}
-                  </button>
-                </div>
+                </label>
               );
             })}
           </div>
 
-          {/* Randomize Any Size */}
-          <button
-            type="button"
-            onClick={() => handleGenerateBoardSize(3, 20)}
-            className="w-full py-1.5 text-xs font-bold rounded-lg bg-zinc-750 hover:bg-zinc-700 text-zinc-200 border border-zinc-600 transition cursor-pointer"
-            title="Pick random base size from 3 to 20 with ~1.7:1 probabilistic aspect ratio"
-          >
-            🎲 Randomize Any Size (3-20)
-          </button>
+          {/* Aspect Ratio Bell Curve Tuning */}
+          <div className="flex flex-col gap-2.5 pt-2 border-t border-zinc-700/60">
+            <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">
+              Aspect Ratio (Bell Curve)
+            </span>
+
+            <label className="flex flex-col gap-1">
+              <div className="flex justify-between text-xs">
+                <span className="text-zinc-300">
+                  Ratio Mean (μ): <span className="text-[10px] text-zinc-400">{ratioMean < 0.95 ? 'Tall' : ratioMean > 1.05 ? 'Wide' : 'Square'}</span>
+                </span>
+                <span className="font-mono font-bold text-amber-400">{ratioMean.toFixed(2)}</span>
+              </div>
+              <input
+                type="range"
+                min="0.6"
+                max="2.0"
+                step="0.05"
+                value={ratioMean}
+                onChange={(e) => setRatioMean(parseFloat(e.target.value))}
+                className="accent-amber-500 cursor-pointer"
+              />
+            </label>
+
+            <label className="flex flex-col gap-1">
+              <div className="flex justify-between text-xs">
+                <span className="text-zinc-300">
+                  Ratio Spread (σ): <span className="text-[10px] text-zinc-400">{ratioSpread <= 0.15 ? 'Tight' : ratioSpread >= 0.4 ? 'Diverse' : 'Balanced'}</span>
+                </span>
+                <span className="font-mono font-bold text-amber-400">{ratioSpread.toFixed(2)}</span>
+              </div>
+              <input
+                type="range"
+                min="0.05"
+                max="0.60"
+                step="0.05"
+                value={ratioSpread}
+                onChange={(e) => setRatioSpread(parseFloat(e.target.value))}
+                className="accent-amber-500 cursor-pointer"
+              />
+            </label>
+          </div>
+
+          {/* Generate Action Bar */}
+          <div className="flex items-center gap-3 pt-2 border-t border-zinc-700/60">
+            <button
+              type="button"
+              onClick={handleGenerateBoardSize}
+              className="flex-1 py-2 text-xs font-bold rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 transition cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
+              title="Generate a board using the selected size tier and aspect ratio bell curve"
+            >
+              <span>🎲</span>
+              <span>Generate Board</span>
+            </button>
+
+            <label className="flex items-center gap-1.5 cursor-pointer select-none shrink-0" title="Also roll a new random seed when generating">
+              <input
+                type="checkbox"
+                checked={rollSeedOnGenerate}
+                onChange={(e) => setRollSeedOnGenerate(e.target.checked)}
+                className="accent-amber-500 cursor-pointer rounded"
+              />
+              <span className="text-xs font-medium text-zinc-300">Roll seed</span>
+            </label>
+          </div>
 
           {/* Timer Multiplier and Cap Calculation */}
           <div className="flex flex-col gap-2.5 pt-2 border-t border-zinc-700/60">
