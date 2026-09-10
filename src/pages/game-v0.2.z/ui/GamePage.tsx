@@ -91,12 +91,11 @@ export const GamePage: React.FC = () => {
             />
           </div>
           <HintBar />
-          {noHintsAvailableMsg ? (
-            <div className="text-[10px] font-bold text-zinc-500 bg-zinc-200/50 dark:bg-zinc-800/50 px-2 py-0.5 rounded-full border border-zinc-300 dark:border-zinc-700">
+          <ComboBar />
+          {noHintsAvailableMsg && (
+            <div className="text-[10px] font-bold text-zinc-500 bg-zinc-200/50 dark:bg-zinc-800/50 px-2 py-0.5 rounded-full border border-zinc-300 dark:border-zinc-700 animate-in fade-in duration-200">
               {noHintsAvailableMsg}
             </div>
-          ) : (
-            <ComboBar />
           )}
         </div>
 

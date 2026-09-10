@@ -1,6 +1,15 @@
 import { create } from 'zustand';
-import type { TileCoord } from '@/entities/board';
-import { useSolverStore } from '@/features/look-ahead-solver';
+import { useBoardStore, type TileCoord } from '@/entities/board';
+import { useSolverStore, findClearableCombinationsOnly, type SolverCombination } from '@/features/look-ahead-solver';
+
+function getClearableHints(): SolverCombination[] {
+  const solverStore = useSolverStore.getState();
+  if (solverStore.hintMode === 'default' && solverStore.isCalculated) {
+    return solverStore.combinations;
+  }
+  const matrix = useBoardStore.getState().matrix;
+  return findClearableCombinationsOnly(matrix);
+}
 
 export interface ComboConfig {
   drainExponent: number;
@@ -56,7 +65,7 @@ export interface GameSessionState {
   registerMatch: (clearedTileCount: number) => void;
   setHighlightedTiles: (tiles: TileCoord[] | ((prev: TileCoord[]) => TileCoord[])) => void;
   removeClearedTiles: (clearedTiles: TileCoord[]) => void;
-  triggerHint: () => void;
+  triggerHint: () => boolean;
 
   // Tuning Setters
   setMaxCountdown: (val: number) => void;
@@ -124,6 +133,16 @@ export const useGameSessionStore = create<GameSessionState>((set, get) => ({
       ),
     }));
     useSolverStore.getState().cascadeTiles(clearedTiles);
+
+    // Re-evaluate clearable hints after clearing tiles
+    const clearables = getClearableHints();
+    if (clearables.length > 0) {
+      if (get().noHintsAvailableMsg) {
+        set({ noHintsAvailableMsg: null });
+      }
+    } else if (!get().isPhase1Over) {
+      set({ noHintsAvailableMsg: 'No more hints available.' });
+    }
   },
 
   addTime: (seconds) => {
@@ -175,15 +194,13 @@ export const useGameSessionStore = create<GameSessionState>((set, get) => ({
   },
 
   triggerHint: () => {
-    const solverState = useSolverStore.getState();
-    const activeClearables = solverState.combinations.filter((c) => c.isActive && c.blockers.length === 0);
+    const activeClearables = getClearableHints();
 
     if (activeClearables.length === 0) {
       set({
         noHintsAvailableMsg: 'No more hints available.',
-        isPhase1Over: true,
       });
-      return;
+      return false;
     }
 
     set((state) => {
@@ -205,8 +222,13 @@ export const useGameSessionStore = create<GameSessionState>((set, get) => ({
         }
       });
 
-      return { highlightedTiles: merged };
+      return {
+        highlightedTiles: merged,
+        noHintsAvailableMsg: null,
+      };
     });
+
+    return true;
   },
 
   tick: (deltaSeconds: number) => {
@@ -219,6 +241,24 @@ export const useGameSessionStore = create<GameSessionState>((set, get) => ({
     let nextHintCountdown = state.hintCountdown;
     let nextHintPhaseStarted = state.hintPhaseStarted;
     let nextIsPhase1Over = state.isPhase1Over;
+    let nextComboCount = state.comboCount;
+    let nextComboPct = state.comboPct;
+
+    const clearableHints = getClearableHints();
+    const hasClearableHints = clearableHints.length > 0;
+
+    if (!hasClearableHints) {
+      // All active timers pause mid-countdown when no clearable hints are available!
+      if (!nextIsPhase1Over && state.noHintsAvailableMsg !== 'No more hints available.') {
+        set({ noHintsAvailableMsg: 'No more hints available.' });
+      }
+      return;
+    }
+
+    // Clearable hints exist: clear message if present
+    if (state.noHintsAvailableMsg) {
+      set({ noHintsAvailableMsg: null });
+    }
 
     // 1. Survival Timer Countdown (if not depleted)
     if (!state.isDepleted) {
@@ -234,8 +274,6 @@ export const useGameSessionStore = create<GameSessionState>((set, get) => ({
           nextHintPhaseStarted = true;
           nextHintsRemaining = nextHintsRemaining - 1;
           nextHintCountdown = state.freeHintInterval;
-
-          // Dispatch hint tile highlight immediately
           get().triggerHint();
 
           if (nextHintsRemaining <= 0) {
@@ -249,22 +287,25 @@ export const useGameSessionStore = create<GameSessionState>((set, get) => ({
       nextHintCountdown = state.hintCountdown - deltaSeconds;
 
       if (nextHintCountdown <= 0) {
-        // Trigger subsequent hint
-        get().triggerHint();
-        nextHintsRemaining = nextHintsRemaining - 1;
+        const triggered = get().triggerHint();
+        if (triggered) {
+          nextHintsRemaining = nextHintsRemaining - 1;
 
-        if (nextHintsRemaining <= 0) {
-          nextIsPhase1Over = true;
-          nextHintCountdown = 0;
+          // Phase 1 is strictly over ONLY when the final free triggered hint is consumed!
+          if (nextHintsRemaining <= 0) {
+            nextIsPhase1Over = true;
+            nextHintCountdown = 0;
+          } else {
+            nextHintCountdown = state.freeHintInterval;
+          }
         } else {
-          nextHintCountdown = state.freeHintInterval;
+          // If hint couldn't be triggered, hold at 0
+          nextHintCountdown = 0;
         }
       }
     }
 
     // 3. Combo Drain (runs whenever comboCount > 0)
-    let nextComboCount = state.comboCount;
-    let nextComboPct = state.comboPct;
     if (state.comboCount > 0) {
       const { fixedMinimalDrain, multiplier, drainExponent } = state.comboConfig;
       const drainRate = fixedMinimalDrain + multiplier * Math.pow(state.comboCount, drainExponent);
