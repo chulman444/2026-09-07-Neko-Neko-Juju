@@ -36,7 +36,6 @@ export const GamePage: React.FC = () => {
   const noHintsAvailableMsg = useGameSessionStore((state) => state.noHintsAvailableMsg);
 
   // Store Actions
-  const togglePause = useGameSessionStore((state) => state.togglePause);
   const registerMatch = useGameSessionStore((state) => state.registerMatch);
   const removeClearedTiles = useGameSessionStore((state) => state.removeClearedTiles);
   const resetSession = useGameSessionStore((state) => state.resetSession);
@@ -113,13 +112,6 @@ export const GamePage: React.FC = () => {
             }`}
           >
             🛠️ Dev Tools
-          </button>
-          <button
-            type="button"
-            onClick={togglePause}
-            className="px-3 py-1.5 text-xs font-bold rounded-lg border border-amber-900/20 bg-amber-50 hover:bg-amber-100 text-amber-950 dark:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700 transition cursor-pointer"
-          >
-            {isPaused ? '▶ Resume' : '⏸ Pause'}
           </button>
           {retryAllowed && (
             <button

@@ -180,8 +180,8 @@ export const useGameSessionStore = create<GameSessionState>((set, get) => ({
 
     if (activeClearables.length === 0) {
       set({
-        noHintsAvailableMsg: 'No more combinations available. Phase 1 halted.',
-        isPaused: true,
+        noHintsAvailableMsg: 'No more hints available.',
+        isPhase1Over: true,
       });
       return;
     }
