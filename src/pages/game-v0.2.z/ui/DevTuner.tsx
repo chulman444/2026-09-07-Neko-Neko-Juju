@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useBoardStore } from '@/entities/board';
-import { useSolverStore } from '@/features/look-ahead-solver';
+import { useSolverStore, type HintAlgorithmMode } from '@/features/look-ahead-solver';
 import { useGameSessionStore, type ComboConfig } from '../model/gameSessionStore';
 
 export const DevTuner: React.FC = () => {
@@ -9,6 +9,10 @@ export const DevTuner: React.FC = () => {
   const seedHistory = useBoardStore((state) => state.seedHistory);
   const setBoardSeed = useBoardStore((state) => state.setSeed);
   const generateNewBoard = useBoardStore((state) => state.generateNewBoard);
+
+  // Solver Store State & Actions
+  const hintMode = useSolverStore((state) => state.hintMode);
+  const setHintMode = useSolverStore((state) => state.setHintMode);
 
   // Game Session Store State
   const maxCountdown = useGameSessionStore((state) => state.maxCountdown);
@@ -36,13 +40,13 @@ export const DevTuner: React.FC = () => {
   const handleLoadSeed = (seedToLoad: string) => {
     setBoardSeed(seedToLoad);
     resetSession();
-    useSolverStore.getState().recalculate(useBoardStore.getState().matrix);
+    useSolverStore.getState().recalculate(useBoardStore.getState().matrix, seedToLoad);
   };
 
   const handleRollNewSeed = () => {
     generateNewBoard();
     resetSession();
-    useSolverStore.getState().recalculate(useBoardStore.getState().matrix);
+    useSolverStore.getState().recalculate(useBoardStore.getState().matrix, useBoardStore.getState().seed);
   };
 
   const handleLoadCustomSeed = () => {
@@ -218,6 +222,31 @@ export const DevTuner: React.FC = () => {
             />
             <div className="w-9 h-5 bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-500"></div>
           </label>
+        </div>
+      </div>
+
+      {/* Hint Algorithm Mode */}
+      <div>
+        <h4 className="font-bold text-[11px] text-amber-400/90 uppercase tracking-wider mb-2">
+          Hint Algorithm Mode
+        </h4>
+        <div className="flex flex-col gap-2.5 bg-zinc-800/60 p-3 rounded-xl border border-zinc-700/70">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-zinc-200">Algorithm</span>
+            <select
+              value={hintMode}
+              onChange={(e) => setHintMode(e.target.value as HintAlgorithmMode)}
+              className="bg-zinc-800 border border-zinc-700 rounded-lg px-2.5 py-1 text-xs font-mono text-white focus:border-amber-500 focus:outline-none cursor-pointer"
+            >
+              <option value="default">Default (On-the-fly)</option>
+              <option value="all_combinations">All Combinations (Dev)</option>
+            </select>
+          </div>
+          <p className="text-[11px] text-zinc-400 leading-tight">
+            {hintMode === 'default'
+              ? '⚡ Fast on-the-fly solver evaluating only clearable moves without cascade lag.'
+              : '🔬 Evaluates all combinations (clearable + blocked) on initial seed and cascades in O(1).'}
+          </p>
         </div>
       </div>
 

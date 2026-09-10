@@ -22,7 +22,7 @@ export const GamePage: React.FC = () => {
 
   // Initial solver recalculation on mount
   useEffect(() => {
-    useSolverStore.getState().recalculate(useBoardStore.getState().matrix);
+    useSolverStore.getState().recalculate(useBoardStore.getState().matrix, useBoardStore.getState().seed);
   }, []);
 
   // Game Session Selectors (Only what GamePage itself needs)
@@ -52,13 +52,13 @@ export const GamePage: React.FC = () => {
   const handleRetryGame = useCallback(() => {
     restartCurrentBoard();
     resetSession();
-    useSolverStore.getState().recalculate(useBoardStore.getState().matrix);
+    useSolverStore.getState().recalculate(useBoardStore.getState().matrix, useBoardStore.getState().seed);
   }, [restartCurrentBoard, resetSession]);
 
   const handleNewGame = useCallback(() => {
     generateNewBoard();
     resetSession();
-    useSolverStore.getState().recalculate(useBoardStore.getState().matrix);
+    useSolverStore.getState().recalculate(useBoardStore.getState().matrix, useBoardStore.getState().seed);
   }, [generateNewBoard, resetSession]);
 
   return (

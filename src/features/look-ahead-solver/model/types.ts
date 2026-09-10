@@ -28,3 +28,5 @@ export interface DependencyCell {
 }
 
 export type SolverListType = 'clearable' | 'blocked';
+
+export type HintAlgorithmMode = 'default' | 'all_combinations';

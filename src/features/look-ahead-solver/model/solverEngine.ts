@@ -359,31 +359,281 @@ export function runSolverEngine(board: number[][]): {
   };
 }
 
+export function findClearableCombinationsOnly(board: number[][]): SolverCombination[] {
+  const rows = board.length;
+  const cols = rows > 0 ? (board[0]?.length ?? 0) : 0;
+  if (rows === 0 || cols === 0) return [];
+
+  const sat = calculateSAT(board, rows, cols);
+  const clearableCombinations: SolverCombination[] = [];
+  const seenKeys = new Set<string>();
+
+  // 1. Scan tight rectangles [r1..r2, c1..c2]
+  for (let r1 = 0; r1 < rows; r1++) {
+    for (let r2 = r1; r2 < rows; r2++) {
+      for (let c1 = 0; c1 < cols; c1++) {
+        for (let c2 = c1; c2 < cols; c2++) {
+          if (r1 === r2 && c1 === c2) continue; // 1x1 cannot sum to 10
+
+          const sum = querySAT(r1, c1, r2, c2, sat);
+          if (sum > 10) {
+            // As c2 increases, sum is monotonically non-decreasing because board[r][c] >= 0
+            break;
+          }
+
+          if (sum === 10) {
+            // Check tightness in O(1): every boundary edge must have at least one non-zero cell
+            const topRowHasTile = querySAT(r1, c1, r1, c2, sat) > 0;
+            const bottomRowHasTile = querySAT(r2, c1, r2, c2, sat) > 0;
+            const leftColHasTile = querySAT(r1, c1, r2, c1, sat) > 0;
+            const rightColHasTile = querySAT(r1, c2, r2, c2, sat) > 0;
+
+            if (topRowHasTile && bottomRowHasTile && leftColHasTile && rightColHasTile) {
+              const required: SolverTileCoord[] = [];
+              const digits: number[] = [];
+
+              for (let r = r1; r <= r2; r++) {
+                for (let c = c1; c <= c2; c++) {
+                  const val = board[r]?.[c] ?? 0;
+                  if (val > 0) {
+                    required.push({ row: r, col: c });
+                    digits.push(val);
+                  }
+                }
+              }
+
+              if (required.length >= 2) {
+                const uniqueDigits = [...new Set(digits)].sort((a, b) => b - a);
+                const familyName = `${uniqueDigits.join('-')}-Family`;
+                const shape = 'Rectangle/Line';
+                const key = `${shape}:${required.map((t) => `${t.row},${t.col}`).join(';')}`;
+
+                if (!seenKeys.has(key)) {
+                  seenKeys.add(key);
+                  clearableCombinations.push({
+                    id: clearableCombinations.length + 1,
+                    family: familyName,
+                    shape,
+                    required,
+                    blockers: [],
+                    isActive: true,
+                  });
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // 2. Scan diagonals Down-Right
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      if ((board[r]?.[c] ?? 0) === 0) continue; // Start must be non-zero
+
+      let sum = board[r][c];
+      const maxLen = Math.min(rows - r, cols - c);
+
+      for (let len = 2; len <= maxLen; len++) {
+        const endR = r + len - 1;
+        const endC = c + len - 1;
+        const endVal = board[endR]?.[endC] ?? 0;
+        sum += endVal;
+
+        if (sum > 10) break;
+
+        if (sum === 10 && endVal > 0) {
+          const required: SolverTileCoord[] = [];
+          const digits: number[] = [];
+
+          for (let i = 0; i < len; i++) {
+            const tr = r + i;
+            const tc = c + i;
+            const val = board[tr]?.[tc] ?? 0;
+            if (val > 0) {
+              required.push({ row: tr, col: tc });
+              digits.push(val);
+            }
+          }
+
+          if (required.length >= 2) {
+            const uniqueDigits = [...new Set(digits)].sort((a, b) => b - a);
+            const familyName = `${uniqueDigits.join('-')}-Family`;
+            const shape = 'Diagonal Down-Right';
+            const key = `${shape}:${required.map((t) => `${t.row},${t.col}`).join(';')}`;
+
+            if (!seenKeys.has(key)) {
+              seenKeys.add(key);
+              clearableCombinations.push({
+                id: clearableCombinations.length + 1,
+                family: familyName,
+                shape,
+                required,
+                blockers: [],
+                isActive: true,
+              });
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // 3. Scan diagonals Down-Left
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      if ((board[r]?.[c] ?? 0) === 0) continue; // Start must be non-zero
+
+      let sum = board[r][c];
+      const maxLen = Math.min(rows - r, c + 1);
+
+      for (let len = 2; len <= maxLen; len++) {
+        const endR = r + len - 1;
+        const endC = c - len + 1;
+        const endVal = board[endR]?.[endC] ?? 0;
+        sum += endVal;
+
+        if (sum > 10) break;
+
+        if (sum === 10 && endVal > 0) {
+          const required: SolverTileCoord[] = [];
+          const digits: number[] = [];
+
+          for (let i = 0; i < len; i++) {
+            const tr = r + i;
+            const tc = c - i;
+            const val = board[tr]?.[tc] ?? 0;
+            if (val > 0) {
+              required.push({ row: tr, col: tc });
+              digits.push(val);
+            }
+          }
+
+          if (required.length >= 2) {
+            const uniqueDigits = [...new Set(digits)].sort((a, b) => b - a);
+            const familyName = `${uniqueDigits.join('-')}-Family`;
+            const shape = 'Diagonal Down-Left';
+            const key = `${shape}:${required.map((t) => `${t.row},${t.col}`).join(';')}`;
+
+            if (!seenKeys.has(key)) {
+              seenKeys.add(key);
+              clearableCombinations.push({
+                id: clearableCombinations.length + 1,
+                family: familyName,
+                shape,
+                required,
+                blockers: [],
+                isActive: true,
+              });
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return clearableCombinations;
+}
+
+export function buildBlockerLookup(combinations: SolverCombination[]): {
+  requiredMap: Map<string, SolverCombination[]>;
+  blockerMap: Map<string, SolverCombination[]>;
+} {
+  const requiredMap = new Map<string, SolverCombination[]>();
+  const blockerMap = new Map<string, SolverCombination[]>();
+
+  combinations.forEach((c) => {
+    c.required.forEach((t) => {
+      const key = `${t.row},${t.col}`;
+      let list = requiredMap.get(key);
+      if (!list) {
+        list = [];
+        requiredMap.set(key, list);
+      }
+      list.push(c);
+    });
+
+    c.blockers.forEach((t) => {
+      const key = `${t.row},${t.col}`;
+      let list = blockerMap.get(key);
+      if (!list) {
+        list = [];
+        blockerMap.set(key, list);
+      }
+      list.push(c);
+    });
+  });
+
+  return { requiredMap, blockerMap };
+}
+
 export function cascadeClearTiles(
   clearedTiles: SolverTileCoord[],
   combinations: SolverCombination[],
-  dependencyGraph: DependencyCell[][]
+  dependencyGraph?: DependencyCell[][],
+  lookupMaps?: {
+    requiredMap: Map<string, SolverCombination[]>;
+    blockerMap: Map<string, SolverCombination[]>;
+  }
 ): SolverCombination[] {
-  clearedTiles.forEach((tile) => {
-    const { row, col } = tile;
-    const cellGraph = dependencyGraph[row]?.[col];
-    if (!cellGraph) return;
+  // 1. Direct O(1) dictionary lookup if provided
+  if (lookupMaps) {
+    const { requiredMap, blockerMap } = lookupMaps;
+    clearedTiles.forEach((tile) => {
+      const key = `${tile.row},${tile.col}`;
 
-    // Cascade A: Invalidate overlapping matches relying on this cell
-    cellGraph.requiredIn.forEach((matchId) => {
-      const linkedMatch = combinations.find((c) => c.id === matchId);
-      if (linkedMatch) linkedMatch.isActive = false;
-    });
+      const reqList = requiredMap.get(key);
+      if (reqList) {
+        for (let i = 0; i < reqList.length; i++) {
+          reqList[i].isActive = false;
+        }
+      }
 
-    // Cascade B: Filter out elements from blocking vectors
-    cellGraph.blockedIn.forEach((matchId) => {
-      const linkedMatch = combinations.find((c) => c.id === matchId);
-      if (linkedMatch && linkedMatch.isActive) {
-        linkedMatch.blockers = linkedMatch.blockers.filter(
-          (b) => !(b.row === row && b.col === col)
-        );
+      const blockList = blockerMap.get(key);
+      if (blockList) {
+        for (let i = 0; i < blockList.length; i++) {
+          const combo = blockList[i];
+          if (combo.isActive) {
+            combo.blockers = combo.blockers.filter(
+              (b) => !(b.row === tile.row && b.col === tile.col)
+            );
+          }
+        }
       }
     });
+
+    return combinations.filter((c) => c.isActive);
+  }
+
+  // 2. O(1) by-id lookup if dependencyGraph is provided
+  const combosById = new Map<number, SolverCombination>();
+  for (let i = 0; i < combinations.length; i++) {
+    combosById.set(combinations[i].id, combinations[i]);
+  }
+
+  clearedTiles.forEach((tile) => {
+    const { row, col } = tile;
+    if (dependencyGraph) {
+      const cellGraph = dependencyGraph[row]?.[col];
+      if (cellGraph) {
+        // Invalidate overlapping matches relying on this cell
+        cellGraph.requiredIn.forEach((matchId) => {
+          const linkedMatch = combosById.get(matchId);
+          if (linkedMatch) linkedMatch.isActive = false;
+        });
+
+        // Filter out cleared element from blocking vectors
+        cellGraph.blockedIn.forEach((matchId) => {
+          const linkedMatch = combosById.get(matchId);
+          if (linkedMatch && linkedMatch.isActive) {
+            linkedMatch.blockers = linkedMatch.blockers.filter(
+              (b) => !(b.row === row && b.col === col)
+            );
+          }
+        });
+      }
+    }
   });
 
   return combinations.filter((c) => c.isActive);

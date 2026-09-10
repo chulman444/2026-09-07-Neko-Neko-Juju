@@ -123,6 +123,7 @@ export const useGameSessionStore = create<GameSessionState>((set, get) => ({
         (p) => !clearedTiles.some((c) => c.row === p.row && c.col === p.col)
       ),
     }));
+    useSolverStore.getState().cascadeTiles(clearedTiles);
   },
 
   addTime: (seconds) => {
