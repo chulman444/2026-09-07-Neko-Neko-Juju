@@ -4,9 +4,9 @@ import { useBoardStore, calculateBoardMetrics } from '@/entities/board';
 export const BoardMetricsCard: React.FC = () => {
   const cols = useBoardStore((state) => state.cols);
   const rows = useBoardStore((state) => state.rows);
-  const matrix = useBoardStore((state) => state.matrix);
+  const initialMatrix = useBoardStore((state) => state.initialMatrix);
 
-  const boardMetrics = calculateBoardMetrics(matrix);
+  const boardMetrics = calculateBoardMetrics(initialMatrix);
 
   return (
     <div className="grid grid-cols-3 gap-2 bg-zinc-850/80 p-2.5 rounded-lg border border-zinc-750 text-center font-mono">

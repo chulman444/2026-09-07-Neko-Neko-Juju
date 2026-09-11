@@ -39,4 +39,27 @@ describe('boardStore - setDimensions', () => {
 
     expect(useBoardStore.getState().clearingAnimations).toEqual([]);
   });
+
+  it('preserves initialMatrix when clearTiles mutates live matrix', () => {
+    useBoardStore.getState().setDimensions(5, 5);
+    const originalInitial = useBoardStore.getState().initialMatrix.map((r) => [...r]);
+    const firstTileVal = originalInitial[0]![0]!;
+    expect(firstTileVal).toBeGreaterThan(0);
+
+    // Clear the tile at (0, 0)
+    useBoardStore.getState().clearTiles([{ col: 0, row: 0 }]);
+
+    const stateAfterClear = useBoardStore.getState();
+    // Live matrix tile should be 0
+    expect(stateAfterClear.matrix[0]![0]).toBe(0);
+    // initialMatrix tile must remain unchanged
+    expect(stateAfterClear.initialMatrix[0]![0]).toBe(firstTileVal);
+    expect(stateAfterClear.initialMatrix).toEqual(originalInitial);
+
+    // Restarting board should restore matrix from initialMatrix
+    useBoardStore.getState().restartCurrentBoard();
+    const stateAfterRestart = useBoardStore.getState();
+    expect(stateAfterRestart.matrix[0]![0]).toBe(firstTileVal);
+    expect(stateAfterRestart.matrix).toEqual(originalInitial);
+  });
 });

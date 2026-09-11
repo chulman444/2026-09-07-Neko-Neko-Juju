@@ -14,6 +14,7 @@ export interface BoardState {
   maxNum: number;
   seed: string;
   seedHistory: string[];
+  initialMatrix: number[][];
   matrix: number[][];
   clearingAnimations: ClearingAnimation[];
   tileWeights?: number[];
@@ -37,6 +38,13 @@ export interface BoardState {
 }
 
 const initialSeed = generateSeed();
+const initialGeneratedMatrix = createBoardMatrix(
+  DEFAULT_CONFIG.cols,
+  DEFAULT_CONFIG.rows,
+  DEFAULT_CONFIG.minNum,
+  DEFAULT_CONFIG.maxNum,
+  initialSeed
+);
 
 export const useBoardStore = create<BoardState>((set, get) => ({
   cols: DEFAULT_CONFIG.cols,
@@ -48,30 +56,32 @@ export const useBoardStore = create<BoardState>((set, get) => ({
   maxNum: DEFAULT_CONFIG.maxNum,
   seed: initialSeed,
   seedHistory: [initialSeed],
-  matrix: createBoardMatrix(
-    DEFAULT_CONFIG.cols,
-    DEFAULT_CONFIG.rows,
-    DEFAULT_CONFIG.minNum,
-    DEFAULT_CONFIG.maxNum,
-    initialSeed
-  ),
+  initialMatrix: initialGeneratedMatrix,
+  matrix: initialGeneratedMatrix.map((r) => [...r]),
   clearingAnimations: [],
   tileWeights: undefined,
   activeTilt: 0,
 
   setDimensions: (cols, rows) => {
     const { minNum, maxNum, seed, tileWeights } = get();
-    const matrix = createBoardMatrix(cols, rows, minNum, maxNum, seed, tileWeights);
-    set({ cols, rows, matrix, clearingAnimations: [] });
+    const initialMatrix = createBoardMatrix(cols, rows, minNum, maxNum, seed, tileWeights);
+    set({
+      cols,
+      rows,
+      initialMatrix,
+      matrix: initialMatrix.map((r) => [...r]),
+      clearingAnimations: [],
+    });
   },
 
   setTileWeights: (tileWeights, activeTilt) => {
     const { cols, rows, minNum, maxNum, seed } = get();
-    const matrix = createBoardMatrix(cols, rows, minNum, maxNum, seed, tileWeights);
+    const initialMatrix = createBoardMatrix(cols, rows, minNum, maxNum, seed, tileWeights);
     set({
       tileWeights,
       activeTilt: activeTilt !== undefined ? activeTilt : get().activeTilt,
-      matrix,
+      initialMatrix,
+      matrix: initialMatrix.map((r) => [...r]),
       clearingAnimations: [],
     });
   },
@@ -92,33 +102,52 @@ export const useBoardStore = create<BoardState>((set, get) => ({
 
   setSeed: (seed) => {
     const { cols, rows, minNum, maxNum, seedHistory, tileWeights } = get();
-    const matrix = createBoardMatrix(cols, rows, minNum, maxNum, seed, tileWeights);
+    const initialMatrix = createBoardMatrix(cols, rows, minNum, maxNum, seed, tileWeights);
     const updatedHistory = seedHistory.includes(seed)
       ? seedHistory
       : [seed, ...seedHistory].slice(0, 50);
-    set({ seed, matrix, seedHistory: updatedHistory, clearingAnimations: [] });
+    set({
+      seed,
+      initialMatrix,
+      matrix: initialMatrix.map((r) => [...r]),
+      seedHistory: updatedHistory,
+      clearingAnimations: [],
+    });
   },
 
   generateNewBoard: (forcedSeed) => {
     const { cols, rows, minNum, maxNum, seedHistory, tileWeights } = get();
     const newSeed = forcedSeed || generateSeed();
-    const matrix = createBoardMatrix(cols, rows, minNum, maxNum, newSeed, tileWeights);
+    const initialMatrix = createBoardMatrix(cols, rows, minNum, maxNum, newSeed, tileWeights);
     const updatedHistory = seedHistory.includes(newSeed)
       ? seedHistory
       : [newSeed, ...seedHistory].slice(0, 50);
-    set({ seed: newSeed, matrix, seedHistory: updatedHistory, clearingAnimations: [] });
+    set({
+      seed: newSeed,
+      initialMatrix,
+      matrix: initialMatrix.map((r) => [...r]),
+      seedHistory: updatedHistory,
+      clearingAnimations: [],
+    });
   },
 
   restartCurrentBoard: () => {
-    const { cols, rows, minNum, maxNum, seed, tileWeights } = get();
-    const matrix = createBoardMatrix(cols, rows, minNum, maxNum, seed, tileWeights);
-    set({ matrix, clearingAnimations: [] });
+    const { initialMatrix } = get();
+    set({
+      matrix: initialMatrix.map((r) => [...r]),
+      clearingAnimations: [],
+    });
   },
 
   setMatrix: (matrix) => {
     const rows = matrix.length;
     const cols = rows > 0 ? (matrix[0]?.length ?? 0) : 0;
-    set({ matrix, rows, cols });
+    set({
+      initialMatrix: matrix.map((r) => [...r]),
+      matrix: matrix.map((r) => [...r]),
+      rows,
+      cols,
+    });
   },
 
   clearTiles: (tiles) => {

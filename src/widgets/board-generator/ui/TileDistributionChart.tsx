@@ -4,8 +4,8 @@ import { useBoardStore, calculateBoardMetrics } from '@/entities/board';
 const DIGITS = [1, 2, 3, 4, 5, 6, 7, 8, 9] as const;
 
 export const TileDistributionChart: React.FC = () => {
-  const matrix = useBoardStore((state) => state.matrix);
-  const boardMetrics = calculateBoardMetrics(matrix);
+  const initialMatrix = useBoardStore((state) => state.initialMatrix);
+  const boardMetrics = calculateBoardMetrics(initialMatrix);
 
   return (
     <div className="flex flex-col gap-1">
