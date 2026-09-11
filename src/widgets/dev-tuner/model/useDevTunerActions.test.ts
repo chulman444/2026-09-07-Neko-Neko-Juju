@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { useBoardStore } from '@/entities/board';
-import { useGameSessionStore } from './gameSessionStore';
+import { useGameSessionStore } from '@/entities/game-session';
 import { useDevTunerActions } from './useDevTunerActions';
 
 describe('useDevTunerActions', () => {

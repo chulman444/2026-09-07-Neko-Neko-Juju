@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { useGameSessionStore } from './gameSessionStore';
+import { useGameSessionStore } from '@/entities/game-session';
 
 /**
  * Lightweight RAF driver that ticks the unified game session store.

@@ -1,5 +1,5 @@
 import React from 'react';
-import { useGameSessionStore, type ComboConfig } from '../../model/gameSessionStore';
+import { useGameSessionStore, type ComboConfig } from '@/entities/game-session';
 
 export const ComboRefillSection: React.FC = () => {
   const comboConfig = useGameSessionStore((state) => state.comboConfig);

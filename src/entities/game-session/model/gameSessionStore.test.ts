@@ -245,5 +245,3 @@ describe('gameSessionStore - Pause All Timers When Clearable Hints Exhausted', (
     expect(useGameSessionStore.getState().difficultyNoiseSpread).toBe(0);
   });
 });
-
-

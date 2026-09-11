@@ -1,5 +1,5 @@
 import React from 'react';
-import { useGameSessionStore } from '../../model/gameSessionStore';
+import { useGameSessionStore } from '@/entities/game-session';
 
 export const HintsConfigSection: React.FC = () => {
   const maxFreeHints = useGameSessionStore((state) => state.maxFreeHints);

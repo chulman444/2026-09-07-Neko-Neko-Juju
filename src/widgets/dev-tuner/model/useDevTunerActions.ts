@@ -1,6 +1,6 @@
 import { useBoardStore, generateLinearTileWeights } from '@/entities/board';
 import { useSolverStore } from '@/features/look-ahead-solver';
-import { useGameSessionStore } from './gameSessionStore';
+import { useGameSessionStore } from '@/entities/game-session';
 import { sampleNormal } from '../lib/sampleNormal';
 
 export function useDevTunerActions() {

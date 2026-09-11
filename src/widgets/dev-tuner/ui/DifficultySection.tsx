@@ -1,7 +1,7 @@
 import React from 'react';
 import { useBoardStore } from '@/entities/board';
-import { useGameSessionStore, type DifficultyTier } from '../../model/gameSessionStore';
-import { useDevTunerActions } from '../../model/useDevTunerActions';
+import { useGameSessionStore, type DifficultyTier } from '@/entities/game-session';
+import { useDevTunerActions } from '../model/useDevTunerActions';
 import { BoardMetricsCard } from './BoardMetricsCard';
 import { TileDistributionChart } from './TileDistributionChart';
 

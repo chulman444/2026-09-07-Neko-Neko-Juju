@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import type { TileCoord } from '@/entities/board';
 import { SolverPanelWidget } from '@/widgets/solver-panel';
+import { DevTunerWidget } from '@/widgets/dev-tuner';
 import type { SolverCombination } from '@/features/look-ahead-solver';
-import { useGameSessionStore } from '../model/gameSessionStore';
-import { DevTuner } from './DevTuner';
+import { useGameSessionStore } from '@/entities/game-session';
 
 export interface SidePanelProps {
   isOpen: boolean;
@@ -75,7 +75,7 @@ export const SidePanel: React.FC<SidePanelProps> = ({
       {/* Orchestrated Tool Content Area */}
       <div className="flex-1 overflow-y-auto p-4 text-zinc-200">
         {activeTab === 'tuner' ? (
-          <DevTuner />
+          <DevTunerWidget />
         ) : (
           <div className="w-full">
             <SolverPanelWidget

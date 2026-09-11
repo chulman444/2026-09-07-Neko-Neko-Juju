@@ -1,7 +1,7 @@
 import React from 'react';
 import { useBoardStore } from '@/entities/board';
-import { useGameSessionStore, type BoardSizeTier } from '../../model/gameSessionStore';
-import { useDevTunerActions } from '../../model/useDevTunerActions';
+import { useGameSessionStore, type BoardSizeTier } from '@/entities/game-session';
+import { useDevTunerActions } from '../model/useDevTunerActions';
 
 const SIZE_TIERS: readonly BoardSizeTier[] = ['small', 'medium', 'large', 'any'] as const;
 

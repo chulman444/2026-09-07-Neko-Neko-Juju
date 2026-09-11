@@ -18,8 +18,6 @@ describe('sampleNormal', () => {
     }
 
     const empiricalMean = sum / n;
-    // With 1000 samples and stdDev 0.25, standard error is 0.25 / sqrt(1000) ~ 0.008
-    // 0.1 margin is well beyond 6 sigma
     expect(empiricalMean).toBeGreaterThan(targetMean - 0.1);
     expect(empiricalMean).toBeLessThan(targetMean + 0.1);
   });

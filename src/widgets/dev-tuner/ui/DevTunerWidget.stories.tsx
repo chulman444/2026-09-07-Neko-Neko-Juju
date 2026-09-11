@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { DevTuner } from './DevTuner';
+import { DevTunerWidget } from './DevTunerWidget';
 
 const meta = {
-  title: 'Pages/Game-v0.2.z/DevTuner',
-  component: DevTuner,
+  title: 'Widgets/DevTuner/DevTunerWidget',
+  component: DevTunerWidget,
   parameters: {
     layout: 'centered',
   },
@@ -14,7 +14,7 @@ const meta = {
       </div>
     ),
   ],
-} satisfies Meta<typeof DevTuner>;
+} satisfies Meta<typeof DevTunerWidget>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;

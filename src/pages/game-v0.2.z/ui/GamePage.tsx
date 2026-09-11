@@ -4,7 +4,7 @@ import { GameBoardWidget } from '@/widgets/game-board';
 import { useBoardStore, type TileCoord } from '@/entities/board';
 import { useSolverStore } from '@/features/look-ahead-solver';
 import { Link } from '@/shared/lib/router';
-import { useGameSessionStore } from '../model/gameSessionStore';
+import { useGameSessionStore } from '@/entities/game-session';
 import { useGameSessionDriver } from '../model/useGameSessionDriver';
 import { ComboBar } from './ComboBar';
 import { HintBar } from './HintBar';

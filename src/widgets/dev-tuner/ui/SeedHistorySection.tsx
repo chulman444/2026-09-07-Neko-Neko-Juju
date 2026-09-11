@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useBoardStore } from '@/entities/board';
-import { useDevTunerActions } from '../../model/useDevTunerActions';
+import { useDevTunerActions } from '../model/useDevTunerActions';
 
 export const SeedHistorySection: React.FC = () => {
   const currentSeed = useBoardStore((state) => state.seed);
