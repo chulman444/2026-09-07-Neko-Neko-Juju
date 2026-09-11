@@ -38,6 +38,20 @@ export interface BoardSizeRanges {
   any: [number, number];
 }
 
+export interface TierAspectConfig {
+  ratioMean: number;
+  ratioSpread: number;
+}
+
+export type TierAspectConfigs = Record<BoardSizeTier, TierAspectConfig>;
+
+export const DEFAULT_TIER_ASPECT_CONFIGS: TierAspectConfigs = {
+  small: { ratioMean: 1.0, ratioSpread: 0.15 },
+  medium: { ratioMean: 1.35, ratioSpread: 0.25 },
+  large: { ratioMean: 1.65, ratioSpread: 0.3 },
+  any: { ratioMean: 1.25, ratioSpread: 0.35 },
+};
+
 export interface GameSessionState {
   // Session & Meta
   score: number;
@@ -56,8 +70,7 @@ export interface GameSessionState {
   timerMultiplier: number;
   boardSizeRanges: BoardSizeRanges;
   selectedSizeTier: BoardSizeTier;
-  ratioMean: number;
-  ratioSpread: number;
+  tierAspectConfigs: TierAspectConfigs;
   rollSeedOnGenerate: boolean;
 
   // Phase 1 Hint State
@@ -94,8 +107,8 @@ export interface GameSessionState {
   setTimerMultiplier: (val: number) => void;
   setBoardSizeRange: (tier: BoardSizeTier, index: 0 | 1, val: number) => void;
   setSelectedSizeTier: (tier: BoardSizeTier) => void;
-  setRatioMean: (val: number) => void;
-  setRatioSpread: (val: number) => void;
+  setTierRatioMean: (tier: BoardSizeTier, val: number) => void;
+  setTierRatioSpread: (tier: BoardSizeTier, val: number) => void;
   setRollSeedOnGenerate: (val: boolean) => void;
 
   // Lifecycle
@@ -125,8 +138,7 @@ export const useGameSessionStore = create<GameSessionState>((set, get) => ({
     any: [3, 20],
   },
   selectedSizeTier: 'medium',
-  ratioMean: 1.20,
-  ratioSpread: 0.30,
+  tierAspectConfigs: { ...DEFAULT_TIER_ASPECT_CONFIGS },
   rollSeedOnGenerate: false,
 
   // Phase 1 Hint Initial State
@@ -429,12 +441,28 @@ export const useGameSessionStore = create<GameSessionState>((set, get) => ({
     set({ selectedSizeTier: tier });
   },
 
-  setRatioMean: (val) => {
-    set({ ratioMean: val });
+  setTierRatioMean: (tier, val) => {
+    set((state) => ({
+      tierAspectConfigs: {
+        ...state.tierAspectConfigs,
+        [tier]: {
+          ...state.tierAspectConfigs[tier],
+          ratioMean: val,
+        },
+      },
+    }));
   },
 
-  setRatioSpread: (val) => {
-    set({ ratioSpread: Math.max(0.01, val) });
+  setTierRatioSpread: (tier, val) => {
+    set((state) => ({
+      tierAspectConfigs: {
+        ...state.tierAspectConfigs,
+        [tier]: {
+          ...state.tierAspectConfigs[tier],
+          ratioSpread: Math.max(0.01, val),
+        },
+      },
+    }));
   },
 
   setRollSeedOnGenerate: (val) => {

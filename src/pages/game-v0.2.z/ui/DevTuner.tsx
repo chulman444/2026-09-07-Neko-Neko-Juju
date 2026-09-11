@@ -29,8 +29,7 @@ export const DevTuner: React.FC = () => {
   const timerMultiplier = useGameSessionStore((state) => state.timerMultiplier);
   const boardSizeRanges = useGameSessionStore((state) => state.boardSizeRanges);
   const selectedSizeTier = useGameSessionStore((state) => state.selectedSizeTier);
-  const ratioMean = useGameSessionStore((state) => state.ratioMean);
-  const ratioSpread = useGameSessionStore((state) => state.ratioSpread);
+  const tierAspectConfigs = useGameSessionStore((state) => state.tierAspectConfigs);
   const rollSeedOnGenerate = useGameSessionStore((state) => state.rollSeedOnGenerate);
   const maxFreeHints = useGameSessionStore((state) => state.maxFreeHints);
   const freeHintInterval = useGameSessionStore((state) => state.freeHintInterval);
@@ -44,8 +43,8 @@ export const DevTuner: React.FC = () => {
   const setTimerMultiplier = useGameSessionStore((state) => state.setTimerMultiplier);
   const setBoardSizeRange = useGameSessionStore((state) => state.setBoardSizeRange);
   const setSelectedSizeTier = useGameSessionStore((state) => state.setSelectedSizeTier);
-  const setRatioMean = useGameSessionStore((state) => state.setRatioMean);
-  const setRatioSpread = useGameSessionStore((state) => state.setRatioSpread);
+  const setTierRatioMean = useGameSessionStore((state) => state.setTierRatioMean);
+  const setTierRatioSpread = useGameSessionStore((state) => state.setTierRatioSpread);
   const setRollSeedOnGenerate = useGameSessionStore((state) => state.setRollSeedOnGenerate);
   const setMaxFreeHints = useGameSessionStore((state) => state.setMaxFreeHints);
   const setFreeHintInterval = useGameSessionStore((state) => state.setFreeHintInterval);
@@ -78,32 +77,27 @@ export const DevTuner: React.FC = () => {
     const [minVal, maxVal] = boardSizeRanges[selectedSizeTier];
     const low = Math.min(minVal, maxVal);
     const high = Math.max(minVal, maxVal);
-    const baseSize = Math.floor(Math.random() * (high - low + 1)) + low;
+    // The tier range bounds the longest side of the board
+    const longestSide = Math.floor(Math.random() * (high - low + 1)) + low;
 
+    const { ratioMean, ratioSpread } = tierAspectConfigs[selectedSizeTier];
     // Sample aspect ratio from normal distribution (bell curve)
-    const sampledRatio = Math.max(0.4, Math.min(2.5, sampleNormal(ratioMean, ratioSpread)));
+    const sampledRatio = Math.max(0.3, Math.min(3.0, sampleNormal(ratioMean, ratioSpread)));
 
     let nextCols: number;
     let nextRows: number;
 
     if (sampledRatio >= 1.0) {
-      // Landscape or Square
-      nextRows = baseSize;
-      nextCols = Math.round(nextRows * sampledRatio);
-      if (nextCols > 20) {
-        nextRows = Math.max(3, Math.round(20 / sampledRatio));
-        nextCols = 20;
-      }
+      // Wide or Square: Cols is the longest side, rows scales down from it
+      nextCols = longestSide;
+      nextRows = Math.max(3, Math.round(longestSide / sampledRatio));
     } else {
-      // Portrait
-      nextCols = baseSize;
-      nextRows = Math.round(nextCols / sampledRatio);
-      if (nextRows > 20) {
-        nextCols = Math.max(3, Math.round(20 * sampledRatio));
-        nextRows = 20;
-      }
+      // Tall: Rows is the longest side, cols scales down from it
+      nextRows = longestSide;
+      nextCols = Math.max(3, Math.round(longestSide * sampledRatio));
     }
 
+    // Clamp both dimensions to [3, 20]
     nextCols = Math.min(20, Math.max(3, nextCols));
     nextRows = Math.min(20, Math.max(3, nextRows));
 
@@ -242,24 +236,38 @@ export const DevTuner: React.FC = () => {
 
           {/* Aspect Ratio Bell Curve Tuning */}
           <div className="flex flex-col gap-2.5 pt-2 border-t border-zinc-700/60">
-            <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">
-              Aspect Ratio (Bell Curve)
-            </span>
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">
+                Aspect Ratio (Bell Curve)
+              </span>
+              <span className="text-[10px] font-mono text-amber-400/90 font-bold uppercase">
+                {selectedSizeTier} preset
+              </span>
+            </div>
 
             <label className="flex flex-col gap-1">
               <div className="flex justify-between text-xs">
                 <span className="text-zinc-300">
-                  Ratio Mean (μ): <span className="text-[10px] text-zinc-400">{ratioMean < 0.95 ? 'Tall' : ratioMean > 1.05 ? 'Wide' : 'Square'}</span>
+                  Ratio Mean (μ):{' '}
+                  <span className="text-[10px] text-zinc-400">
+                    {tierAspectConfigs[selectedSizeTier].ratioMean < 0.95
+                      ? 'Tall'
+                      : tierAspectConfigs[selectedSizeTier].ratioMean > 1.05
+                        ? 'Wide'
+                        : 'Square'}
+                  </span>
                 </span>
-                <span className="font-mono font-bold text-amber-400">{ratioMean.toFixed(2)}</span>
+                <span className="font-mono font-bold text-amber-400">
+                  {tierAspectConfigs[selectedSizeTier].ratioMean.toFixed(2)}
+                </span>
               </div>
               <input
                 type="range"
                 min="0.6"
                 max="2.0"
                 step="0.05"
-                value={ratioMean}
-                onChange={(e) => setRatioMean(parseFloat(e.target.value))}
+                value={tierAspectConfigs[selectedSizeTier].ratioMean}
+                onChange={(e) => setTierRatioMean(selectedSizeTier, parseFloat(e.target.value))}
                 className="accent-amber-500 cursor-pointer"
               />
             </label>
@@ -267,17 +275,26 @@ export const DevTuner: React.FC = () => {
             <label className="flex flex-col gap-1">
               <div className="flex justify-between text-xs">
                 <span className="text-zinc-300">
-                  Ratio Spread (σ): <span className="text-[10px] text-zinc-400">{ratioSpread <= 0.15 ? 'Tight' : ratioSpread >= 0.4 ? 'Diverse' : 'Balanced'}</span>
+                  Ratio Spread (σ):{' '}
+                  <span className="text-[10px] text-zinc-400">
+                    {tierAspectConfigs[selectedSizeTier].ratioSpread <= 0.15
+                      ? 'Tight'
+                      : tierAspectConfigs[selectedSizeTier].ratioSpread >= 0.4
+                        ? 'Diverse'
+                        : 'Balanced'}
+                  </span>
                 </span>
-                <span className="font-mono font-bold text-amber-400">{ratioSpread.toFixed(2)}</span>
+                <span className="font-mono font-bold text-amber-400">
+                  {tierAspectConfigs[selectedSizeTier].ratioSpread.toFixed(2)}
+                </span>
               </div>
               <input
                 type="range"
                 min="0.05"
                 max="0.60"
                 step="0.05"
-                value={ratioSpread}
-                onChange={(e) => setRatioSpread(parseFloat(e.target.value))}
+                value={tierAspectConfigs[selectedSizeTier].ratioSpread}
+                onChange={(e) => setTierRatioSpread(selectedSizeTier, parseFloat(e.target.value))}
                 className="accent-amber-500 cursor-pointer"
               />
             </label>

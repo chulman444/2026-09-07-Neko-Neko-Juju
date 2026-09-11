@@ -206,15 +206,18 @@ describe('gameSessionStore - Pause All Timers When Clearable Hints Exhausted', (
     expect(useGameSessionStore.getState().boardSizeRanges.any).toEqual([5, 19]);
   });
 
-  it('updates selectedSizeTier, bell curve parameters, and rollSeedOnGenerate', () => {
-    useGameSessionStore.getState().setSelectedSizeTier('any');
-    expect(useGameSessionStore.getState().selectedSizeTier).toBe('any');
+  it('updates selectedSizeTier, per-tier bell curve parameters, and rollSeedOnGenerate', () => {
+    useGameSessionStore.getState().setSelectedSizeTier('small');
+    expect(useGameSessionStore.getState().selectedSizeTier).toBe('small');
 
-    useGameSessionStore.getState().setRatioMean(1.5);
-    expect(useGameSessionStore.getState().ratioMean).toBe(1.5);
+    useGameSessionStore.getState().setTierRatioMean('small', 1.05);
+    expect(useGameSessionStore.getState().tierAspectConfigs.small.ratioMean).toBe(1.05);
 
-    useGameSessionStore.getState().setRatioSpread(0.2);
-    expect(useGameSessionStore.getState().ratioSpread).toBe(0.2);
+    useGameSessionStore.getState().setTierRatioSpread('small', 0.18);
+    expect(useGameSessionStore.getState().tierAspectConfigs.small.ratioSpread).toBe(0.18);
+
+    // Medium remains unchanged
+    expect(useGameSessionStore.getState().tierAspectConfigs.medium.ratioMean).toBe(1.35);
 
     useGameSessionStore.getState().setRollSeedOnGenerate(true);
     expect(useGameSessionStore.getState().rollSeedOnGenerate).toBe(true);
