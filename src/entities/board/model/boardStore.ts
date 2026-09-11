@@ -16,9 +16,12 @@ export interface BoardState {
   seedHistory: string[];
   matrix: number[][];
   clearingAnimations: ClearingAnimation[];
+  tileWeights?: number[];
+  activeTilt?: number;
 
   // Actions
   setDimensions: (cols: number, rows: number) => void;
+  setTileWeights: (weights?: number[], activeTilt?: number) => void;
   setShapeSize: (shapeSize: number) => void;
   setTileBorder: (tileBorder: number) => void;
   setTextSize: (textSize: number) => void;
@@ -53,11 +56,24 @@ export const useBoardStore = create<BoardState>((set, get) => ({
     initialSeed
   ),
   clearingAnimations: [],
+  tileWeights: undefined,
+  activeTilt: 0,
 
   setDimensions: (cols, rows) => {
-    const { minNum, maxNum, seed } = get();
-    const matrix = createBoardMatrix(cols, rows, minNum, maxNum, seed);
+    const { minNum, maxNum, seed, tileWeights } = get();
+    const matrix = createBoardMatrix(cols, rows, minNum, maxNum, seed, tileWeights);
     set({ cols, rows, matrix, clearingAnimations: [] });
+  },
+
+  setTileWeights: (tileWeights, activeTilt) => {
+    const { cols, rows, minNum, maxNum, seed } = get();
+    const matrix = createBoardMatrix(cols, rows, minNum, maxNum, seed, tileWeights);
+    set({
+      tileWeights,
+      activeTilt: activeTilt !== undefined ? activeTilt : get().activeTilt,
+      matrix,
+      clearingAnimations: [],
+    });
   },
 
   setShapeSize: (shapeSize) => set({ shapeSize }),
@@ -75,8 +91,8 @@ export const useBoardStore = create<BoardState>((set, get) => ({
   },
 
   setSeed: (seed) => {
-    const { cols, rows, minNum, maxNum, seedHistory } = get();
-    const matrix = createBoardMatrix(cols, rows, minNum, maxNum, seed);
+    const { cols, rows, minNum, maxNum, seedHistory, tileWeights } = get();
+    const matrix = createBoardMatrix(cols, rows, minNum, maxNum, seed, tileWeights);
     const updatedHistory = seedHistory.includes(seed)
       ? seedHistory
       : [seed, ...seedHistory].slice(0, 50);
@@ -84,9 +100,9 @@ export const useBoardStore = create<BoardState>((set, get) => ({
   },
 
   generateNewBoard: (forcedSeed) => {
-    const { cols, rows, minNum, maxNum, seedHistory } = get();
+    const { cols, rows, minNum, maxNum, seedHistory, tileWeights } = get();
     const newSeed = forcedSeed || generateSeed();
-    const matrix = createBoardMatrix(cols, rows, minNum, maxNum, newSeed);
+    const matrix = createBoardMatrix(cols, rows, minNum, maxNum, newSeed, tileWeights);
     const updatedHistory = seedHistory.includes(newSeed)
       ? seedHistory
       : [newSeed, ...seedHistory].slice(0, 50);
@@ -94,8 +110,8 @@ export const useBoardStore = create<BoardState>((set, get) => ({
   },
 
   restartCurrentBoard: () => {
-    const { cols, rows, minNum, maxNum, seed } = get();
-    const matrix = createBoardMatrix(cols, rows, minNum, maxNum, seed);
+    const { cols, rows, minNum, maxNum, seed, tileWeights } = get();
+    const matrix = createBoardMatrix(cols, rows, minNum, maxNum, seed, tileWeights);
     set({ matrix, clearingAnimations: [] });
   },
 

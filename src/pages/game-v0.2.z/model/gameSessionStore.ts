@@ -52,6 +52,22 @@ export const DEFAULT_TIER_ASPECT_CONFIGS: TierAspectConfigs = {
   any: { ratioMean: 1.25, ratioSpread: 0.35 },
 };
 
+export type DifficultyTier = 'easy' | 'medium' | 'hard' | 'any';
+
+export interface DifficultyTiltRanges {
+  easy: [number, number];
+  medium: [number, number];
+  hard: [number, number];
+  any: [number, number];
+}
+
+export const DEFAULT_DIFFICULTY_TILT_RANGES: DifficultyTiltRanges = {
+  easy: [2.0, 5.0],
+  medium: [-1.0, 1.0],
+  hard: [-5.0, -2.0],
+  any: [-5.0, 5.0],
+};
+
 export interface GameSessionState {
   // Session & Meta
   score: number;
@@ -72,6 +88,11 @@ export interface GameSessionState {
   selectedSizeTier: BoardSizeTier;
   tierAspectConfigs: TierAspectConfigs;
   rollSeedOnGenerate: boolean;
+
+  // Game Difficulty Tuning (Tilt & Gaussian Noise)
+  selectedDifficultyTier: DifficultyTier;
+  difficultyTiltRanges: DifficultyTiltRanges;
+  difficultyNoiseSpread: number;
 
   // Phase 1 Hint State
   maxFreeHints: number;
@@ -110,6 +131,9 @@ export interface GameSessionState {
   setTierRatioMean: (tier: BoardSizeTier, val: number) => void;
   setTierRatioSpread: (tier: BoardSizeTier, val: number) => void;
   setRollSeedOnGenerate: (val: boolean) => void;
+  setSelectedDifficultyTier: (tier: DifficultyTier) => void;
+  setDifficultyTiltRange: (tier: DifficultyTier, index: 0 | 1, val: number) => void;
+  setDifficultyNoiseSpread: (val: number) => void;
 
   // Lifecycle
   resetSession: () => void;
@@ -140,6 +164,11 @@ export const useGameSessionStore = create<GameSessionState>((set, get) => ({
   selectedSizeTier: 'medium',
   tierAspectConfigs: { ...DEFAULT_TIER_ASPECT_CONFIGS },
   rollSeedOnGenerate: false,
+
+  // Game Difficulty Initial State
+  selectedDifficultyTier: 'medium',
+  difficultyTiltRanges: { ...DEFAULT_DIFFICULTY_TILT_RANGES },
+  difficultyNoiseSpread: 0.015,
 
   // Phase 1 Hint Initial State
   maxFreeHints: 3,
@@ -467,6 +496,27 @@ export const useGameSessionStore = create<GameSessionState>((set, get) => ({
 
   setRollSeedOnGenerate: (val) => {
     set({ rollSeedOnGenerate: val });
+  },
+
+  setSelectedDifficultyTier: (tier) => {
+    set({ selectedDifficultyTier: tier });
+  },
+
+  setDifficultyTiltRange: (tier, index, val) => {
+    set((state) => {
+      const current = [...state.difficultyTiltRanges[tier]] as [number, number];
+      current[index] = val;
+      return {
+        difficultyTiltRanges: {
+          ...state.difficultyTiltRanges,
+          [tier]: current,
+        },
+      };
+    });
+  },
+
+  setDifficultyNoiseSpread: (val) => {
+    set({ difficultyNoiseSpread: Math.max(0, val) });
   },
 
   resetSession: () => {

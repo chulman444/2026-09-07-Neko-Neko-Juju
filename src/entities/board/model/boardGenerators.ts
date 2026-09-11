@@ -71,21 +71,126 @@ export function generateRandomNumberSum10sSeeded(total: number, prng: () => numb
   return numbers;
 }
 
+export function sampleNormal(mean: number, stdDev: number, rng: () => number = Math.random): number {
+  const u1 = Math.max(1e-7, rng());
+  const u2 = rng();
+  const z0 = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
+  return mean + z0 * stdDev;
+}
+
+/**
+ * Generates 9 normalized weights for tiles 1 to 9.
+ * @param tiltPercent Tilt percentage (e.g. +4 for +4% easy, -4 for -4% hard).
+ * @param noiseSpread Standard deviation of Gaussian noise added to each tile weight.
+ * @param rng Random number generator (defaults to Math.random).
+ */
+export function generateLinearTileWeights(
+  tiltPercent: number,
+  noiseSpread = 0,
+  rng: () => number = Math.random
+): number[] {
+  const tilt = tiltPercent / 100;
+  const rawWeights: number[] = [];
+
+  for (let k = 1; k <= 9; k++) {
+    // Linear trendline centered at 1/9 (~11.11%)
+    const base = 1 / 9 + tilt * ((5 - k) / 4);
+    // Gaussian noise
+    const noise = noiseSpread > 0 ? sampleNormal(0, noiseSpread, rng) : 0;
+    // Floor at 0.005 so every digit always has a nonzero probability
+    rawWeights.push(Math.max(0.005, base + noise));
+  }
+
+  const total = rawWeights.reduce((a, b) => a + b, 0);
+  return rawWeights.map((w) => w / total);
+}
+
 export function createBoardMatrix(
   cols: number,
   rows: number,
   minNum: number,
   maxNum: number,
-  seedStr: string
+  seedStr: string,
+  tileWeights?: number[]
 ): number[][] {
   const prng = seededRandomGenerator(seedStr);
   const matrix: number[][] = [];
+
+  // If weights are provided and match the digit count, build CDF
+  const count = maxNum - minNum + 1;
+  let normalizedWeights: number[] | null = null;
+  if (tileWeights && tileWeights.length === count) {
+    const sum = tileWeights.reduce((a, b) => a + b, 0);
+    if (sum > 0) {
+      normalizedWeights = tileWeights.map((w) => w / sum);
+    }
+  }
+
   for (let r = 0; r < rows; r++) {
     const row: number[] = [];
     for (let c = 0; c < cols; c++) {
-      row.push(Math.floor(prng() * (maxNum - minNum + 1)) + minNum);
+      if (normalizedWeights) {
+        const roll = prng();
+        let acc = 0;
+        let chosen = maxNum;
+        for (let i = 0; i < normalizedWeights.length; i++) {
+          acc += normalizedWeights[i]!;
+          if (roll <= acc || i === normalizedWeights.length - 1) {
+            chosen = minNum + i;
+            break;
+          }
+        }
+        row.push(chosen);
+      } else {
+        row.push(Math.floor(prng() * (maxNum - minNum + 1)) + minNum);
+      }
     }
     matrix.push(row);
   }
   return matrix;
 }
+
+export interface BoardMetrics {
+  totalTiles: number;
+  totalSum: number;
+  averageTile: number;
+  zScore: number;
+  counts: Record<number, number>;
+}
+
+export function calculateBoardMetrics(matrix: number[][]): BoardMetrics {
+  let totalTiles = 0;
+  let totalSum = 0;
+  const counts: Record<number, number> = {};
+  for (let i = 1; i <= 9; i++) {
+    counts[i] = 0;
+  }
+
+  for (let r = 0; r < matrix.length; r++) {
+    const row = matrix[r];
+    if (!row) continue;
+    for (let c = 0; c < row.length; c++) {
+      const val = row[c] ?? 0;
+      if (val > 0) {
+        totalTiles++;
+        totalSum += val;
+        counts[val] = (counts[val] ?? 0) + 1;
+      }
+    }
+  }
+
+  const averageTile = totalTiles > 0 ? totalSum / totalTiles : 0;
+  // Variance of a uniform tile 1..9 is 80/12 = 6.6667, stdDev = 2.581988897
+  const expectedSum = totalTiles * 5;
+  const sumStdDev = 2.581988897 * Math.sqrt(totalTiles);
+  const zScore = sumStdDev > 0 ? (totalSum - expectedSum) / sumStdDev : 0;
+
+  return {
+    totalTiles,
+    totalSum,
+    averageTile,
+    zScore,
+    counts,
+  };
+}
+

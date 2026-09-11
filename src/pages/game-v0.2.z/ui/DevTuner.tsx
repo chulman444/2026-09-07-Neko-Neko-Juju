@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useBoardStore } from '@/entities/board';
+import { useBoardStore, calculateBoardMetrics, generateLinearTileWeights } from '@/entities/board';
 import { useSolverStore, type HintAlgorithmMode } from '@/features/look-ahead-solver';
 import { useGameSessionStore, type ComboConfig } from '../model/gameSessionStore';
 
@@ -14,7 +14,10 @@ export const DevTuner: React.FC = () => {
   // Board Store
   const cols = useBoardStore((state) => state.cols);
   const rows = useBoardStore((state) => state.rows);
+  const matrix = useBoardStore((state) => state.matrix);
+  const activeTilt = useBoardStore((state) => state.activeTilt);
   const setDimensions = useBoardStore((state) => state.setDimensions);
+  const setTileWeights = useBoardStore((state) => state.setTileWeights);
   const currentSeed = useBoardStore((state) => state.seed);
   const seedHistory = useBoardStore((state) => state.seedHistory);
   const setBoardSeed = useBoardStore((state) => state.setSeed);
@@ -31,6 +34,9 @@ export const DevTuner: React.FC = () => {
   const selectedSizeTier = useGameSessionStore((state) => state.selectedSizeTier);
   const tierAspectConfigs = useGameSessionStore((state) => state.tierAspectConfigs);
   const rollSeedOnGenerate = useGameSessionStore((state) => state.rollSeedOnGenerate);
+  const selectedDifficultyTier = useGameSessionStore((state) => state.selectedDifficultyTier);
+  const difficultyTiltRanges = useGameSessionStore((state) => state.difficultyTiltRanges);
+  const difficultyNoiseSpread = useGameSessionStore((state) => state.difficultyNoiseSpread);
   const maxFreeHints = useGameSessionStore((state) => state.maxFreeHints);
   const freeHintInterval = useGameSessionStore((state) => state.freeHintInterval);
   const baseSecondsPerTile = useGameSessionStore((state) => state.baseSecondsPerTile);
@@ -46,6 +52,9 @@ export const DevTuner: React.FC = () => {
   const setTierRatioMean = useGameSessionStore((state) => state.setTierRatioMean);
   const setTierRatioSpread = useGameSessionStore((state) => state.setTierRatioSpread);
   const setRollSeedOnGenerate = useGameSessionStore((state) => state.setRollSeedOnGenerate);
+  const setSelectedDifficultyTier = useGameSessionStore((state) => state.setSelectedDifficultyTier);
+  const setDifficultyTiltRange = useGameSessionStore((state) => state.setDifficultyTiltRange);
+  const setDifficultyNoiseSpread = useGameSessionStore((state) => state.setDifficultyNoiseSpread);
   const setMaxFreeHints = useGameSessionStore((state) => state.setMaxFreeHints);
   const setFreeHintInterval = useGameSessionStore((state) => state.setFreeHintInterval);
   const setBaseSecondsPerTile = useGameSessionStore((state) => state.setBaseSecondsPerTile);
@@ -101,12 +110,33 @@ export const DevTuner: React.FC = () => {
     nextCols = Math.min(20, Math.max(3, nextCols));
     nextRows = Math.min(20, Math.max(3, nextRows));
 
+    // Roll difficulty tilt within selected difficulty tier range
+    const [minTilt, maxTilt] = difficultyTiltRanges[selectedDifficultyTier];
+    const lowTilt = Math.min(minTilt, maxTilt);
+    const highTilt = Math.max(minTilt, maxTilt);
+    const rolledTilt = Math.round((lowTilt + Math.random() * (highTilt - lowTilt)) * 10) / 10;
+    const weights = generateLinearTileWeights(rolledTilt, difficultyNoiseSpread);
+    setTileWeights(weights, rolledTilt);
+
     if (rollSeedOnGenerate) {
       generateNewBoard();
     }
 
     handleUpdateDimensions(nextCols, nextRows);
   };
+
+  const handleApplyDifficultyOnly = () => {
+    const [minTilt, maxTilt] = difficultyTiltRanges[selectedDifficultyTier];
+    const lowTilt = Math.min(minTilt, maxTilt);
+    const highTilt = Math.max(minTilt, maxTilt);
+    const rolledTilt = Math.round((lowTilt + Math.random() * (highTilt - lowTilt)) * 10) / 10;
+    const weights = generateLinearTileWeights(rolledTilt, difficultyNoiseSpread);
+    setTileWeights(weights, rolledTilt);
+    resetSession();
+    useSolverStore.getState().recalculate(useBoardStore.getState().matrix, useBoardStore.getState().seed);
+  };
+
+  const boardMetrics = calculateBoardMetrics(matrix);
 
   const handleRevertTimerCap = () => {
     const calculated = Math.max(1, Math.round(cols * rows * timerMultiplier));
@@ -369,6 +399,233 @@ export const DevTuner: React.FC = () => {
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Game Difficulty & Tile Distribution */}
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <h4 className="font-bold text-[11px] text-amber-400/90 uppercase tracking-wider">
+            Game Difficulty
+          </h4>
+          <span className="text-[10px] font-mono text-zinc-400">
+            Active Tilt:{' '}
+            <span className="text-amber-400 font-bold">
+              {activeTilt !== undefined
+                ? activeTilt > 0
+                  ? `+${activeTilt}%`
+                  : `${activeTilt}%`
+                : '0% (Flat)'}
+            </span>
+          </span>
+        </div>
+
+        <div className="flex flex-col gap-3 bg-zinc-800/60 p-3 rounded-xl border border-zinc-700/70">
+          {/* Live Board Metrics Card */}
+          <div className="grid grid-cols-3 gap-2 bg-zinc-850/80 p-2.5 rounded-lg border border-zinc-750 text-center font-mono">
+            <div className="flex flex-col">
+              <span className="text-[10px] text-zinc-400 uppercase font-sans">Board Sum</span>
+              <span className="text-xs font-bold text-amber-300">
+                {boardMetrics.totalSum}{' '}
+                <span className="text-[9px] text-zinc-500 font-normal">
+                  (exp: {cols * rows * 5})
+                </span>
+              </span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[10px] text-zinc-400 uppercase font-sans">Avg Tile (X̄)</span>
+              <span className="text-xs font-bold text-zinc-200">
+                {boardMetrics.averageTile.toFixed(2)}
+              </span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[10px] text-zinc-400 uppercase font-sans">Z-Score</span>
+              <span
+                className={`text-xs font-bold ${
+                  boardMetrics.zScore <= -1.2
+                    ? 'text-emerald-400'
+                    : boardMetrics.zScore >= 1.2
+                      ? 'text-rose-400'
+                      : 'text-amber-400'
+                }`}
+                title="Negative Z: high clearability (abundant 1-3). Positive Z: hard (choked with 7-9)."
+              >
+                {boardMetrics.zScore > 0
+                  ? `+${boardMetrics.zScore.toFixed(2)}`
+                  : boardMetrics.zScore.toFixed(2)}
+              </span>
+            </div>
+          </div>
+
+          {/* Mini Bar Chart for 1..9 distribution */}
+          <div className="flex flex-col gap-1">
+            <div className="flex justify-between items-center text-[10px] text-zinc-400 font-mono">
+              <span>Tile Frequency (1 → 9)</span>
+              <span>{boardMetrics.totalTiles} tiles total</span>
+            </div>
+            <div className="grid grid-cols-9 gap-1 h-14 items-end bg-zinc-900/60 p-1.5 rounded-lg border border-zinc-750/70">
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((digit) => {
+                const count = boardMetrics.counts[digit] ?? 0;
+                const pct = boardMetrics.totalTiles > 0 ? (count / boardMetrics.totalTiles) * 100 : 0;
+                const barHeight = Math.min(100, Math.max(8, Math.round((pct / 25) * 100)));
+                return (
+                  <div key={digit} className="flex flex-col items-center h-full justify-end group relative">
+                    <div
+                      className={`w-full rounded-t transition-all duration-300 ${
+                        digit <= 3
+                          ? 'bg-emerald-500/70 group-hover:bg-emerald-400'
+                          : digit <= 6
+                            ? 'bg-amber-500/70 group-hover:bg-amber-400'
+                            : 'bg-rose-500/70 group-hover:bg-rose-400'
+                      }`}
+                      style={{ height: `${barHeight}%` }}
+                      title={`${digit}: ${count} tiles (${pct.toFixed(1)}%)`}
+                    />
+                    <span className="text-[10px] font-bold font-mono text-zinc-300 mt-1">{digit}</span>
+                    <span className="text-[8px] font-mono text-zinc-400">{count}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 4 Difficulty Tiers with Radio Buttons */}
+          <div className="flex flex-col gap-1.5 pt-2 border-t border-zinc-700/60">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">
+                Difficulty Tiers (Tilt %)
+              </span>
+              <span className="text-[10px] text-zinc-400">
+                Slope: +% boosts 1-3, -% boosts 7-9
+              </span>
+            </div>
+            {(['easy', 'medium', 'hard', 'any'] as const).map((tier) => {
+              const [minTilt, maxTilt] = difficultyTiltRanges[tier];
+              const isSelected = selectedDifficultyTier === tier;
+              const tierLabel = tier.charAt(0).toUpperCase() + tier.slice(1);
+
+              // Estimated sum for current board dimensions
+              const totalTiles = cols * rows;
+              const lowTilt = Math.min(minTilt, maxTilt);
+              const highTilt = Math.max(minTilt, maxTilt);
+              const minAvg = 5.0 - 0.15 * highTilt;
+              const maxAvg = 5.0 - 0.15 * lowTilt;
+              const minSum = Math.round(totalTiles * minAvg);
+              const maxSum = Math.round(totalTiles * maxAvg);
+
+              return (
+                <label
+                  key={tier}
+                  className={`flex flex-col gap-1 px-2.5 py-1.5 rounded-lg border transition cursor-pointer ${
+                    isSelected
+                      ? 'bg-amber-500/15 border-amber-500/40 text-amber-300 font-bold'
+                      : 'bg-zinc-850/40 border-zinc-750 text-zinc-300 hover:bg-zinc-800'
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="radio"
+                        name="difficultyTier"
+                        checked={isSelected}
+                        onChange={() => setSelectedDifficultyTier(tier)}
+                        className="accent-amber-500 cursor-pointer"
+                      />
+                      <span className="text-xs">{tierLabel}</span>
+                    </div>
+
+                    <div
+                      className="flex items-center gap-1.5 font-mono text-xs text-zinc-400 font-normal"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <span>Min:</span>
+                      <input
+                        type="number"
+                        step="0.5"
+                        min="-10"
+                        max="10"
+                        value={minTilt}
+                        onChange={(e) =>
+                          setDifficultyTiltRange(tier, 0, parseFloat(e.target.value) || 0)
+                        }
+                        className="w-14 bg-zinc-850 border border-zinc-700 rounded px-1.5 py-0.5 text-right font-mono text-xs text-white focus:border-amber-500 focus:outline-none"
+                      />
+                      <span>%</span>
+                      <span>Max:</span>
+                      <input
+                        type="number"
+                        step="0.5"
+                        min="-10"
+                        max="10"
+                        value={maxTilt}
+                        onChange={(e) =>
+                          setDifficultyTiltRange(tier, 1, parseFloat(e.target.value) || 0)
+                        }
+                        className="w-14 bg-zinc-850 border border-zinc-700 rounded px-1.5 py-0.5 text-right font-mono text-xs text-white focus:border-amber-500 focus:outline-none"
+                      />
+                      <span>%</span>
+                    </div>
+                  </div>
+
+                  {isSelected && (
+                    <div className="text-[10px] font-mono text-zinc-400 pl-5">
+                      Exp. Sum for {cols}×{rows}: <span className="text-amber-300">~{minSum}–{maxSum}</span> (Avg {minAvg.toFixed(2)}–{maxAvg.toFixed(2)})
+                    </div>
+                  )}
+                </label>
+              );
+            })}
+          </div>
+
+          {/* Gaussian Noise Spread Tuning */}
+          <div className="flex flex-col gap-2.5 pt-2 border-t border-zinc-700/60">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">
+                Noise Spread (Gaussian σ)
+              </span>
+              <span className="text-[10px] font-mono text-amber-400/90 font-bold">
+                {difficultyNoiseSpread <= 0.005
+                  ? 'Clean Line'
+                  : difficultyNoiseSpread <= 0.025
+                    ? 'Natural Scatter'
+                    : 'Chaotic Wobble'}
+              </span>
+            </div>
+
+            <label className="flex flex-col gap-1">
+              <div className="flex justify-between text-xs">
+                <span className="text-zinc-300">
+                  Noise Scatter (σ):{' '}
+                  <span className="text-[10px] text-zinc-400">
+                    {difficultyNoiseSpread === 0 ? 'Disabled' : `±${(difficultyNoiseSpread * 100).toFixed(1)}%`}
+                  </span>
+                </span>
+                <span className="font-mono font-bold text-amber-400">
+                  {(difficultyNoiseSpread * 100).toFixed(1)}%
+                </span>
+              </div>
+              <input
+                type="range"
+                min="0.00"
+                max="0.05"
+                step="0.005"
+                value={difficultyNoiseSpread}
+                onChange={(e) => setDifficultyNoiseSpread(parseFloat(e.target.value))}
+                className="accent-amber-500 cursor-pointer"
+              />
+            </label>
+          </div>
+
+          {/* Apply Difficulty Action Button */}
+          <button
+            type="button"
+            onClick={handleApplyDifficultyOnly}
+            className="w-full py-1.5 text-xs font-bold rounded-lg bg-zinc-750 hover:bg-amber-500 hover:text-zinc-950 text-zinc-200 border border-zinc-600 transition cursor-pointer flex items-center justify-center gap-1.5"
+            title="Roll and apply difficulty tilt & Gaussian noise to current board without resizing"
+          >
+            <span>🎲</span>
+            <span>Apply Difficulty to Current Board</span>
+          </button>
         </div>
       </div>
 

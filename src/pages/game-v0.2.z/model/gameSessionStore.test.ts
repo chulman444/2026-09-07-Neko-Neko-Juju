@@ -222,5 +222,28 @@ describe('gameSessionStore - Pause All Timers When Clearable Hints Exhausted', (
     useGameSessionStore.getState().setRollSeedOnGenerate(true);
     expect(useGameSessionStore.getState().rollSeedOnGenerate).toBe(true);
   });
+
+  it('updates selectedDifficultyTier, difficultyTiltRanges, and difficultyNoiseSpread', () => {
+    // Default tier is medium
+    expect(useGameSessionStore.getState().selectedDifficultyTier).toBe('medium');
+
+    // Switch tier to easy
+    useGameSessionStore.getState().setSelectedDifficultyTier('easy');
+    expect(useGameSessionStore.getState().selectedDifficultyTier).toBe('easy');
+
+    // Update easy tilt range
+    useGameSessionStore.getState().setDifficultyTiltRange('easy', 0, 2.5);
+    useGameSessionStore.getState().setDifficultyTiltRange('easy', 1, 6.0);
+    expect(useGameSessionStore.getState().difficultyTiltRanges.easy).toEqual([2.5, 6.0]);
+
+    // Update noise spread
+    useGameSessionStore.getState().setDifficultyNoiseSpread(0.025);
+    expect(useGameSessionStore.getState().difficultyNoiseSpread).toBe(0.025);
+
+    // Negative noise spread is sanitized to 0
+    useGameSessionStore.getState().setDifficultyNoiseSpread(-0.01);
+    expect(useGameSessionStore.getState().difficultyNoiseSpread).toBe(0);
+  });
 });
+
 
