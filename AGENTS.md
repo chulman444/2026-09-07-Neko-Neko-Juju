@@ -45,6 +45,7 @@ Code can only import from layers strictly below it. Never import upwards or hori
   - `api/`: Requests, queries, endpoints.
   - `lib/`: Slice-internal helper functions.
   - `config/`: Slice-internal constants and configuration.
+- **Flat Segments**: Segment folders (`ui/`, `model/`, `lib/`, etc.) must remain flat. Never create nested subfolders or internal `index.ts` files inside a segment.
 
 ### 3.3 Public API (`index.ts`)
 - **Strict Boundary**: Every slice or shared segment must export its public interface via an `index.ts` at its root.
@@ -57,6 +58,10 @@ Code can only import from layers strictly below it. Never import upwards or hori
 - **Keep code as high as practical first**: When introducing new functionality, keep it local to its immediate scope (`pages`, `widgets`, or `features`). Do not anticipate abstractions.
 - **No premature `entities` or `shared`**: Do NOT extract components, state, or helpers into `entities/` or `shared/` until there is demonstrable domain justification or concrete reuse across multiple slices.
 - **Colocation before extraction**: Colocate UI, state, and helper functions directly within the relevant feature or widget slice until repetition or distinct business domain boundaries naturally emerge (avoid "Excessive Entities" anti-pattern).
+
+### 3.5 Refactoring & Component Extraction Triggers
+- **Component → Widget Threshold**: If a component decomposes into its own business logic / state hook (`model/`), internal utilities (`lib/`), and multiple child components, it has outgrown being an inline page component. Promote it directly to a `widgets/<name>` slice (e.g., `widgets/solver-panel`, `widgets/dev-tuner`) rather than nesting pseudo-slices inside a page segment.
+- **Single-Use Widgets are Legitimate**: Unlike `entities/` or `shared/`, a `widgets/` slice does NOT require multi-page reuse to be extracted; self-contained composite blocks delivering an entire use case or dev tool belong in `widgets/`.
 
 ---
 
