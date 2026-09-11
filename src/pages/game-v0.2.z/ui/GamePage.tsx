@@ -16,7 +16,9 @@ export const GamePage: React.FC = () => {
   // Mount 60fps simulation driver that ticks the store
   useGameSessionDriver();
 
-  // Board Store Actions
+  // Board Store Selectors & Actions
+  const cols = useBoardStore((state) => state.cols);
+  const rows = useBoardStore((state) => state.rows);
   const generateNewBoard = useBoardStore((state) => state.generateNewBoard);
   const restartCurrentBoard = useBoardStore((state) => state.restartCurrentBoard);
 
@@ -76,8 +78,16 @@ export const GamePage: React.FC = () => {
               Neko Neko Juju
             </span>
           </div>
-          <div className="text-sm font-semibold px-3 py-1 bg-amber-50 dark:bg-zinc-800 text-amber-900 dark:text-amber-200 border border-amber-200 dark:border-zinc-700 rounded-lg">
-            Score: <span className="font-bold">{score}</span>
+          <div className="flex items-center gap-2">
+            <div className="text-sm font-semibold px-3 py-1 bg-amber-50 dark:bg-zinc-800 text-amber-900 dark:text-amber-200 border border-amber-200 dark:border-zinc-700 rounded-lg">
+              Score: <span className="font-bold">{score}</span>
+            </div>
+            <div
+              className="text-xs font-semibold px-2.5 py-1 bg-amber-50/60 dark:bg-zinc-800/60 text-amber-800 dark:text-zinc-300 border border-amber-200/60 dark:border-zinc-700 rounded-lg font-mono"
+              title={`Board Size: ${cols} columns × ${rows} rows (${cols * rows} tiles)`}
+            >
+              Size: <span className="font-bold text-amber-950 dark:text-amber-200">{cols}×{rows}</span>
+            </div>
           </div>
         </div>
 
