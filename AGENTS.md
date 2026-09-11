@@ -22,6 +22,7 @@
 - **Build Storybook**: `npm run build-storybook`
 - **Lint**: `npm run lint`
 - **Windows Quirks**: Always use `npm.cmd` if running into PowerShell script execution policy (`PSSecurityException`) issues.
+- **Isolated Git Commits**: Never chain `git commit` with other commands using `;` or `&&` (e.g. `git add ...; git commit ...`). Always run `git add` and `git commit` as separate, independent terminal commands so the user can review and approve the commit message.
 
 ---
 
