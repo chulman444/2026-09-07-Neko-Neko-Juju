@@ -1,7 +1,7 @@
 import React from 'react';
 import { useBoardStore } from '@/entities/board';
 import { useGameSessionStore, type DifficultyTier } from '@/entities/game-session';
-import { useDevTunerActions } from '../model/useDevTunerActions';
+import { useBoardGeneratorActions } from '../model/useBoardGeneratorActions';
 import { BoardMetricsCard } from './BoardMetricsCard';
 import { TileDistributionChart } from './TileDistributionChart';
 
@@ -20,7 +20,7 @@ export const DifficultySection: React.FC = () => {
   const setDifficultyTiltRange = useGameSessionStore((state) => state.setDifficultyTiltRange);
   const setDifficultyNoiseSpread = useGameSessionStore((state) => state.setDifficultyNoiseSpread);
 
-  const { applyDifficultyOnly } = useDevTunerActions();
+  const { applyDifficultyOnly } = useBoardGeneratorActions();
 
   return (
     <div>

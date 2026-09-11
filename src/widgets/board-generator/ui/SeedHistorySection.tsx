@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { useBoardStore } from '@/entities/board';
-import { useDevTunerActions } from '../model/useDevTunerActions';
+import { useBoardGeneratorActions } from '../model/useBoardGeneratorActions';
 
 export const SeedHistorySection: React.FC = () => {
   const currentSeed = useBoardStore((state) => state.seed);
   const seedHistory = useBoardStore((state) => state.seedHistory);
   const [customSeedInput, setCustomSeedInput] = useState<string>('');
 
-  const { loadSeed, rollNewSeed } = useDevTunerActions();
+  const { loadSeed, rollNewSeed } = useBoardGeneratorActions();
 
   const handleLoadCustomSeed = () => {
     const trimmed = customSeedInput.trim();

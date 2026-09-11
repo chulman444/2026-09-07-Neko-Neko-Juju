@@ -1,9 +1,8 @@
-import { useBoardStore, generateLinearTileWeights } from '@/entities/board';
+import { useBoardStore, generateLinearTileWeights, sampleNormal } from '@/entities/board';
 import { useSolverStore } from '@/features/look-ahead-solver';
 import { useGameSessionStore } from '@/entities/game-session';
-import { sampleNormal } from '../lib/sampleNormal';
 
-export function useDevTunerActions() {
+export function useBoardGeneratorActions() {
   const updateDimensions = (nextCols: number, nextRows: number) => {
     const clampedCols = Math.min(20, Math.max(3, nextCols));
     const clampedRows = Math.min(20, Math.max(3, nextRows));

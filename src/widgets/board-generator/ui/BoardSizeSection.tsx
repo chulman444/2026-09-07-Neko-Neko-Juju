@@ -1,7 +1,7 @@
 import React from 'react';
 import { useBoardStore } from '@/entities/board';
 import { useGameSessionStore, type BoardSizeTier } from '@/entities/game-session';
-import { useDevTunerActions } from '../model/useDevTunerActions';
+import { useBoardGeneratorActions } from '../model/useBoardGeneratorActions';
 
 const SIZE_TIERS: readonly BoardSizeTier[] = ['small', 'medium', 'large', 'any'] as const;
 
@@ -24,7 +24,7 @@ export const BoardSizeSection: React.FC = () => {
   const setTierRatioSpread = useGameSessionStore((state) => state.setTierRatioSpread);
   const setRollSeedOnGenerate = useGameSessionStore((state) => state.setRollSeedOnGenerate);
 
-  const { updateDimensions, generateBoard, revertTimerCap } = useDevTunerActions();
+  const { updateDimensions, generateBoard, revertTimerCap } = useBoardGeneratorActions();
 
   return (
     <div>
