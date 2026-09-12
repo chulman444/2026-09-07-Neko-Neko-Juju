@@ -19,6 +19,7 @@ export interface BoardContextAccess {
   getVisualConfig: () => BoardVisualConfig;
   onClear: (tiles: TileCoord[], sum: number) => void;
   onSelectionChange?: (tiles: TileCoord[], sum: number, isValid: boolean) => void;
+  onTileClick?: (tile: TileCoord) => void;
 }
 
 export class GameBoardInteraction {
@@ -188,6 +189,9 @@ export class GameBoardInteraction {
 
     if (this.selectMode === 'tap') {
       if (endTile.col === this.startTile.col && endTile.row === this.startTile.row) {
+        if (this.ctxAccess.onTileClick) {
+          this.ctxAccess.onTileClick(endTile);
+        }
         this.resetSelectionState();
       } else {
         this.dragCurrent = pos;
@@ -200,6 +204,11 @@ export class GameBoardInteraction {
     }
 
     if (endTile.col === this.startTile.col && endTile.row === this.startTile.row) {
+      if (this.ctxAccess.onTileClick) {
+        this.ctxAccess.onTileClick(endTile);
+        this.resetSelectionState();
+        return;
+      }
       if (config.twoClickSelection !== false) {
         this.selectMode = 'tap';
         const centerPos = {

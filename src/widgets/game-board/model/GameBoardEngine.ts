@@ -12,6 +12,7 @@ export interface GameBoardEngineOptions {
   visualConfig?: Partial<BoardVisualConfig>;
   onTilesCleared?: (tiles: TileCoord[], sum: number) => void;
   onSelectionChange?: (tiles: TileCoord[], sum: number, isValid: boolean) => void;
+  onTileClick?: (tile: TileCoord) => void;
 }
 
 export class GameBoardEngine {
@@ -28,6 +29,7 @@ export class GameBoardEngine {
   private highlightedTiles: TileCoord[] = [];
   private onTilesCleared?: (tiles: TileCoord[], sum: number) => void;
   private onSelectionChange?: (tiles: TileCoord[], sum: number, isValid: boolean) => void;
+  private onTileClick?: (tile: TileCoord) => void;
   private visualConfig: BoardVisualConfig;
 
   constructor(options: GameBoardEngineOptions) {
@@ -38,6 +40,7 @@ export class GameBoardEngine {
     this.highlightedTiles = options.highlightedTiles ?? [];
     this.onTilesCleared = options.onTilesCleared;
     this.onSelectionChange = options.onSelectionChange;
+    this.onTileClick = options.onTileClick;
 
     this.visualConfig = {
       gameBg: options.visualConfig?.gameBg ?? '#fbf2df',
@@ -61,6 +64,7 @@ export class GameBoardEngine {
       getVisualConfig: () => this.visualConfig,
       onClear: (tiles, sum) => this.handleClear(tiles, sum),
       onSelectionChange: (tiles, sum, isValid) => this.onSelectionChange?.(tiles, sum, isValid),
+      onTileClick: (tile) => this.onTileClick?.(tile),
     };
 
     this.interaction = new GameBoardInteraction(this.canvas, ctxAccess);
@@ -90,10 +94,12 @@ export class GameBoardEngine {
 
   public setCallbacks(
     onTilesCleared?: (tiles: TileCoord[], sum: number) => void,
-    onSelectionChange?: (tiles: TileCoord[], sum: number, isValid: boolean) => void
+    onSelectionChange?: (tiles: TileCoord[], sum: number, isValid: boolean) => void,
+    onTileClick?: (tile: TileCoord) => void
   ): void {
     this.onTilesCleared = onTilesCleared;
     this.onSelectionChange = onSelectionChange;
+    this.onTileClick = onTileClick;
   }
 
   public start(): void {

@@ -22,6 +22,8 @@ export interface GameBoardWidgetProps {
   onTilesCleared?: (tiles: TileCoord[], sum: number) => void;
   /** Callback fired whenever user selects tiles */
   onSelectionChange?: (tiles: TileCoord[], sum: number, isValid: boolean) => void;
+  /** Callback fired when a single tile is clicked without drag (e.g. for item placement) */
+  onTileClick?: (tile: TileCoord) => void;
   className?: string;
 }
 
@@ -35,6 +37,7 @@ export const GameBoardWidget: React.FC<GameBoardWidgetProps> = ({
   gameBg = '#fbf2df',
   onTilesCleared,
   onSelectionChange,
+  onTileClick,
   className = '',
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -65,6 +68,7 @@ export const GameBoardWidget: React.FC<GameBoardWidgetProps> = ({
       visualConfig: { gameBg, twoClickSelection, hoverLiveSelection },
       onTilesCleared,
       onSelectionChange,
+      onTileClick,
     });
     engineRef.current = engine;
     engine.start();
@@ -124,9 +128,9 @@ export const GameBoardWidget: React.FC<GameBoardWidgetProps> = ({
 
   useEffect(() => {
     if (engineRef.current) {
-      engineRef.current.setCallbacks(onTilesCleared, onSelectionChange);
+      engineRef.current.setCallbacks(onTilesCleared, onSelectionChange, onTileClick);
     }
-  }, [onTilesCleared, onSelectionChange]);
+  }, [onTilesCleared, onSelectionChange, onTileClick]);
 
   return (
     <div className={`inline-block select-none ${className}`}>

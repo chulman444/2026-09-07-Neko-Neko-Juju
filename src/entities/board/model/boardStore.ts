@@ -33,6 +33,7 @@ export interface BoardState {
   restartCurrentBoard: () => void;
   setMatrix: (matrix: number[][]) => void;
   clearTiles: (tiles: TileCoord[]) => number;
+  setTileValue: (col: number, row: number, val: number) => void;
   addClearingAnimation: (anim: ClearingAnimation) => void;
   removeExpiredAnimations: (now: number) => void;
 }
@@ -165,6 +166,15 @@ export const useBoardStore = create<BoardState>((set, get) => ({
 
     set({ matrix: newMatrix });
     return clearedCount;
+  },
+
+  setTileValue: (col, row, val) => {
+    const currentMatrix = get().matrix;
+    if (!currentMatrix[row] || currentMatrix[row][col] === undefined) return;
+    const newMatrix = currentMatrix.map((r, rIdx) =>
+      rIdx === row ? r.map((c, cIdx) => (cIdx === col ? val : c)) : [...r]
+    );
+    set({ matrix: newMatrix });
   },
 
   addClearingAnimation: (anim) => {
