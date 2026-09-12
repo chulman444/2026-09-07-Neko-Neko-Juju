@@ -25,7 +25,7 @@ export interface GameBoardWidgetProps {
   /** Callback fired whenever user selects tiles */
   onSelectionChange?: (tiles: TileCoord[], sum: number, isValid: boolean) => void;
   /** Callback fired when a single tile is clicked without drag (e.g. for item placement) */
-  onTileClick?: (tile: TileCoord) => void;
+  onTileClick?: (tile: TileCoord) => boolean | void;
   className?: string;
 }
 

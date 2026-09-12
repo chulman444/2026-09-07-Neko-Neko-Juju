@@ -71,14 +71,16 @@ export const GamePage: React.FC = () => {
   }, [generateNewBoard, resetSession]);
 
   const handleTileClick = useCallback(
-    (tile: TileCoord) => {
-      if (!isToggled) return;
+    (tile: TileCoord): boolean => {
+      if (!isToggled) return false;
       const success = handleBoardTileClick(tile, false);
       if (success) {
         useSolverStore
           .getState()
           .recalculate(useBoardStore.getState().matrix, useBoardStore.getState().seed);
+        return true;
       }
+      return false;
     },
     [isToggled, handleBoardTileClick]
   );

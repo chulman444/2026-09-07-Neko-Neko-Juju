@@ -20,7 +20,7 @@ export interface BoardContextAccess {
   getVisualConfig: () => BoardVisualConfig;
   onClear: (tiles: TileCoord[], sum: number) => void;
   onSelectionChange?: (tiles: TileCoord[], sum: number, isValid: boolean) => void;
-  onTileClick?: (tile: TileCoord) => void;
+  onTileClick?: (tile: TileCoord) => boolean | void;
 }
 
 export class GameBoardInteraction {
@@ -206,8 +206,8 @@ export class GameBoardInteraction {
     }
 
     if (endTile.col === this.startTile.col && endTile.row === this.startTile.row) {
-      if (this.ctxAccess.onTileClick) {
-        this.ctxAccess.onTileClick(endTile);
+      const handled = this.ctxAccess.onTileClick?.(endTile);
+      if (handled) {
         this.resetSelectionState();
         return;
       }
