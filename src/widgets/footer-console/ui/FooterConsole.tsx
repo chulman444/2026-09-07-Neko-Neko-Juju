@@ -217,12 +217,12 @@ export const FooterConsole: React.FC<FooterConsoleProps> = ({
         )}
       </div>
 
-      {/* Main Floating Console Deck (Fixed Dimensions with Row 1 & Row 2) */}
-      <div className="relative flex flex-col items-center justify-between bg-[#fff9f1]/95 dark:bg-zinc-900/95 backdrop-blur-md border-[3px] border-[#4a3422] dark:border-zinc-700 rounded-2xl shadow-2xl px-3.5 py-2.5 w-fit max-w-[480px] h-[138px] box-border gap-2">
-        {/* Row 1: Items & Trackball Deck */}
-        <div className="flex items-center justify-between gap-3 w-full">
+      {/* Main Floating Console Deck */}
+      <div className="relative flex flex-col items-center justify-between bg-[#fff9f1]/95 dark:bg-zinc-900/95 backdrop-blur-md border-[3px] border-[#4a3422] dark:border-zinc-700 rounded-2xl shadow-2xl px-4 py-3 w-fit max-w-[calc(100vw-2rem)] box-border gap-2.5">
+        {/* Row 1: Items & Trackball Deck (Symmetric 3-column grid for true center alignment) */}
+        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2.5 w-full">
           {/* Left Cluster: Random Number & Random Choose */}
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center justify-end gap-2.5">
             {/* Button 1: Random Number */}
             <MechanicalItemButton
               icon="🎲"
@@ -231,8 +231,8 @@ export const FooterConsole: React.FC<FooterConsoleProps> = ({
                 !isRandomNumberActive
                   ? `Random Number (${counts.randomNumber} left). Click to arm Stage 1 (Single Use).`
                   : activeItemStage === 1
-                  ? `Random Number: Stage 1 (Single Use). Click again to advance to Stage 2 (Multi-Use).`
-                  : `Random Number: Stage 2 (Multi-Use Active). Click to disarm.`
+                    ? `Random Number: Stage 1 (Single Use). Click again to advance to Stage 2 (Multi-Use).`
+                    : `Random Number: Stage 2 (Multi-Use Active). Click to disarm.`
               }
               leftWingState={isRandomNumberActive && activeItemStage >= 1 ? 'amber' : 'inactive'}
               rightWingState={isRandomNumberActive && activeItemStage === 2 ? 'amber' : 'inactive'}
@@ -254,8 +254,8 @@ export const FooterConsole: React.FC<FooterConsoleProps> = ({
                 !isRandomChooseActive
                   ? `Random Choose (${counts.randomChoose} left). Click to arm Stage 1 (Single Use).`
                   : activeItemStage === 1
-                  ? `Random Choose: Stage 1 (Single Use). Click again to advance to Stage 2 (Multi-Use).`
-                  : `Random Choose: Stage 2 (Multi-Use Active). Click to disarm.`
+                    ? `Random Choose: Stage 1 (Single Use). Click again to advance to Stage 2 (Multi-Use).`
+                    : `Random Choose: Stage 2 (Multi-Use Active). Click to disarm.`
               }
               leftWingState={isRandomChooseActive && activeItemStage >= 1 ? 'purple' : 'inactive'}
               rightWingState={isRandomChooseActive && activeItemStage === 2 ? 'purple' : 'inactive'}
@@ -292,7 +292,7 @@ export const FooterConsole: React.FC<FooterConsoleProps> = ({
           </div>
 
           {/* Right Cluster: Hint & Re-Center Pan */}
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center justify-start gap-2.5">
             {/* Button 3: Hint Item */}
             <MechanicalItemButton
               icon="💡"
