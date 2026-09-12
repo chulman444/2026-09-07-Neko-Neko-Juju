@@ -1,3 +1,5 @@
+import type { TileCoord } from '@/entities/board';
+
 export type ItemType = 'randomNumber' | 'randomChoose' | 'hint';
 
 export interface ItemCounts {
@@ -6,13 +8,24 @@ export interface ItemCounts {
   hint: number;
 }
 
+export interface ToggleCheckConfig {
+  randomNumber: boolean;
+  randomChoose: boolean;
+}
+
 export interface ItemState {
   // Inventory Counts (real game)
   counts: ItemCounts;
 
-  // Toggle Check & Active Mode
+  // Active Item & Toggle State
   activeItem: 'randomNumber' | 'randomChoose' | null;
   isToggled: boolean;
+
+  // Toggle Check (Single Use vs Multiple Use / Continuous)
+  toggleCheck: ToggleCheckConfig;
+
+  // In-Place Targeting & Rolling
+  targetTile: TileCoord | null;
 
   // Random Number State
   historyConstraintN: number; // 0 to 8, default 3
@@ -30,6 +43,12 @@ export interface ItemState {
   // Actions
   toggleItem: (item: 'randomNumber' | 'randomChoose') => void;
   untoggle: () => void;
+  setToggleCheck: (item: 'randomNumber' | 'randomChoose', enabled: boolean) => void;
+  handleBoardTileClick: (coord: TileCoord, isFree?: boolean) => boolean;
+  confirmRandomChoose: (val: number, isFree?: boolean) => boolean;
+  cancelTargetTile: () => void;
+
+  // Direct helpers for dev triggers & test suites
   rollRandomNumber: (isFree?: boolean) => number | null;
   rollRandomChoose: (isFree?: boolean) => [number, number, number] | null;
   selectChooseNumber: (val: number) => void;
@@ -43,3 +62,4 @@ export interface ItemState {
   regenerateItemSeed: () => void;
   getActiveNumber: () => number | null;
 }
+

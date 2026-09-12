@@ -23,11 +23,11 @@ export const GamePage: React.FC = () => {
   const rows = useBoardStore((state) => state.rows);
   const generateNewBoard = useBoardStore((state) => state.generateNewBoard);
   const restartCurrentBoard = useBoardStore((state) => state.restartCurrentBoard);
-  const setTileValue = useBoardStore((state) => state.setTileValue);
 
   // Item Store Selectors
-  const getActiveNumber = useItemStore((state) => state.getActiveNumber);
   const isToggled = useItemStore((state) => state.isToggled);
+  const targetTile = useItemStore((state) => state.targetTile);
+  const handleBoardTileClick = useItemStore((state) => state.handleBoardTileClick);
 
   // Initial solver recalculation on mount
   useEffect(() => {
@@ -71,15 +71,15 @@ export const GamePage: React.FC = () => {
 
   const handleTileClick = useCallback(
     (tile: TileCoord) => {
-      const activeNumber = getActiveNumber();
-      if (isToggled && activeNumber !== null) {
-        setTileValue(tile.col, tile.row, activeNumber);
+      if (!isToggled) return;
+      const success = handleBoardTileClick(tile, false);
+      if (success) {
         useSolverStore
           .getState()
           .recalculate(useBoardStore.getState().matrix, useBoardStore.getState().seed);
       }
     },
-    [isToggled, getActiveNumber, setTileValue]
+    [isToggled, handleBoardTileClick]
   );
 
   return (
@@ -171,6 +171,7 @@ export const GamePage: React.FC = () => {
         <GameBoardWidget
           interactive={!isPaused}
           highlightedTiles={highlightedTiles}
+          targetTile={targetTile}
           onTilesCleared={handleTilesCleared}
           onTileClick={handleTileClick}
           className={isPaused ? 'opacity-80' : ''}

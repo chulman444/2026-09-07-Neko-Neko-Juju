@@ -13,6 +13,7 @@ export class GameBoardRenderer {
   private visualConfig!: BoardVisualConfig;
   private interaction!: InteractionSnapshot;
   private highlightedTiles: TileCoord[] = [];
+  private targetTile: TileCoord | null = null;
   private pitch = 0;
   private now = 0;
   private isValidBoxSum = false;
@@ -39,12 +40,14 @@ export class GameBoardRenderer {
     visualConfig: BoardVisualConfig,
     interaction: InteractionSnapshot,
     highlightedTiles: TileCoord[],
-    now: number
+    now: number,
+    targetTile?: TileCoord | null
   ): void {
     this.board = board;
     this.visualConfig = visualConfig;
     this.interaction = interaction;
     this.highlightedTiles = highlightedTiles;
+    this.targetTile = targetTile ?? null;
     this.now = now;
     this.pitch = getGridPitch(board.shapeSize, board.tileBorder);
 
@@ -73,10 +76,12 @@ export class GameBoardRenderer {
     this.drawBackground();
     this.drawBaseBowls();
     this.drawHintHighlights();
+    this.drawTargetIndicator();
     this.drawSelectionOverlays();
     this.drawValidSumCatHeads();
     this.drawSelectionIndicators();
     this.drawNumberText();
+    this.drawTargetBadge();
     this.drawClearingAnimations();
   }
 
@@ -134,6 +139,70 @@ export class GameBoardRenderer {
       this.ctx.fill();
       this.ctx.stroke();
     }
+  }
+
+  // Layer 2.6: Target Indicator (animated pulsating aura & reticles for targeted tile)
+  private drawTargetIndicator(): void {
+    if (!this.targetTile) return;
+    const { shapeSize, tileBorder } = this.board;
+    const { col, row } = this.targetTile;
+
+    const cellX = col * this.pitch + tileBorder;
+    const cellY = row * this.pitch + tileBorder;
+    const pulse = 0.5 + 0.5 * Math.sin(this.now / 150);
+
+    // 1. Semi-transparent magenta/purple glow wash inside bowl
+    this.ctx.fillStyle = `rgba(168, 85, 247, ${0.25 + pulse * 0.2})`;
+    this.ctx.beginPath();
+    this.ctx.roundRect(cellX, cellY, shapeSize, shapeSize, 10);
+    this.ctx.fill();
+
+    // 2. Animated marching ants dashed border
+    this.ctx.save();
+    this.ctx.strokeStyle = `rgba(192, 38, 211, ${0.8 + pulse * 0.2})`;
+    this.ctx.lineWidth = 3;
+    this.ctx.setLineDash([6, 4]);
+    this.ctx.lineDashOffset = -this.now / 30;
+    this.ctx.beginPath();
+    this.ctx.roundRect(cellX - 3, cellY - 3, shapeSize + 6, shapeSize + 6, 12);
+    this.ctx.stroke();
+    this.ctx.restore();
+
+    // 3. Crisp corner crosshair brackets
+    const bracketLen = Math.min(10, shapeSize * 0.25);
+    this.ctx.save();
+    this.ctx.strokeStyle = '#a855f7';
+    this.ctx.lineWidth = 2.5;
+    this.ctx.lineCap = 'round';
+
+    // Top-left
+    this.ctx.beginPath();
+    this.ctx.moveTo(cellX - 4, cellY - 4 + bracketLen);
+    this.ctx.lineTo(cellX - 4, cellY - 4);
+    this.ctx.lineTo(cellX - 4 + bracketLen, cellY - 4);
+    this.ctx.stroke();
+
+    // Top-right
+    this.ctx.beginPath();
+    this.ctx.moveTo(cellX + shapeSize + 4 - bracketLen, cellY - 4);
+    this.ctx.lineTo(cellX + shapeSize + 4, cellY - 4);
+    this.ctx.lineTo(cellX + shapeSize + 4, cellY - 4 + bracketLen);
+    this.ctx.stroke();
+
+    // Bottom-left
+    this.ctx.beginPath();
+    this.ctx.moveTo(cellX - 4, cellY + shapeSize + 4 - bracketLen);
+    this.ctx.lineTo(cellX - 4, cellY + shapeSize + 4);
+    this.ctx.lineTo(cellX - 4 + bracketLen, cellY + shapeSize + 4);
+    this.ctx.stroke();
+
+    // Bottom-right
+    this.ctx.beginPath();
+    this.ctx.moveTo(cellX + shapeSize + 4 - bracketLen, cellY + shapeSize + 4);
+    this.ctx.lineTo(cellX + shapeSize + 4, cellY + shapeSize + 4);
+    this.ctx.lineTo(cellX + shapeSize + 4, cellY + shapeSize + 4 - bracketLen);
+    this.ctx.stroke();
+    this.ctx.restore();
   }
 
   // Layer 3: Selection Overlays
@@ -404,6 +473,36 @@ export class GameBoardRenderer {
         this.ctx.fillText(val.toString(), cx, cy + 2);
       }
     }
+  }
+
+  // Layer 6.5: Floating Target Badge ("TARGET TILE" pill indicator)
+  private drawTargetBadge(): void {
+    if (!this.targetTile) return;
+    const { shapeSize, tileBorder } = this.board;
+    const { col, row } = this.targetTile;
+
+    const cellX = col * this.pitch + tileBorder;
+    const cellY = row * this.pitch + tileBorder;
+    const badgeW = 68;
+    const badgeH = 16;
+    const badgeX = cellX + shapeSize / 2 - badgeW / 2;
+    const badgeY = Math.max(2, cellY - 12);
+
+    this.ctx.save();
+    this.ctx.fillStyle = '#7e22ce';
+    this.ctx.strokeStyle = '#f3e8ff';
+    this.ctx.lineWidth = 1.5;
+    this.ctx.beginPath();
+    this.ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 8);
+    this.ctx.fill();
+    this.ctx.stroke();
+
+    this.ctx.fillStyle = '#ffffff';
+    this.ctx.font = 'bold 9px sans-serif';
+    this.ctx.textAlign = 'center';
+    this.ctx.textBaseline = 'middle';
+    this.ctx.fillText('TARGET TILE', cellX + shapeSize / 2, badgeY + badgeH / 2);
+    this.ctx.restore();
   }
 
   // Layer 7: Active Clearing Animations

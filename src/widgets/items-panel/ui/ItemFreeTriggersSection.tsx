@@ -4,12 +4,15 @@ import { useItemStore } from '@/entities/item';
 export const ItemFreeTriggersSection: React.FC = () => {
   const activeItem = useItemStore((state) => state.activeItem);
   const isToggled = useItemStore((state) => state.isToggled);
+  const toggleCheck = useItemStore((state) => state.toggleCheck);
+  const targetTile = useItemStore((state) => state.targetTile);
   const currentRolledNumber = useItemStore((state) => state.currentRolledNumber);
   const randomChooseOptions = useItemStore((state) => state.randomChooseOptions);
   const selectedChooseNumber = useItemStore((state) => state.selectedChooseNumber);
 
   const toggleItem = useItemStore((state) => state.toggleItem);
   const untoggle = useItemStore((state) => state.untoggle);
+  const setToggleCheck = useItemStore((state) => state.setToggleCheck);
   const rollRandomNumber = useItemStore((state) => state.rollRandomNumber);
   const rollRandomChoose = useItemStore((state) => state.rollRandomChoose);
   const selectChooseNumber = useItemStore((state) => state.selectChooseNumber);
@@ -39,9 +42,9 @@ export const ItemFreeTriggersSection: React.FC = () => {
               }`}
             />
             <span className="text-xs font-semibold text-zinc-200">
-              Current Mode:{' '}
+              Mode:{' '}
               <strong className={isToggled ? 'text-amber-400' : 'text-emerald-400'}>
-                {isToggled ? `Item Placement (${activeItem})` : 'Select Mode (Match 10)'}
+                {isToggled ? `Armed (${activeItem})` : 'Select Mode (Match 10)'}
               </strong>
             </span>
           </div>
@@ -59,20 +62,12 @@ export const ItemFreeTriggersSection: React.FC = () => {
         {/* 1. Free Random Number Item */}
         <div className="flex flex-col gap-2 p-2.5 rounded-lg bg-zinc-900/60 border border-zinc-700/60">
           <div className="flex items-center justify-between">
-            <label className="flex items-center gap-2 cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={isRandomNumberToggled}
-                onChange={() => toggleItem('randomNumber')}
-                className="w-4 h-4 accent-amber-500 rounded cursor-pointer"
-              />
-              <span className="text-xs font-bold text-zinc-200">
-                🎲 Random Number (Toggle Check)
-              </span>
-            </label>
+            <span className="text-xs font-bold text-zinc-200">
+              🎲 Random Number
+            </span>
             {isRandomNumberToggled && (
               <span className="text-[10px] text-amber-400 font-mono font-bold bg-amber-950/60 px-1.5 py-0.5 rounded border border-amber-600/50">
-                ACTIVE
+                ARMED (TAP BOARD TILE)
               </span>
             )}
           </div>
@@ -80,52 +75,90 @@ export const ItemFreeTriggersSection: React.FC = () => {
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={() => rollRandomNumber(true)}
-              className="flex-1 py-1.5 px-3 rounded-lg text-xs font-bold bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-200 transition cursor-pointer"
+              onClick={() => toggleItem('randomNumber')}
+              className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition cursor-pointer ${
+                isRandomNumberToggled
+                  ? 'bg-amber-500 text-zinc-950'
+                  : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700'
+              }`}
             >
-              🎲 Free Roll (No cost)
+              {isRandomNumberToggled ? '✓ Disarm Random Number' : 'Arm Random Number'}
+            </button>
+            <button
+              type="button"
+              onClick={() => rollRandomNumber(true)}
+              className="py-1.5 px-2.5 rounded-lg text-xs font-bold bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-200 transition cursor-pointer"
+              title="Test direct PRNG draw"
+            >
+              Test PRNG Roll
             </button>
             {currentRolledNumber !== null && (
-              <div className="px-3 py-1 bg-amber-500 text-zinc-950 font-mono font-black text-sm rounded-lg shadow">
+              <div className="px-2.5 py-1 bg-amber-500 text-zinc-950 font-mono font-black text-xs rounded-lg shadow">
                 {currentRolledNumber}
               </div>
             )}
           </div>
+
+          <label className="flex items-center gap-2 cursor-pointer select-none text-[11px] text-zinc-300 mt-0.5">
+            <input
+              type="checkbox"
+              checked={toggleCheck.randomNumber}
+              onChange={(e) => setToggleCheck('randomNumber', e.target.checked)}
+              className="w-3.5 h-3.5 accent-amber-500 rounded cursor-pointer"
+            />
+            <span>Multiple Use (Stay armed for repeated tile clicking)</span>
+          </label>
         </div>
 
         {/* 2. Free Random Choose Item */}
         <div className="flex flex-col gap-2 p-2.5 rounded-lg bg-zinc-900/60 border border-zinc-700/60">
           <div className="flex items-center justify-between">
-            <label className="flex items-center gap-2 cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={isRandomChooseToggled}
-                onChange={() => toggleItem('randomChoose')}
-                className="w-4 h-4 accent-amber-500 rounded cursor-pointer"
-              />
-              <span className="text-xs font-bold text-zinc-200">
-                🎰 Random Choose (Toggle Check)
-              </span>
-            </label>
+            <span className="text-xs font-bold text-zinc-200">
+              🎰 Random Choose
+            </span>
             {isRandomChooseToggled && (
-              <span className="text-[10px] text-amber-400 font-mono font-bold bg-amber-950/60 px-1.5 py-0.5 rounded border border-amber-600/50">
-                ACTIVE
+              <span className="text-[10px] text-purple-400 font-mono font-bold bg-purple-950/60 px-1.5 py-0.5 rounded border border-purple-600/50">
+                {targetTile ? `TARGETED (${targetTile.col + 1}, ${targetTile.row + 1})` : 'ARMED (TAP TILE)'}
               </span>
             )}
           </div>
 
-          <button
-            type="button"
-            onClick={() => rollRandomChoose(true)}
-            className="w-full py-1.5 px-3 rounded-lg text-xs font-bold bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-200 transition cursor-pointer"
-          >
-            🎰 Free Choose 3 Options (No cost)
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => toggleItem('randomChoose')}
+              className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition cursor-pointer ${
+                isRandomChooseToggled
+                  ? 'bg-purple-600 text-white'
+                  : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700'
+              }`}
+            >
+              {isRandomChooseToggled ? '✓ Disarm Random Choose' : 'Arm Random Choose'}
+            </button>
+            <button
+              type="button"
+              onClick={() => rollRandomChoose(true)}
+              className="py-1.5 px-2.5 rounded-lg text-xs font-bold bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/40 text-purple-200 transition cursor-pointer"
+              title="Test direct PRNG draw of 3 options"
+            >
+              Test PRNG 3
+            </button>
+          </div>
+
+          <label className="flex items-center gap-2 cursor-pointer select-none text-[11px] text-zinc-300 mt-0.5">
+            <input
+              type="checkbox"
+              checked={toggleCheck.randomChoose}
+              onChange={(e) => setToggleCheck('randomChoose', e.target.checked)}
+              className="w-3.5 h-3.5 accent-purple-600 rounded cursor-pointer"
+            />
+            <span>Multiple Use (Stay armed for choosing other tiles)</span>
+          </label>
 
           {randomChooseOptions && (
-            <div className="flex flex-col gap-1 mt-1">
+            <div className="flex flex-col gap-1 mt-1 pt-1.5 border-t border-zinc-700/60">
               <span className="text-[10px] text-zinc-400 font-semibold">
-                Click an option to select active number:
+                Available choices:
               </span>
               <div className="grid grid-cols-3 gap-1.5">
                 {randomChooseOptions.map((opt, i) => (
@@ -135,7 +168,7 @@ export const ItemFreeTriggersSection: React.FC = () => {
                     onClick={() => selectChooseNumber(opt)}
                     className={`py-1 text-center font-mono font-bold text-xs rounded-md transition cursor-pointer border ${
                       selectedChooseNumber === opt
-                        ? 'bg-amber-500 text-zinc-950 border-amber-400 shadow'
+                        ? 'bg-purple-600 text-white border-purple-500 shadow'
                         : 'bg-zinc-800 text-zinc-300 border-zinc-700 hover:bg-zinc-700'
                     }`}
                   >

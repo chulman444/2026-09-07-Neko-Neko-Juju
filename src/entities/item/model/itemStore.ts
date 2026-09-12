@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { useBoardStore } from '@/entities/board';
+import { useBoardStore, type TileCoord } from '@/entities/board';
 import { useGameSessionStore } from '@/entities/game-session';
 import { generateSeed, seededRandomGenerator } from '@/shared/lib/prng';
 import type { ItemState, ItemCounts, ItemType } from './types';
@@ -30,6 +30,11 @@ export const useItemStore = create<ItemState>((set, get) => ({
   counts: { ...DEFAULT_ITEM_COUNTS },
   activeItem: null,
   isToggled: false,
+  toggleCheck: {
+    randomNumber: false,
+    randomChoose: false,
+  },
+  targetTile: null,
 
   historyConstraintN: 3,
   rollHistory: [],
@@ -44,28 +49,154 @@ export const useItemStore = create<ItemState>((set, get) => ({
   toggleItem: (item: 'randomNumber' | 'randomChoose') => {
     const state = get();
     if (state.isToggled && state.activeItem === item) {
-      set({ isToggled: false, activeItem: null });
+      set({
+        isToggled: false,
+        activeItem: null,
+        targetTile: null,
+        randomChooseOptions: null,
+        selectedChooseNumber: null,
+      });
       return;
     }
 
-    if (item === 'randomNumber') {
-      if (state.currentRolledNumber !== null) {
-        set({ activeItem: 'randomNumber', isToggled: true });
-      } else {
-        get().rollRandomNumber(false);
-      }
-    } else if (item === 'randomChoose') {
-      if (state.randomChooseOptions !== null) {
-        set({ activeItem: 'randomChoose', isToggled: true });
-      } else {
-        get().rollRandomChoose(false);
-      }
-    }
+    // Arm the item with strict mutual exclusion
+    set({
+      activeItem: item,
+      isToggled: true,
+      targetTile: null,
+      randomChooseOptions: null,
+      selectedChooseNumber: null,
+    });
   },
 
   untoggle: () => {
-    set({ isToggled: false, activeItem: null });
+    set({
+      isToggled: false,
+      activeItem: null,
+      targetTile: null,
+      randomChooseOptions: null,
+      selectedChooseNumber: null,
+    });
   },
+
+  setToggleCheck: (item: 'randomNumber' | 'randomChoose', enabled: boolean) => {
+    set((state) => ({
+      toggleCheck: {
+        ...state.toggleCheck,
+        [item]: enabled,
+      },
+    }));
+  },
+
+  handleBoardTileClick: (coord: TileCoord, isFree = false) => {
+    const state = get();
+    if (!state.isToggled || !state.activeItem) return false;
+
+    if (state.activeItem === 'randomNumber') {
+      if (!isFree && state.counts.randomNumber <= 0) {
+        return false;
+      }
+
+      const { minNum, maxNum } = useBoardStore.getState();
+      const history = state.rollHistory;
+      const n = Math.max(0, Math.min(8, state.historyConstraintN));
+
+      let candidates: number[] = [];
+      for (let num = minNum; num <= maxNum; num++) {
+        if (!history.includes(num)) {
+          candidates.push(num);
+        }
+      }
+
+      if (candidates.length === 0) {
+        for (let num = minNum; num <= maxNum; num++) {
+          candidates.push(num);
+        }
+      }
+
+      const rand = getItemRandom(state);
+      const index = Math.floor(rand * candidates.length);
+      const chosenNumber = candidates[index] ?? candidates[0] ?? 1;
+      const nextHistory = n > 0 ? [...history, chosenNumber].slice(-n) : [];
+
+      // Update tile directly on board
+      useBoardStore.getState().setTileValue(coord.col, coord.row, chosenNumber);
+
+      const nextCounts = isFree
+        ? state.counts
+        : { ...state.counts, randomNumber: Math.max(0, state.counts.randomNumber - 1) };
+
+      const isMultipleUse = state.toggleCheck.randomNumber;
+      set({
+        counts: nextCounts,
+        currentRolledNumber: chosenNumber,
+        rollHistory: nextHistory,
+        isToggled: isMultipleUse,
+        activeItem: isMultipleUse ? 'randomNumber' : null,
+      });
+
+      return true;
+    }
+
+    if (state.activeItem === 'randomChoose') {
+      if (!isFree && state.counts.randomChoose <= 0) {
+        return false;
+      }
+
+      const { minNum, maxNum } = useBoardStore.getState();
+      const range = maxNum - minNum + 1;
+
+      // Draw 3 consecutive numbers from continuous PRNG stream
+      const options: [number, number, number] = [
+        Math.floor(getItemRandom(state) * range) + minNum,
+        Math.floor(getItemRandom(state) * range) + minNum,
+        Math.floor(getItemRandom(state) * range) + minNum,
+      ];
+
+      set({
+        targetTile: coord,
+        randomChooseOptions: options,
+        selectedChooseNumber: options[0],
+      });
+
+      return true;
+    }
+
+    return false;
+  },
+
+  confirmRandomChoose: (val: number, isFree = false) => {
+    const state = get();
+    if (!state.targetTile) return false;
+    if (!isFree && state.counts.randomChoose <= 0) return false;
+
+    useBoardStore.getState().setTileValue(state.targetTile.col, state.targetTile.row, val);
+
+    const nextCounts = isFree
+      ? state.counts
+      : { ...state.counts, randomChoose: Math.max(0, state.counts.randomChoose - 1) };
+
+    const isMultipleUse = state.toggleCheck.randomChoose;
+    set({
+      counts: nextCounts,
+      targetTile: null,
+      randomChooseOptions: null,
+      selectedChooseNumber: null,
+      isToggled: isMultipleUse,
+      activeItem: isMultipleUse ? 'randomChoose' : null,
+    });
+
+    return true;
+  },
+
+  cancelTargetTile: () => {
+    set({
+      targetTile: null,
+      randomChooseOptions: null,
+      selectedChooseNumber: null,
+    });
+  },
+
 
   rollRandomNumber: (isFree = false) => {
     const state = get();

@@ -9,6 +9,7 @@ export interface GameBoardEngineOptions {
   targetSum?: number;
   matrix?: number[][];
   highlightedTiles?: TileCoord[];
+  targetTile?: TileCoord | null;
   visualConfig?: Partial<BoardVisualConfig>;
   onTilesCleared?: (tiles: TileCoord[], sum: number) => void;
   onSelectionChange?: (tiles: TileCoord[], sum: number, isValid: boolean) => void;
@@ -27,6 +28,7 @@ export class GameBoardEngine {
   private targetSum = 10;
   private matrixOverride?: number[][];
   private highlightedTiles: TileCoord[] = [];
+  private targetTile: TileCoord | null = null;
   private onTilesCleared?: (tiles: TileCoord[], sum: number) => void;
   private onSelectionChange?: (tiles: TileCoord[], sum: number, isValid: boolean) => void;
   private onTileClick?: (tile: TileCoord) => void;
@@ -38,6 +40,7 @@ export class GameBoardEngine {
     this.targetSum = options.targetSum ?? 10;
     this.matrixOverride = options.matrix ? options.matrix.map((row) => [...row]) : undefined;
     this.highlightedTiles = options.highlightedTiles ?? [];
+    this.targetTile = options.targetTile ?? null;
     this.onTilesCleared = options.onTilesCleared;
     this.onSelectionChange = options.onSelectionChange;
     this.onTileClick = options.onTileClick;
@@ -90,6 +93,10 @@ export class GameBoardEngine {
 
   public setHighlightedTiles(tiles: TileCoord[]): void {
     this.highlightedTiles = tiles;
+  }
+
+  public setTargetTile(targetTile: TileCoord | null): void {
+    this.targetTile = targetTile;
   }
 
   public setCallbacks(
@@ -190,7 +197,8 @@ export class GameBoardEngine {
         this.visualConfig,
         snapshot,
         this.highlightedTiles,
-        timestamp
+        timestamp,
+        this.targetTile
       );
 
       this.animId = requestAnimationFrame(loop);

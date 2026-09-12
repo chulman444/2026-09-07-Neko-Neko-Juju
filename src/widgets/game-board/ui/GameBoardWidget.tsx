@@ -16,6 +16,8 @@ export interface GameBoardWidgetProps {
   hoverLiveSelection?: boolean;
   /** Highlighted tile coordinates (e.g. for hint system) */
   highlightedTiles?: TileCoord[];
+  /** Targeted tile coordinate for item application (e.g. Random Choose) */
+  targetTile?: TileCoord | null;
   /** Board background color override */
   gameBg?: string;
   /** Callback fired when a valid set of tiles is matched and cleared */
@@ -34,6 +36,7 @@ export const GameBoardWidget: React.FC<GameBoardWidgetProps> = ({
   twoClickSelection = true,
   hoverLiveSelection = true,
   highlightedTiles = [],
+  targetTile = null,
   gameBg = '#fbf2df',
   onTilesCleared,
   onSelectionChange,
@@ -65,6 +68,7 @@ export const GameBoardWidget: React.FC<GameBoardWidgetProps> = ({
       targetSum,
       matrix,
       highlightedTiles,
+      targetTile,
       visualConfig: { gameBg, twoClickSelection, hoverLiveSelection },
       onTilesCleared,
       onSelectionChange,
@@ -125,6 +129,12 @@ export const GameBoardWidget: React.FC<GameBoardWidgetProps> = ({
       engineRef.current.setHighlightedTiles(highlightedTiles);
     }
   }, [highlightedTiles]);
+
+  useEffect(() => {
+    if (engineRef.current) {
+      engineRef.current.setTargetTile(targetTile ?? null);
+    }
+  }, [targetTile]);
 
   useEffect(() => {
     if (engineRef.current) {
