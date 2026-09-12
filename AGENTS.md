@@ -4,6 +4,8 @@
 - **No unsolicited edits**: Always diagnose, explain, or propose solutions first.
 - **Strict Permission**: NEVER create, modify, or delete files, or execute modifying shell commands, without the user's explicit confirmation (e.g., "go ahead", "apply this fix").
 - **Plan As Single Source of Truth**: When requirements or user feedback change the direction of a task, immediately rewrite and update `implementation_plan.md` in that exact same turn before asking for confirmation or proceeding to execution. Never leave an outdated plan in place while discussing changes in chat.
+- **Proactive Git Commit Prompts**: As soon as a discrete feature, fix, or refactoring step passes verification (`lint`, `test`, `build`), the agent MUST proactively prompt the user to commit with a concise suggested commit message before moving on to new feature requests, discussions, or further code changes.
+- **Uncommitted Work Guard**: Before pivoting or starting work on any new user request, the agent must check `git status`. If uncommitted changes exist from prior completed work, the agent must explicitly flag them and suggest committing them first so changes do not get tangled or forgotten.
 
 ---
 
@@ -108,3 +110,4 @@ Before completing any task:
 2. Check for lint or type errors and resolve them immediately: `npm.cmd run lint`.
 3. If story files or Storybook configs were modified, verify Storybook builds cleanly: `npm.cmd run build-storybook`.
 4. Ensure no FSD layer boundary violations or deep slice imports are introduced.
+5. **Prompt for Git Commit**: Once verification passes, always present a suggested commit message and ask the user for confirmation to commit before proceeding to any new or unrelated work.
