@@ -18,7 +18,6 @@ export const FooterConsole: React.FC<FooterConsoleProps> = ({
   className = '',
 }) => {
   // Session & Board
-  const isDepleted = useGameSessionStore((state) => state.isDepleted);
   const isPaused = useGameSessionStore((state) => state.isPaused);
   const panOffset = useBoardStore((state) => state.panOffset);
   const resetPanOffset = useBoardStore((state) => state.resetPanOffset);
@@ -58,7 +57,7 @@ export const FooterConsole: React.FC<FooterConsoleProps> = ({
   const isPanned = Math.abs(panOffset.x) > 1 || Math.abs(panOffset.y) > 1;
 
   const handleHintClick = () => {
-    if (isDepleted || isPaused || counts.hint <= 0) return;
+    if (isPaused || counts.hint <= 0) return;
     const success = triggerHintItem(false);
     if (success) {
       setHintSuccessFlash(true);
@@ -240,7 +239,7 @@ export const FooterConsole: React.FC<FooterConsoleProps> = ({
               }
               onRightWingClick={() => setToggleCheck('randomNumber', !toggleCheck.randomNumber)}
               onClick={() => toggleItem('randomNumber')}
-              disabled={isDepleted || isPaused || counts.randomNumber <= 0}
+              disabled={isPaused || counts.randomNumber <= 0}
             />
 
             {/* Button 2: Random Choose */}
@@ -258,7 +257,7 @@ export const FooterConsole: React.FC<FooterConsoleProps> = ({
               }
               onRightWingClick={() => setToggleCheck('randomChoose', !toggleCheck.randomChoose)}
               onClick={() => toggleItem('randomChoose')}
-              disabled={isDepleted || isPaused || counts.randomChoose <= 0}
+              disabled={isPaused || counts.randomChoose <= 0}
             />
           </div>
 
@@ -295,7 +294,7 @@ export const FooterConsole: React.FC<FooterConsoleProps> = ({
               leftWingTitle="Hint Indicator"
               rightWingTitle="Hint Indicator"
               onClick={handleHintClick}
-              disabled={isDepleted || isPaused || counts.hint <= 0}
+              disabled={isPaused || counts.hint <= 0}
             />
 
             {/* Button 4: Re-Center Pan */}
