@@ -30,6 +30,7 @@ export const useItemStore = create<ItemState>((set, get) => ({
   counts: { ...DEFAULT_ITEM_COUNTS },
   activeItem: null,
   isToggled: false,
+  activeItemStage: 0,
   toggleCheck: {
     randomNumber: false,
     randomChoose: false,
@@ -48,44 +49,72 @@ export const useItemStore = create<ItemState>((set, get) => ({
 
   toggleItem: (item: 'randomNumber' | 'randomChoose') => {
     const state = get();
-    if (state.isToggled && state.activeItem === item) {
+    if (state.activeItem !== item) {
+      // 1st click: Arm in Stage 1 (or Stage 2 if toggleCheck was already pre-enabled)
+      const stage = state.toggleCheck[item] ? 2 : 1;
       set({
-        isToggled: false,
-        activeItem: null,
+        activeItem: item,
+        isToggled: true,
+        activeItemStage: stage,
         targetTile: null,
         randomChooseOptions: null,
         selectedChooseNumber: null,
+        toggleCheck: {
+          randomNumber: item === 'randomNumber' ? stage === 2 : false,
+          randomChoose: item === 'randomChoose' ? stage === 2 : false,
+        },
       });
-      return;
+    } else if (state.activeItemStage === 1) {
+      // 2nd click: Advance to Stage 2 (Multi-Use Mode)
+      set({
+        activeItemStage: 2,
+        toggleCheck: {
+          ...state.toggleCheck,
+          [item]: true,
+        },
+      });
+    } else {
+      // 3rd click: Disarm to Stage 0
+      set({
+        isToggled: false,
+        activeItem: null,
+        activeItemStage: 0,
+        targetTile: null,
+        randomChooseOptions: null,
+        selectedChooseNumber: null,
+        toggleCheck: {
+          ...state.toggleCheck,
+          [item]: false,
+        },
+      });
     }
-
-    // Arm the item with strict mutual exclusion
-    set({
-      activeItem: item,
-      isToggled: true,
-      targetTile: null,
-      randomChooseOptions: null,
-      selectedChooseNumber: null,
-    });
   },
 
   untoggle: () => {
     set({
       isToggled: false,
       activeItem: null,
+      activeItemStage: 0,
       targetTile: null,
       randomChooseOptions: null,
       selectedChooseNumber: null,
+      toggleCheck: {
+        randomNumber: false,
+        randomChoose: false,
+      },
     });
   },
 
   setToggleCheck: (item: 'randomNumber' | 'randomChoose', enabled: boolean) => {
-    set((state) => ({
+    const state = get();
+    const nextStage = state.activeItem === item ? (enabled ? 2 : 1) : state.activeItemStage;
+    set({
+      activeItemStage: nextStage,
       toggleCheck: {
         ...state.toggleCheck,
         [item]: enabled,
       },
-    }));
+    });
   },
 
   handleBoardTileClick: (coord: TileCoord, isFree = false) => {
@@ -126,13 +155,19 @@ export const useItemStore = create<ItemState>((set, get) => ({
         ? state.counts
         : { ...state.counts, randomNumber: Math.max(0, state.counts.randomNumber - 1) };
 
-      const isMultipleUse = state.toggleCheck.randomNumber;
+      const isMultipleUse = state.activeItemStage === 2 || state.toggleCheck.randomNumber;
+      const shouldStayArmed = isMultipleUse && (isFree || nextCounts.randomNumber > 0);
       set({
         counts: nextCounts,
         currentRolledNumber: chosenNumber,
         rollHistory: nextHistory,
-        isToggled: isMultipleUse,
-        activeItem: isMultipleUse ? 'randomNumber' : null,
+        isToggled: shouldStayArmed,
+        activeItem: shouldStayArmed ? 'randomNumber' : null,
+        activeItemStage: shouldStayArmed ? 2 : 0,
+        toggleCheck: {
+          ...state.toggleCheck,
+          randomNumber: shouldStayArmed,
+        },
       });
 
       return true;
@@ -176,14 +211,20 @@ export const useItemStore = create<ItemState>((set, get) => ({
       ? state.counts
       : { ...state.counts, randomChoose: Math.max(0, state.counts.randomChoose - 1) };
 
-    const isMultipleUse = state.toggleCheck.randomChoose;
+    const isMultipleUse = state.activeItemStage === 2 || state.toggleCheck.randomChoose;
+    const shouldStayArmed = isMultipleUse && (isFree || nextCounts.randomChoose > 0);
     set({
       counts: nextCounts,
       targetTile: null,
       randomChooseOptions: null,
       selectedChooseNumber: null,
-      isToggled: isMultipleUse,
-      activeItem: isMultipleUse ? 'randomChoose' : null,
+      isToggled: shouldStayArmed,
+      activeItem: shouldStayArmed ? 'randomChoose' : null,
+      activeItemStage: shouldStayArmed ? 2 : 0,
+      toggleCheck: {
+        ...state.toggleCheck,
+        randomChoose: shouldStayArmed,
+      },
     });
 
     return true;

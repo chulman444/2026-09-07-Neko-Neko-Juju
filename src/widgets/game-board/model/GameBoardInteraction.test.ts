@@ -230,4 +230,210 @@ describe('GameBoardInteraction - Two-Click Selection', () => {
 
     interaction.unbind();
   });
+
+  it('keeps cursor as crosshair in default gameplay (idle, drag, tap)', () => {
+    const mockCanvas = createMockCanvas();
+    const ctxAccess: BoardContextAccess = {
+      getTargetSum: () => 10,
+      isInteractive: () => true,
+      getBoardState: () => defaultBoardState,
+      getVisualConfig: () => defaultVisualConfig,
+      onClear: vi.fn(),
+    };
+
+    const interaction = new GameBoardInteraction(mockCanvas as unknown as HTMLCanvasElement, ctxAccess);
+    interaction.bind();
+
+    // Idle hover
+    triggerWindow('pointermove', { clientX: 20, clientY: 20, buttons: 0, pointerType: 'mouse' });
+    expect(mockCanvas.style.cursor).toBe('crosshair');
+
+    // Pointer down (dragging)
+    mockCanvas.trigger('pointerdown', { clientX: 20, clientY: 20, button: 0, pointerType: 'mouse' });
+    expect(mockCanvas.style.cursor).toBe('crosshair');
+
+    interaction.unbind();
+  });
+
+  it('sets cursor to grab/grabbing in pan mode and never crosshair', () => {
+    const mockCanvas = createMockCanvas();
+    let panMode = true;
+    const ctxAccess: BoardContextAccess = {
+      getTargetSum: () => 10,
+      isInteractive: () => true,
+      isPanMode: () => panMode,
+      getBoardState: () => defaultBoardState,
+      getVisualConfig: () => defaultVisualConfig,
+      onClear: vi.fn(),
+    };
+
+    const interaction = new GameBoardInteraction(mockCanvas as unknown as HTMLCanvasElement, ctxAccess);
+    interaction.bind();
+
+    // Hovering in pan mode
+    triggerWindow('pointermove', { clientX: 20, clientY: 20, buttons: 0, pointerType: 'mouse' });
+    expect(mockCanvas.style.cursor).toBe('grab');
+
+    // Dragging/panning in pan mode
+    mockCanvas.trigger('pointerdown', { clientX: 20, clientY: 20, button: 0, pointerType: 'mouse' });
+    expect(mockCanvas.style.cursor).toBe('grabbing');
+
+    triggerWindow('pointerup', { clientX: 20, clientY: 20, button: 0, pointerType: 'mouse' });
+    expect(mockCanvas.style.cursor).toBe('grab');
+
+    // Disabling pan mode restores default crosshair
+    panMode = false;
+    interaction.updateCursorState();
+    expect(mockCanvas.style.cursor).toBe('crosshair');
+
+    interaction.unbind();
+  });
+
+  it('sets cursor to pointer in item active mode and never crosshair', () => {
+    const mockCanvas = createMockCanvas();
+    let itemActive = true;
+    const ctxAccess: BoardContextAccess = {
+      getTargetSum: () => 10,
+      isInteractive: () => true,
+      isItemActive: () => itemActive,
+      getBoardState: () => defaultBoardState,
+      getVisualConfig: () => defaultVisualConfig,
+      onClear: vi.fn(),
+    };
+
+    const interaction = new GameBoardInteraction(mockCanvas as unknown as HTMLCanvasElement, ctxAccess);
+    interaction.bind();
+
+    triggerWindow('pointermove', { clientX: 20, clientY: 20, buttons: 0, pointerType: 'mouse' });
+    expect(mockCanvas.style.cursor).toBe('pointer');
+
+    // Disarming item restores crosshair
+    itemActive = false;
+    interaction.updateCursorState();
+    expect(mockCanvas.style.cursor).toBe('crosshair');
+
+    interaction.unbind();
+  });
+
+  it('bypasses selection mode when isItemActive is true', () => {
+    const mockCanvas = createMockCanvas();
+    const onClear = vi.fn();
+    const onTileClick = vi.fn();
+    const onSelectionChange = vi.fn();
+
+    const ctxAccess: BoardContextAccess = {
+      getTargetSum: () => 10,
+      isInteractive: () => true,
+      isItemActive: () => true,
+      getBoardState: () => defaultBoardState,
+      getVisualConfig: () => defaultVisualConfig,
+      onClear,
+      onTileClick,
+      onSelectionChange,
+    };
+
+    const interaction = new GameBoardInteraction(mockCanvas as unknown as HTMLCanvasElement, ctxAccess);
+    interaction.bind();
+
+    // 1. Pointer down on tile (0, 0)
+    mockCanvas.trigger('pointerdown', {
+      clientX: 20,
+      clientY: 20,
+      button: 0,
+      pointerType: 'mouse',
+      shiftKey: false,
+    });
+
+    // Should NOT have started a box selection action
+    const snapshotDown = interaction.getSnapshot();
+    expect(snapshotDown.activeAction).toBeNull();
+    expect(snapshotDown.boxTiles).toEqual([]);
+
+    // 2. Drag to tile (1, 0)
+    triggerWindow('pointermove', {
+      clientX: 60,
+      clientY: 20,
+      buttons: 1,
+      pointerType: 'mouse',
+      shiftKey: false,
+    });
+
+    const snapshotMove = interaction.getSnapshot();
+    expect(snapshotMove.activeAction).toBeNull();
+    expect(snapshotMove.boxTiles).toEqual([]);
+
+    // 3. Pointer up on tile (1, 0) (dragged away from startTile)
+    triggerWindow('pointerup', {
+      clientX: 60,
+      clientY: 20,
+      button: 0,
+      pointerType: 'mouse',
+      shiftKey: false,
+    });
+
+    // Should NOT clear tiles and should NOT click tile (since released on different tile)
+    expect(onClear).not.toHaveBeenCalled();
+    expect(onTileClick).not.toHaveBeenCalled();
+
+    // 4. Click cleanly on tile (0, 0)
+    mockCanvas.trigger('pointerdown', {
+      clientX: 20,
+      clientY: 20,
+      button: 0,
+      pointerType: 'mouse',
+      shiftKey: false,
+    });
+    triggerWindow('pointerup', {
+      clientX: 20,
+      clientY: 20,
+      button: 0,
+      pointerType: 'mouse',
+      shiftKey: false,
+    });
+
+    expect(onTileClick).toHaveBeenCalledWith({ col: 0, row: 0 });
+    // Should NOT enter tap mode
+    const snapshotClick = interaction.getSnapshot();
+    expect(snapshotClick.selectMode).toBe('drag');
+    expect(snapshotClick.activeAction).toBeNull();
+
+    interaction.unbind();
+  });
+
+  it('cancels in-progress tap selection when item becomes active on next interaction', () => {
+    const mockCanvas = createMockCanvas();
+    const onClear = vi.fn();
+    const onTileClick = vi.fn().mockReturnValue(false);
+    let itemActive = false;
+
+    const ctxAccess: BoardContextAccess = {
+      getTargetSum: () => 10,
+      isInteractive: () => true,
+      isItemActive: () => itemActive,
+      getBoardState: () => defaultBoardState,
+      getVisualConfig: () => defaultVisualConfig,
+      onClear,
+      onTileClick,
+    };
+
+    const interaction = new GameBoardInteraction(mockCanvas as unknown as HTMLCanvasElement, ctxAccess);
+    interaction.bind();
+
+    // Click 1 on tile (0, 0) entering tap mode
+    mockCanvas.trigger('pointerdown', { clientX: 20, clientY: 20, button: 0, pointerType: 'mouse' });
+    triggerWindow('pointerup', { clientX: 20, clientY: 20, button: 0, pointerType: 'mouse' });
+    expect(interaction.getSnapshot().selectMode).toBe('tap');
+
+    // Arm item
+    itemActive = true;
+    // Next click down on canvas immediately resets tap mode and executes item targeting
+    mockCanvas.trigger('pointerdown', { clientX: 60, clientY: 20, button: 0, pointerType: 'mouse' });
+    expect(interaction.getSnapshot().selectMode).toBe('drag');
+    expect(interaction.getSnapshot().activeAction).toBeNull();
+
+    triggerWindow('pointerup', { clientX: 60, clientY: 20, button: 0, pointerType: 'mouse' });
+    expect(onTileClick).toHaveBeenCalledWith({ col: 1, row: 0 });
+
+    interaction.unbind();
+  });
 });

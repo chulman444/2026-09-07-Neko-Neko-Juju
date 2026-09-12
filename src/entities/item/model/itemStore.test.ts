@@ -224,5 +224,39 @@ describe('useItemStore', () => {
       expect(useItemStore.getState().targetTile).toBeNull();
       expect(useItemStore.getState().randomChooseOptions).toBeNull();
     });
+
+    it('cycles two-stage button correctly (0 -> 1 -> 2 -> 0)', () => {
+      const store = useItemStore.getState();
+      store.untoggle();
+      expect(useItemStore.getState().activeItemStage).toBe(0);
+      expect(useItemStore.getState().isToggled).toBe(false);
+
+      // 1st click: Stage 1 (Single Use)
+      store.toggleItem('randomNumber');
+      expect(useItemStore.getState().activeItem).toBe('randomNumber');
+      expect(useItemStore.getState().activeItemStage).toBe(1);
+      expect(useItemStore.getState().isToggled).toBe(true);
+
+      // 2nd click: Stage 2 (Multi-Use)
+      store.toggleItem('randomNumber');
+      expect(useItemStore.getState().activeItem).toBe('randomNumber');
+      expect(useItemStore.getState().activeItemStage).toBe(2);
+      expect(useItemStore.getState().isToggled).toBe(true);
+
+      // 3rd click: Disarms to Stage 0
+      store.toggleItem('randomNumber');
+      expect(useItemStore.getState().activeItem).toBeNull();
+      expect(useItemStore.getState().activeItemStage).toBe(0);
+      expect(useItemStore.getState().isToggled).toBe(false);
+
+      // Switching from Stage 2 of Random Roll to Random Choose starts at Stage 1
+      store.toggleItem('randomNumber'); // Stage 1
+      store.toggleItem('randomNumber'); // Stage 2
+      expect(useItemStore.getState().activeItemStage).toBe(2);
+
+      store.toggleItem('randomChoose');
+      expect(useItemStore.getState().activeItem).toBe('randomChoose');
+      expect(useItemStore.getState().activeItemStage).toBe(1);
+    });
   });
 });

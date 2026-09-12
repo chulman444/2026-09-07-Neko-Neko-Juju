@@ -10,6 +10,7 @@ export interface BoardContextAccess {
   getTargetSum: () => number;
   isInteractive: () => boolean;
   isPanMode?: () => boolean;
+  isItemActive?: () => boolean;
   getBoardState: () => {
     matrix: number[][];
     cols: number;
@@ -55,6 +56,7 @@ export class GameBoardInteraction {
 
   public bind(): void {
     this.canvas.addEventListener('pointerdown', this.handlePointerDown);
+    this.canvas.addEventListener('pointerenter', this.handlePointerEnter);
     window.addEventListener('pointermove', this.handlePointerMove);
     window.addEventListener('pointerup', this.handlePointerUp);
     window.addEventListener('pointercancel', this.handlePointerCancel);
@@ -65,12 +67,17 @@ export class GameBoardInteraction {
 
   public unbind(): void {
     this.canvas.removeEventListener('pointerdown', this.handlePointerDown);
+    this.canvas.removeEventListener('pointerenter', this.handlePointerEnter);
     window.removeEventListener('pointermove', this.handlePointerMove);
     window.removeEventListener('pointerup', this.handlePointerUp);
     window.removeEventListener('pointercancel', this.handlePointerCancel);
     this.canvas.removeEventListener('contextmenu', this.handleContextMenu);
     window.removeEventListener('keydown', this.handleKeyDown);
     window.removeEventListener('keyup', this.handleKeyUp);
+  }
+
+  public updateCursorState(): void {
+    this.updateCursor();
   }
 
   public getSnapshot(): InteractionSnapshot {
@@ -113,14 +120,38 @@ export class GameBoardInteraction {
     }
   };
 
+  private handlePointerEnter = (): void => {
+    this.updateCursor();
+  };
+
   private handlePointerCancel = (): void => {
     this.isPointerDownOnCanvas = false;
+    this.updateCursor();
   };
 
   private handlePointerDown = (e: PointerEvent): void => {
     if (!this.ctxAccess.isInteractive()) return;
-    if (this.ctxAccess.isPanMode?.()) return;
+    if (this.ctxAccess.isPanMode?.()) {
+      this.isPointerDownOnCanvas = true;
+      this.updateCursor();
+      return;
+    }
     if (e.pointerType === 'mouse' && e.button !== 0 && e.button !== 2) return;
+
+    if (this.ctxAccess.isItemActive?.()) {
+      if (this.selectMode !== 'drag' || this.activeAction !== null) {
+        this.resetSelectionState();
+      }
+      if (e.button === 0) {
+        this.isPointerDownOnCanvas = true;
+        const board = this.ctxAccess.getBoardState();
+        const pitch = getGridPitch(board.shapeSize, board.tileBorder);
+        const pos = getCanvasMousePos(this.canvas, e.clientX, e.clientY);
+        this.startTile = getTileFromCanvasPos(pos, board.cols, board.rows, pitch);
+      }
+      this.updateCursor();
+      return;
+    }
 
     this.isPointerDownOnCanvas = true;
     const board = this.ctxAccess.getBoardState();
@@ -146,6 +177,12 @@ export class GameBoardInteraction {
   };
 
   private handlePointerMove = (e: PointerEvent): void => {
+    this.updateCursor();
+
+    if (this.ctxAccess.isItemActive?.() || this.ctxAccess.isPanMode?.()) {
+      return;
+    }
+
     if (!this.activeAction) return;
     if (!this.ctxAccess.isInteractive()) {
       this.resetSelectionState();
@@ -178,6 +215,28 @@ export class GameBoardInteraction {
   };
 
   private handlePointerUp = (e: PointerEvent): void => {
+    if (this.ctxAccess.isPanMode?.()) {
+      this.isPointerDownOnCanvas = false;
+      this.updateCursor();
+      return;
+    }
+
+    if (this.ctxAccess.isItemActive?.()) {
+      if (!this.isPointerDownOnCanvas) return;
+      this.isPointerDownOnCanvas = false;
+
+      const board = this.ctxAccess.getBoardState();
+      const pitch = getGridPitch(board.shapeSize, board.tileBorder);
+      const pos = getCanvasMousePos(this.canvas, e.clientX, e.clientY);
+      const endTile = getTileFromCanvasPos(pos, board.cols, board.rows, pitch);
+
+      if (endTile.col === this.startTile.col && endTile.row === this.startTile.row) {
+        this.ctxAccess.onTileClick?.(endTile);
+      }
+      this.updateCursor();
+      return;
+    }
+
     if (!this.activeAction) return;
 
     if (!this.isPointerDownOnCanvas) return;
@@ -340,9 +399,17 @@ export class GameBoardInteraction {
       return;
     }
     if (this.ctxAccess.isPanMode?.()) {
-      if (this.lastCursor !== 'grab') {
-        this.lastCursor = 'grab';
-        this.canvas.style.cursor = 'grab';
+      const panCursor = this.isPointerDownOnCanvas ? 'grabbing' : 'grab';
+      if (this.lastCursor !== panCursor) {
+        this.lastCursor = panCursor;
+        this.canvas.style.cursor = panCursor;
+      }
+      return;
+    }
+    if (this.ctxAccess.isItemActive?.()) {
+      if (this.lastCursor !== 'pointer') {
+        this.lastCursor = 'pointer';
+        this.canvas.style.cursor = 'pointer';
       }
       return;
     }
@@ -354,7 +421,7 @@ export class GameBoardInteraction {
     }
   }
 
-  private resetSelectionState(): void {
+  public resetSelectionState(): void {
     this.selectMode = 'drag';
     this.isPointerDownOnCanvas = false;
     this.activeAction = null;

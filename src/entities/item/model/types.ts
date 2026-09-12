@@ -20,6 +20,7 @@ export interface ItemState {
   // Active Item & Toggle State
   activeItem: 'randomNumber' | 'randomChoose' | null;
   isToggled: boolean;
+  activeItemStage: 0 | 1 | 2;
 
   // Toggle Check (Single Use vs Multiple Use / Continuous)
   toggleCheck: ToggleCheckConfig;

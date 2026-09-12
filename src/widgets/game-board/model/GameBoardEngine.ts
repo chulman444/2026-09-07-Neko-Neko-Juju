@@ -1,4 +1,5 @@
 import { useBoardStore, type TileCoord } from '@/entities/board';
+import { useItemStore } from '@/entities/item';
 import { GameBoardInteraction, type BoardContextAccess } from './GameBoardInteraction';
 import { GameBoardRenderer } from './GameBoardRenderer';
 import type { BoardVisualConfig, BoardRenderState } from './types';
@@ -14,6 +15,7 @@ export interface GameBoardEngineOptions {
   onTilesCleared?: (tiles: TileCoord[], sum: number) => void;
   onSelectionChange?: (tiles: TileCoord[], sum: number, isValid: boolean) => void;
   onTileClick?: (tile: TileCoord) => boolean | void;
+  isItemActive?: () => boolean;
 }
 
 export class GameBoardEngine {
@@ -32,6 +34,7 @@ export class GameBoardEngine {
   private onTilesCleared?: (tiles: TileCoord[], sum: number) => void;
   private onSelectionChange?: (tiles: TileCoord[], sum: number, isValid: boolean) => void;
   private onTileClick?: (tile: TileCoord) => boolean | void;
+  private isItemActiveProp?: () => boolean;
   private visualConfig: BoardVisualConfig;
 
   constructor(options: GameBoardEngineOptions) {
@@ -44,6 +47,7 @@ export class GameBoardEngine {
     this.onTilesCleared = options.onTilesCleared;
     this.onSelectionChange = options.onSelectionChange;
     this.onTileClick = options.onTileClick;
+    this.isItemActiveProp = options.isItemActive;
 
     this.visualConfig = {
       gameBg: options.visualConfig?.gameBg ?? '#fbf2df',
@@ -64,6 +68,8 @@ export class GameBoardEngine {
       getTargetSum: () => this.targetSum,
       isInteractive: () => this.interactive,
       isPanMode: () => useBoardStore.getState().isPanMode,
+      isItemActive: () =>
+        this.isItemActiveProp ? this.isItemActiveProp() : useItemStore.getState().isToggled,
       getBoardState: () => this.getBoardState(),
       getVisualConfig: () => this.visualConfig,
       onClear: (tiles, sum) => this.handleClear(tiles, sum),
@@ -108,6 +114,19 @@ export class GameBoardEngine {
     this.onTilesCleared = onTilesCleared;
     this.onSelectionChange = onSelectionChange;
     this.onTileClick = onTileClick;
+  }
+
+  public setIsItemActive(isItemActive?: () => boolean): void {
+    this.isItemActiveProp = isItemActive;
+    this.interaction.updateCursorState();
+  }
+
+  public cancelSelection(): void {
+    this.interaction.resetSelectionState();
+  }
+
+  public updateCursor(): void {
+    this.interaction.updateCursorState();
   }
 
   public start(): void {

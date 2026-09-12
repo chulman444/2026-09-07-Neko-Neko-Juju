@@ -186,6 +186,7 @@ export const GamePage: React.FC = () => {
             interactive={!isPaused}
             highlightedTiles={highlightedTiles}
             targetTile={targetTile}
+            isItemActive={isToggled}
             onTilesCleared={handleTilesCleared}
             onTileClick={handleTileClick}
             className={isPaused ? 'opacity-80' : ''}

@@ -1,5 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { useBoardStore, type TileCoord } from '@/entities/board';
+import { useItemStore } from '@/entities/item';
 import { GameBoardEngine } from '../model/GameBoardEngine';
 import { getGridPitch } from '../lib/coordinates';
 
@@ -20,6 +21,8 @@ export interface GameBoardWidgetProps {
   targetTile?: TileCoord | null;
   /** Board background color override */
   gameBg?: string;
+  /** Whether an item is currently armed/active (bypasses box/tap selection) */
+  isItemActive?: boolean;
   /** Callback fired when a valid set of tiles is matched and cleared */
   onTilesCleared?: (tiles: TileCoord[], sum: number) => void;
   /** Callback fired whenever user selects tiles */
@@ -38,6 +41,7 @@ export const GameBoardWidget: React.FC<GameBoardWidgetProps> = ({
   highlightedTiles = [],
   targetTile = null,
   gameBg = '#fbf2df',
+  isItemActive,
   onTilesCleared,
   onSelectionChange,
   onTileClick,
@@ -57,6 +61,10 @@ export const GameBoardWidget: React.FC<GameBoardWidgetProps> = ({
   const canvasWidth = cols * pitch;
   const canvasHeight = rows * pitch;
 
+  const isPanMode = useBoardStore((state) => state.isPanMode);
+  const storeIsItemActive = useItemStore((state) => state.isToggled);
+  const activeItemFlag = isItemActive ?? storeIsItemActive;
+
   // Setup engine on canvas mount
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -73,6 +81,7 @@ export const GameBoardWidget: React.FC<GameBoardWidgetProps> = ({
       onTilesCleared,
       onSelectionChange,
       onTileClick,
+      isItemActive: () => (isItemActive !== undefined ? isItemActive : useItemStore.getState().isToggled),
     });
     engineRef.current = engine;
     engine.start();
@@ -88,8 +97,27 @@ export const GameBoardWidget: React.FC<GameBoardWidgetProps> = ({
   useEffect(() => {
     if (engineRef.current) {
       engineRef.current.setInteractive(interactive);
+      engineRef.current.updateCursor();
     }
   }, [interactive]);
+
+  useEffect(() => {
+    if (engineRef.current) {
+      engineRef.current.updateCursor();
+    }
+  }, [isPanMode]);
+
+  useEffect(() => {
+    if (engineRef.current) {
+      if (activeItemFlag) {
+        engineRef.current.cancelSelection();
+      }
+      engineRef.current.setIsItemActive(
+        isItemActive !== undefined ? () => isItemActive : undefined
+      );
+      engineRef.current.updateCursor();
+    }
+  }, [activeItemFlag, isItemActive]);
 
   useEffect(() => {
     if (engineRef.current) {
@@ -148,6 +176,7 @@ export const GameBoardWidget: React.FC<GameBoardWidgetProps> = ({
         ref={canvasRef}
         width={canvasWidth}
         height={canvasHeight}
+        onPointerEnter={() => engineRef.current?.updateCursor()}
         className="block rounded-xl shadow-inner border border-amber-900/10"
         style={{
           backgroundColor: gameBg,

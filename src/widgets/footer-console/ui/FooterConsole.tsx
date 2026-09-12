@@ -38,13 +38,12 @@ export const FooterConsole: React.FC<FooterConsoleProps> = ({
   const counts = useItemStore((state) => state.counts);
   const activeItem = useItemStore((state) => state.activeItem);
   const isToggled = useItemStore((state) => state.isToggled);
-  const toggleCheck = useItemStore((state) => state.toggleCheck);
+  const activeItemStage = useItemStore((state) => state.activeItemStage);
   const targetTile = useItemStore((state) => state.targetTile);
   const randomChooseOptions = useItemStore((state) => state.randomChooseOptions);
 
   const toggleItem = useItemStore((state) => state.toggleItem);
   const untoggle = useItemStore((state) => state.untoggle);
-  const setToggleCheck = useItemStore((state) => state.setToggleCheck);
   const confirmRandomChoose = useItemStore((state) => state.confirmRandomChoose);
   const cancelTargetTile = useItemStore((state) => state.cancelTargetTile);
   const triggerHintItem = useItemStore((state) => state.triggerHintItem);
@@ -172,7 +171,7 @@ export const FooterConsole: React.FC<FooterConsoleProps> = ({
           <div className="flex items-center gap-2 px-3 py-1 rounded-xl bg-amber-500/15 border border-amber-500/50 shadow-md animate-in fade-in duration-150 text-xs text-amber-950 dark:text-amber-200 backdrop-blur-md">
             <span className="inline-block w-2 h-2 rounded-full bg-amber-500 animate-ping shrink-0" />
             <span className="font-medium">
-              🎲 Click tile to roll ({toggleCheck.randomNumber ? 'Continuous' : 'Single Use'})
+              🎲 Click tile to roll ({activeItemStage === 2 ? 'Stage 2: Multi-Use' : 'Stage 1: Single Use'})
             </span>
             <button
               type="button"
@@ -189,7 +188,7 @@ export const FooterConsole: React.FC<FooterConsoleProps> = ({
           <div className="flex items-center gap-2 px-3 py-1 rounded-xl bg-purple-500/15 border border-purple-500/50 shadow-md animate-in fade-in duration-150 text-xs text-purple-950 dark:text-purple-200 backdrop-blur-md">
             <span className="inline-block w-2 h-2 rounded-full bg-purple-500 animate-ping shrink-0" />
             <span className="font-medium">
-              🎰 Click target tile on board ({toggleCheck.randomChoose ? 'Continuous' : 'Single Use'})
+              🎰 Click target tile on board ({activeItemStage === 2 ? 'Stage 2: Multi-Use' : 'Stage 1: Single Use'})
             </span>
             <button
               type="button"
@@ -228,16 +227,21 @@ export const FooterConsole: React.FC<FooterConsoleProps> = ({
             <MechanicalItemButton
               icon="🎲"
               label={`×${counts.randomNumber}`}
-              title={`Random Number Item (${counts.randomNumber} left). Click to arm, click right wing to toggle Continuous Mode.`}
-              leftWingState={isRandomNumberActive ? 'amber' : 'inactive'}
-              rightWingState={toggleCheck.randomNumber ? 'amber' : 'inactive'}
-              leftWingTitle={isRandomNumberActive ? 'Random Number Armed' : 'Item Disarmed'}
-              rightWingTitle={
-                toggleCheck.randomNumber
-                  ? 'Continuous Mode Active (Stays armed after rolling)'
-                  : 'Single Use Mode (Untoggles after 1 roll). Click to toggle Continuous'
+              title={
+                !isRandomNumberActive
+                  ? `Random Number (${counts.randomNumber} left). Click to arm Stage 1 (Single Use).`
+                  : activeItemStage === 1
+                  ? `Random Number: Stage 1 (Single Use). Click again to advance to Stage 2 (Multi-Use).`
+                  : `Random Number: Stage 2 (Multi-Use Active). Click to disarm.`
               }
-              onRightWingClick={() => setToggleCheck('randomNumber', !toggleCheck.randomNumber)}
+              leftWingState={isRandomNumberActive && activeItemStage >= 1 ? 'amber' : 'inactive'}
+              rightWingState={isRandomNumberActive && activeItemStage === 2 ? 'amber' : 'inactive'}
+              leftWingTitle={isRandomNumberActive ? 'Stage 1 Active (Single Use)' : 'Disarmed'}
+              rightWingTitle={
+                isRandomNumberActive && activeItemStage === 2
+                  ? 'Stage 2 Active (Multi-Use Mode)'
+                  : 'Stage 2 Inactive'
+              }
               onClick={() => toggleItem('randomNumber')}
               disabled={isPaused || counts.randomNumber <= 0}
             />
@@ -246,16 +250,21 @@ export const FooterConsole: React.FC<FooterConsoleProps> = ({
             <MechanicalItemButton
               icon="🎰"
               label={`×${counts.randomChoose}`}
-              title={`Random Choose Item (${counts.randomChoose} left). Click to arm, click right wing to toggle Continuous Mode.`}
-              leftWingState={isRandomChooseActive ? 'purple' : 'inactive'}
-              rightWingState={toggleCheck.randomChoose ? 'purple' : 'inactive'}
-              leftWingTitle={isRandomChooseActive ? 'Random Choose Armed' : 'Item Disarmed'}
-              rightWingTitle={
-                toggleCheck.randomChoose
-                  ? 'Continuous Mode Active'
-                  : 'Single Use Mode. Click to toggle Continuous'
+              title={
+                !isRandomChooseActive
+                  ? `Random Choose (${counts.randomChoose} left). Click to arm Stage 1 (Single Use).`
+                  : activeItemStage === 1
+                  ? `Random Choose: Stage 1 (Single Use). Click again to advance to Stage 2 (Multi-Use).`
+                  : `Random Choose: Stage 2 (Multi-Use Active). Click to disarm.`
               }
-              onRightWingClick={() => setToggleCheck('randomChoose', !toggleCheck.randomChoose)}
+              leftWingState={isRandomChooseActive && activeItemStage >= 1 ? 'purple' : 'inactive'}
+              rightWingState={isRandomChooseActive && activeItemStage === 2 ? 'purple' : 'inactive'}
+              leftWingTitle={isRandomChooseActive ? 'Stage 1 Active (Single Use)' : 'Disarmed'}
+              rightWingTitle={
+                isRandomChooseActive && activeItemStage === 2
+                  ? 'Stage 2 Active (Multi-Use Mode)'
+                  : 'Stage 2 Inactive'
+              }
               onClick={() => toggleItem('randomChoose')}
               disabled={isPaused || counts.randomChoose <= 0}
             />
