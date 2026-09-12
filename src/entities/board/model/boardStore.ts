@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { generateSeed } from '@/shared/lib/prng';
+import { generateSeed, seededRandomGenerator } from '@/shared/lib/prng';
 import { DEFAULT_CONFIG } from '@/shared/config';
 import { createBoardMatrix } from './boardGenerators';
 import type { TileCoord, ClearingAnimation } from './types';
@@ -14,6 +14,7 @@ export interface BoardState {
   maxNum: number;
   seed: string;
   seedHistory: string[];
+  prng: () => number;
   initialMatrix: number[][];
   matrix: number[][];
   clearingAnimations: ClearingAnimation[];
@@ -39,12 +40,13 @@ export interface BoardState {
 }
 
 const initialSeed = generateSeed();
+const initialPrng = seededRandomGenerator(initialSeed);
 const initialGeneratedMatrix = createBoardMatrix(
   DEFAULT_CONFIG.cols,
   DEFAULT_CONFIG.rows,
   DEFAULT_CONFIG.minNum,
   DEFAULT_CONFIG.maxNum,
-  initialSeed
+  initialPrng
 );
 
 export const useBoardStore = create<BoardState>((set, get) => ({
@@ -57,6 +59,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
   maxNum: DEFAULT_CONFIG.maxNum,
   seed: initialSeed,
   seedHistory: [initialSeed],
+  prng: initialPrng,
   initialMatrix: initialGeneratedMatrix,
   matrix: initialGeneratedMatrix.map((r) => [...r]),
   clearingAnimations: [],
@@ -65,10 +68,12 @@ export const useBoardStore = create<BoardState>((set, get) => ({
 
   setDimensions: (cols, rows) => {
     const { minNum, maxNum, seed, tileWeights } = get();
-    const initialMatrix = createBoardMatrix(cols, rows, minNum, maxNum, seed, tileWeights);
+    const prng = seededRandomGenerator(seed);
+    const initialMatrix = createBoardMatrix(cols, rows, minNum, maxNum, prng, tileWeights);
     set({
       cols,
       rows,
+      prng,
       initialMatrix,
       matrix: initialMatrix.map((r) => [...r]),
       clearingAnimations: [],
@@ -77,10 +82,12 @@ export const useBoardStore = create<BoardState>((set, get) => ({
 
   setTileWeights: (tileWeights, activeTilt) => {
     const { cols, rows, minNum, maxNum, seed } = get();
-    const initialMatrix = createBoardMatrix(cols, rows, minNum, maxNum, seed, tileWeights);
+    const prng = seededRandomGenerator(seed);
+    const initialMatrix = createBoardMatrix(cols, rows, minNum, maxNum, prng, tileWeights);
     set({
       tileWeights,
       activeTilt: activeTilt !== undefined ? activeTilt : get().activeTilt,
+      prng,
       initialMatrix,
       matrix: initialMatrix.map((r) => [...r]),
       clearingAnimations: [],
@@ -103,12 +110,14 @@ export const useBoardStore = create<BoardState>((set, get) => ({
 
   setSeed: (seed) => {
     const { cols, rows, minNum, maxNum, seedHistory, tileWeights } = get();
-    const initialMatrix = createBoardMatrix(cols, rows, minNum, maxNum, seed, tileWeights);
+    const prng = seededRandomGenerator(seed);
+    const initialMatrix = createBoardMatrix(cols, rows, minNum, maxNum, prng, tileWeights);
     const updatedHistory = seedHistory.includes(seed)
       ? seedHistory
       : [seed, ...seedHistory].slice(0, 50);
     set({
       seed,
+      prng,
       initialMatrix,
       matrix: initialMatrix.map((r) => [...r]),
       seedHistory: updatedHistory,
@@ -119,12 +128,14 @@ export const useBoardStore = create<BoardState>((set, get) => ({
   generateNewBoard: (forcedSeed) => {
     const { cols, rows, minNum, maxNum, seedHistory, tileWeights } = get();
     const newSeed = forcedSeed || generateSeed();
-    const initialMatrix = createBoardMatrix(cols, rows, minNum, maxNum, newSeed, tileWeights);
+    const prng = seededRandomGenerator(newSeed);
+    const initialMatrix = createBoardMatrix(cols, rows, minNum, maxNum, prng, tileWeights);
     const updatedHistory = seedHistory.includes(newSeed)
       ? seedHistory
       : [newSeed, ...seedHistory].slice(0, 50);
     set({
       seed: newSeed,
+      prng,
       initialMatrix,
       matrix: initialMatrix.map((r) => [...r]),
       seedHistory: updatedHistory,
@@ -133,8 +144,12 @@ export const useBoardStore = create<BoardState>((set, get) => ({
   },
 
   restartCurrentBoard: () => {
-    const { initialMatrix } = get();
+    const { initialMatrix, cols, rows, minNum, maxNum, seed, tileWeights } = get();
+    const prng = seededRandomGenerator(seed);
+    // Advance PRNG through initial board creation to restore stream position
+    createBoardMatrix(cols, rows, minNum, maxNum, prng, tileWeights);
     set({
+      prng,
       matrix: initialMatrix.map((r) => [...r]),
       clearingAnimations: [],
     });

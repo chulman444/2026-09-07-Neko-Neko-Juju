@@ -110,10 +110,10 @@ export function createBoardMatrix(
   rows: number,
   minNum: number,
   maxNum: number,
-  seedStr: string,
+  seedOrPrng: string | (() => number),
   tileWeights?: number[]
 ): number[][] {
-  const prng = seededRandomGenerator(seedStr);
+  const prng = typeof seedOrPrng === 'function' ? seedOrPrng : seededRandomGenerator(seedOrPrng);
   const matrix: number[][] = [];
 
   // If weights are provided and match the digit count, build CDF

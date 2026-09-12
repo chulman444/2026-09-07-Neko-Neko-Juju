@@ -26,7 +26,6 @@ export interface ItemState {
   // Seed Configuration
   useBoardSeed: boolean;
   itemSeed: string;
-  itemSeedStep: number;
 
   // Actions
   toggleItem: (item: 'randomNumber' | 'randomChoose') => void;

@@ -4,6 +4,7 @@ import { useBoardStore } from '@/entities/board';
 
 describe('useItemStore', () => {
   beforeEach(() => {
+    useBoardStore.getState().generateNewBoard('test-stream-seed');
     useItemStore.setState({
       counts: { randomNumber: 5, randomChoose: 5, hint: 5 },
       activeItem: null,
@@ -13,7 +14,7 @@ describe('useItemStore', () => {
       currentRolledNumber: null,
       randomChooseOptions: null,
       selectedChooseNumber: null,
-      itemSeedStep: 0,
+      useBoardSeed: true,
     });
     useBoardStore.setState({ minNum: 1, maxNum: 9 });
   });
@@ -66,15 +67,23 @@ describe('useItemStore', () => {
     expect(unique.size).toBe(9);
   });
 
-  it('generates 3 valid candidate numbers for random choose', () => {
-    const options = useItemStore.getState().rollRandomChoose(false);
-    expect(options).not.toBeNull();
-    expect(options).toHaveLength(3);
-    options?.forEach((num) => {
+  it('generates 3 valid candidate numbers for random choose and advances stream', () => {
+    const options1 = useItemStore.getState().rollRandomChoose(false);
+    expect(options1).not.toBeNull();
+    expect(options1).toHaveLength(3);
+    options1?.forEach((num) => {
       expect(num).toBeGreaterThanOrEqual(1);
       expect(num).toBeLessThanOrEqual(9);
     });
     expect(useItemStore.getState().counts.randomChoose).toBe(4);
+
+    // Roll again and verify stream produces another valid set of numbers
+    const options2 = useItemStore.getState().rollRandomChoose(true);
+    expect(options2).not.toBeNull();
+    // Verify that options across multiple rolls are not stuck on identical static values
+    const allNumbers = [...(options1 ?? []), ...(options2 ?? [])];
+    const unique = new Set(allNumbers);
+    expect(unique.size).toBeGreaterThan(1);
   });
 
   it('toggles and untoggles properly', () => {

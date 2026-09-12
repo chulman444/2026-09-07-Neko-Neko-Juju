@@ -10,11 +10,18 @@ export const DEFAULT_ITEM_COUNTS: ItemCounts = {
   hint: 5,
 };
 
-function getNextRandom(state: ItemState): { rand: number; nextStep: number } {
-  const seedBase = state.useBoardSeed ? useBoardStore.getState().seed : state.itemSeed;
-  const currentStep = state.itemSeedStep;
-  const gen = seededRandomGenerator(`${seedBase}_item_${currentStep}`);
-  return { rand: gen(), nextStep: currentStep + 1 };
+let separateItemPrng: (() => number) | null = null;
+let cachedItemSeed = '';
+
+function getItemRandom(state: ItemState): number {
+  if (state.useBoardSeed) {
+    return useBoardStore.getState().prng();
+  }
+  if (!separateItemPrng || cachedItemSeed !== state.itemSeed) {
+    cachedItemSeed = state.itemSeed;
+    separateItemPrng = seededRandomGenerator(state.itemSeed);
+  }
+  return separateItemPrng();
 }
 
 const initialSeed = generateSeed();
@@ -31,9 +38,8 @@ export const useItemStore = create<ItemState>((set, get) => ({
   randomChooseOptions: null,
   selectedChooseNumber: null,
 
-  useBoardSeed: false,
+  useBoardSeed: true,
   itemSeed: initialSeed,
-  itemSeedStep: 0,
 
   toggleItem: (item: 'randomNumber' | 'randomChoose') => {
     const state = get();
@@ -85,7 +91,7 @@ export const useItemStore = create<ItemState>((set, get) => ({
       }
     }
 
-    const { rand, nextStep } = getNextRandom(state);
+    const rand = getItemRandom(state);
     const index = Math.floor(rand * candidates.length);
     const chosenNumber = candidates[index] ?? candidates[0] ?? 1;
 
@@ -97,7 +103,6 @@ export const useItemStore = create<ItemState>((set, get) => ({
         : { ...state.counts, randomNumber: Math.max(0, state.counts.randomNumber - 1) },
       currentRolledNumber: chosenNumber,
       rollHistory: nextHistory,
-      itemSeedStep: nextStep,
       activeItem: 'randomNumber',
       isToggled: true,
     });
@@ -114,14 +119,12 @@ export const useItemStore = create<ItemState>((set, get) => ({
     const { minNum, maxNum } = useBoardStore.getState();
     const range = maxNum - minNum + 1;
 
-    let step = state.itemSeedStep;
-    const options: [number, number, number] = [0, 0, 0];
-    for (let i = 0; i < 3; i++) {
-      const seedBase = state.useBoardSeed ? useBoardStore.getState().seed : state.itemSeed;
-      const gen = seededRandomGenerator(`${seedBase}_item_${step}`);
-      options[i] = Math.floor(gen() * range) + minNum;
-      step++;
-    }
+    // Draw 3 consecutive numbers from the continuous stream
+    const options: [number, number, number] = [
+      Math.floor(getItemRandom(state) * range) + minNum,
+      Math.floor(getItemRandom(state) * range) + minNum,
+      Math.floor(getItemRandom(state) * range) + minNum,
+    ];
 
     set({
       counts: isFree
@@ -129,7 +132,6 @@ export const useItemStore = create<ItemState>((set, get) => ({
         : { ...state.counts, randomChoose: Math.max(0, state.counts.randomChoose - 1) },
       randomChooseOptions: options,
       selectedChooseNumber: options[0],
-      itemSeedStep: step,
       activeItem: 'randomChoose',
       isToggled: true,
     });
@@ -192,11 +194,16 @@ export const useItemStore = create<ItemState>((set, get) => ({
   },
 
   setItemSeed: (seed: string) => {
-    set({ itemSeed: seed, itemSeedStep: 0 });
+    cachedItemSeed = seed;
+    separateItemPrng = seededRandomGenerator(seed);
+    set({ itemSeed: seed });
   },
 
   regenerateItemSeed: () => {
-    set({ itemSeed: generateSeed(), itemSeedStep: 0 });
+    const newSeed = generateSeed();
+    cachedItemSeed = newSeed;
+    separateItemPrng = seededRandomGenerator(newSeed);
+    set({ itemSeed: newSeed });
   },
 
   getActiveNumber: () => {
