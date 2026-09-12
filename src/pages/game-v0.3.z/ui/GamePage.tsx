@@ -14,6 +14,7 @@ import { SidePanel } from './SidePanel';
 
 export const GamePage: React.FC = () => {
   const [showSidePanel, setShowSidePanel] = useState<boolean>(false);
+  const [showItemArea, setShowItemArea] = useState<boolean>(true);
 
   // Mount 60fps simulation driver that ticks the store
   useGameSessionDriver();
@@ -133,6 +134,19 @@ export const GamePage: React.FC = () => {
         <div className="flex items-center gap-2">
           <button
             type="button"
+            onClick={() => setShowItemArea((prev) => !prev)}
+            className={`px-3 py-1.5 text-xs font-bold rounded-lg border transition cursor-pointer flex items-center gap-1.5 ${
+              showItemArea
+                ? 'bg-amber-200/80 text-amber-950 border-amber-400 dark:bg-zinc-700 dark:text-white dark:border-zinc-500 shadow-sm'
+                : 'border-amber-900/20 bg-amber-50 hover:bg-amber-100 text-amber-950 dark:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700'
+            }`}
+            title={showItemArea ? 'Hide item area' : 'Show item area'}
+          >
+            <span>🎒 Items</span>
+            <span className="text-[10px] opacity-75">{showItemArea ? '▲' : '▼'}</span>
+          </button>
+          <button
+            type="button"
             onClick={() => setShowSidePanel((prev) => !prev)}
             className={`px-3 py-1.5 text-xs font-bold rounded-lg border transition cursor-pointer ${
               showSidePanel
@@ -164,7 +178,10 @@ export const GamePage: React.FC = () => {
       </header>
 
       {/* Main Items Container / Item Bar */}
-      <ItemBar />
+      <ItemBar
+        isCollapsed={!showItemArea}
+        onToggleCollapse={() => setShowItemArea((prev) => !prev)}
+      />
 
       {/* Main Play Area */}
       <main className="flex items-center justify-center w-full max-w-7xl">
