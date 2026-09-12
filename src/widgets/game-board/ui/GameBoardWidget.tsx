@@ -24,7 +24,7 @@ export interface GameBoardWidgetProps {
   /** Whether an item is currently armed/active (bypasses box/tap selection) */
   isItemActive?: boolean;
   /** Callback fired when a valid set of tiles is matched and cleared */
-  onTilesCleared?: (tiles: TileCoord[], sum: number) => void;
+  onTilesCleared?: (tiles: TileCoord[], sum: number, actualCount?: number) => void;
   /** Callback fired whenever user selects tiles */
   onSelectionChange?: (tiles: TileCoord[], sum: number, isValid: boolean) => void;
   /** Callback fired when a single tile is clicked without drag (e.g. for item placement) */

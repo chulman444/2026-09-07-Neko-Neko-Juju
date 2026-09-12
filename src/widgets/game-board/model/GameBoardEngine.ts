@@ -12,7 +12,7 @@ export interface GameBoardEngineOptions {
   highlightedTiles?: TileCoord[];
   targetTile?: TileCoord | null;
   visualConfig?: Partial<BoardVisualConfig>;
-  onTilesCleared?: (tiles: TileCoord[], sum: number) => void;
+  onTilesCleared?: (tiles: TileCoord[], sum: number, actualCount?: number) => void;
   onSelectionChange?: (tiles: TileCoord[], sum: number, isValid: boolean) => void;
   onTileClick?: (tile: TileCoord) => boolean | void;
   isItemActive?: () => boolean;
@@ -31,7 +31,7 @@ export class GameBoardEngine {
   private matrixOverride?: number[][];
   private highlightedTiles: TileCoord[] = [];
   private targetTile: TileCoord | null = null;
-  private onTilesCleared?: (tiles: TileCoord[], sum: number) => void;
+  private onTilesCleared?: (tiles: TileCoord[], sum: number, actualCount?: number) => void;
   private onSelectionChange?: (tiles: TileCoord[], sum: number, isValid: boolean) => void;
   private onTileClick?: (tile: TileCoord) => boolean | void;
   private isItemActiveProp?: () => boolean;
@@ -107,7 +107,7 @@ export class GameBoardEngine {
   }
 
   public setCallbacks(
-    onTilesCleared?: (tiles: TileCoord[], sum: number) => void,
+    onTilesCleared?: (tiles: TileCoord[], sum: number, actualCount?: number) => void,
     onSelectionChange?: (tiles: TileCoord[], sum: number, isValid: boolean) => void,
     onTileClick?: (tile: TileCoord) => boolean | void
   ): void {
@@ -167,10 +167,12 @@ export class GameBoardEngine {
         ? this.visualConfig.munchDuration
         : this.visualConfig.fadeoutDuration;
 
-    // 1. Add clearing animation to board state
+    // 1. Add clearing animation to board state and count non-zero tiles
+    let actualCount = 0;
     tiles.forEach((t) => {
       const val = (this.matrixOverride ?? store.matrix)[t.row]?.[t.col] ?? 0;
       if (val > 0) {
+        actualCount++;
         store.addClearingAnimation({
           id: `${t.col}-${t.row}-${now}`,
           col: t.col,
@@ -198,7 +200,7 @@ export class GameBoardEngine {
     store.clearTiles(tiles);
 
     // 4. Emit event to listeners (timer, score counter, etc.)
-    this.onTilesCleared?.(tiles, sum);
+    this.onTilesCleared?.(tiles, sum, actualCount);
   }
 
   private startLoop(): void {

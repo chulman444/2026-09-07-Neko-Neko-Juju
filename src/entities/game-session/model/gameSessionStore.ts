@@ -71,6 +71,7 @@ export const DEFAULT_DIFFICULTY_TILT_RANGES: DifficultyTiltRanges = {
 export interface GameSessionState {
   // Session & Meta
   score: number;
+  clearedTiles: number;
   retryAllowed: boolean;
   highlightedTiles: TileCoord[];
   noHintsAvailableMsg: string | null;
@@ -113,7 +114,7 @@ export interface GameSessionState {
   setPaused: (paused: boolean) => void;
   togglePause: () => void;
   addTime: (seconds: number) => void;
-  registerMatch: (clearedTileCount: number) => void;
+  registerMatch: (clearedTileCount: number, spanTileCount?: number) => void;
   setHighlightedTiles: (tiles: TileCoord[] | ((prev: TileCoord[]) => TileCoord[])) => void;
   removeClearedTiles: (clearedTiles: TileCoord[]) => void;
   triggerHint: () => boolean;
@@ -142,6 +143,7 @@ export interface GameSessionState {
 export const useGameSessionStore = create<GameSessionState>((set, get) => ({
   // Session & Meta Initial State
   score: 0,
+  clearedTiles: 0,
   retryAllowed: true,
   highlightedTiles: [],
   noHintsAvailableMsg: null,
@@ -233,7 +235,7 @@ export const useGameSessionStore = create<GameSessionState>((set, get) => ({
     });
   },
 
-  registerMatch: (clearedTileCount: number) => {
+  registerMatch: (clearedTileCount: number, spanTileCount?: number) => {
     const state = get();
     const newComboCount = state.comboCount + 1;
 
@@ -247,10 +249,10 @@ export const useGameSessionStore = create<GameSessionState>((set, get) => ({
       comboRefillTime = state.comboConfig.tier3Refill;
     }
 
-    // Award base points (1 tile = 1 point)
-    const points = clearedTileCount;
+    // Award base points: spanTileCount if provided (selection length/area score), otherwise clearedTileCount
+    const points = spanTileCount ?? clearedTileCount;
 
-    // In Phase 1, award time
+    // In Phase 1, award time based strictly on actual cleared tiles
     let nextCountdown = state.countdown;
     let nextDepleted = state.isDepleted;
     if (!state.isPhase1Over) {
@@ -263,6 +265,7 @@ export const useGameSessionStore = create<GameSessionState>((set, get) => ({
 
     set({
       score: state.score + points,
+      clearedTiles: state.clearedTiles + clearedTileCount,
       comboCount: newComboCount,
       comboPct: 100,
       countdown: nextCountdown,
@@ -522,6 +525,7 @@ export const useGameSessionStore = create<GameSessionState>((set, get) => ({
   resetSession: () => {
     set((state) => ({
       score: 0,
+      clearedTiles: 0,
       highlightedTiles: [],
       noHintsAvailableMsg: null,
       countdown: state.maxCountdown,

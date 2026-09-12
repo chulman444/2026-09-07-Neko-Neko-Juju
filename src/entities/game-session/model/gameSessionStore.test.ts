@@ -168,16 +168,24 @@ describe('gameSessionStore - Pause All Timers When Clearable Hints Exhausted', (
     expect(finalState.hintCountdown).toBe(0);
   });
 
-  it('awards exactly 1 point per cleared tile without inflation', () => {
+  it('awards exactly 1 point per cleared tile without inflation and tracks clearedTiles', () => {
     expect(useGameSessionStore.getState().score).toBe(0);
+    expect(useGameSessionStore.getState().clearedTiles).toBe(0);
 
     // Clear 2 tiles (e.g. 5+5)
     useGameSessionStore.getState().registerMatch(2);
     expect(useGameSessionStore.getState().score).toBe(2);
+    expect(useGameSessionStore.getState().clearedTiles).toBe(2);
 
     // Clear 4 tiles (e.g. 1+2+3+4)
     useGameSessionStore.getState().registerMatch(4);
     expect(useGameSessionStore.getState().score).toBe(6);
+    expect(useGameSessionStore.getState().clearedTiles).toBe(6);
+
+    // Clear 2 tiles with a larger span of 10
+    useGameSessionStore.getState().registerMatch(2, 10);
+    expect(useGameSessionStore.getState().score).toBe(16); // 6 + 10
+    expect(useGameSessionStore.getState().clearedTiles).toBe(8); // 6 + 2
   });
 
   it('updates timerMultiplier and clamps minimum to 0', () => {

@@ -1,7 +1,7 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { TimerBar } from '@/shared/ui';
 import { GameBoardWidget, PannableContainer } from '@/widgets/game-board';
-import { useBoardStore, type TileCoord } from '@/entities/board';
+import { useBoardStore, calculateBoardMetrics, type TileCoord } from '@/entities/board';
 import { useSolverStore } from '@/features/look-ahead-solver';
 import { Link } from '@/shared/lib/router';
 import { useGameSessionStore } from '@/entities/game-session';
@@ -22,6 +22,7 @@ export const GamePage: React.FC = () => {
   // Board Store Selectors & Actions
   const cols = useBoardStore((state) => state.cols);
   const rows = useBoardStore((state) => state.rows);
+  const initialMatrix = useBoardStore((state) => state.initialMatrix);
   const generateNewBoard = useBoardStore((state) => state.generateNewBoard);
   const restartCurrentBoard = useBoardStore((state) => state.restartCurrentBoard);
 
@@ -30,6 +31,9 @@ export const GamePage: React.FC = () => {
   const targetTile = useItemStore((state) => state.targetTile);
   const handleBoardTileClick = useItemStore((state) => state.handleBoardTileClick);
 
+  // Solver Store Selectors
+  const combinations = useSolverStore((state) => state.combinations);
+
   // Initial solver recalculation on mount
   useEffect(() => {
     useSolverStore.getState().recalculate(useBoardStore.getState().matrix, useBoardStore.getState().seed);
@@ -37,6 +41,7 @@ export const GamePage: React.FC = () => {
 
   // Game Session Selectors (Only what GamePage itself needs)
   const score = useGameSessionStore((state) => state.score);
+  const clearedTiles = useGameSessionStore((state) => state.clearedTiles);
   const countdown = useGameSessionStore((state) => state.countdown);
   const maxCountdown = useGameSessionStore((state) => state.maxCountdown);
   const isPaused = useGameSessionStore((state) => state.isPaused);
@@ -51,8 +56,11 @@ export const GamePage: React.FC = () => {
   const resetSession = useGameSessionStore((state) => state.resetSession);
 
   const handleTilesCleared = useCallback(
-    (tiles: TileCoord[], _sum: number) => {
-      registerMatch(tiles.length);
+    (tiles: TileCoord[], _sum: number, actualCount?: number) => {
+      const matrix = useBoardStore.getState().matrix;
+      const calculatedCount = tiles.filter((t) => (matrix[t.row]?.[t.col] ?? 0) > 0).length;
+      const nonZeroCount = actualCount ?? (calculatedCount > 0 ? calculatedCount : tiles.length);
+      registerMatch(nonZeroCount, tiles.length);
       removeClearedTiles(tiles);
     },
     [registerMatch, removeClearedTiles]
@@ -85,6 +93,54 @@ export const GamePage: React.FC = () => {
     [isToggled, handleBoardTileClick]
   );
 
+  // Derived Board & Clearable Metrics
+  const totalTiles = cols * rows;
+  const expectedSum = cols * rows * 5;
+  const remainingTiles = Math.max(0, totalTiles - clearedTiles);
+
+  const boardMetrics = useMemo(() => calculateBoardMetrics(initialMatrix), [initialMatrix]);
+  const totalSum = boardMetrics.totalSum;
+  const averageTile = boardMetrics.averageTile;
+  const zScore = boardMetrics.zScore;
+
+  const statDifficulty = useMemo(() => {
+    if (zScore <= -0.8) {
+      return {
+        label: 'Easy',
+        color: 'text-emerald-700 dark:text-emerald-400',
+        dot: 'bg-emerald-500',
+      };
+    }
+    if (zScore >= 0.8) {
+      return {
+        label: 'Hard',
+        color: 'text-rose-700 dark:text-rose-400',
+        dot: 'bg-rose-500',
+      };
+    }
+    return {
+      label: 'Medium',
+      color: 'text-amber-800/90 dark:text-amber-300',
+      dot: 'bg-amber-400 dark:bg-amber-500',
+    };
+  }, [zScore]);
+
+  const { clearableTileCount, clearableCombosCount } = useMemo(() => {
+    const activeClearable = combinations.filter(
+      (c) => c.isActive && c.blockers.length === 0
+    );
+    const uniqueCoords = new Set<string>();
+    for (const combo of activeClearable) {
+      for (const tile of combo.required) {
+        uniqueCoords.add(`${tile.row},${tile.col}`);
+      }
+    }
+    return {
+      clearableTileCount: uniqueCoords.size,
+      clearableCombosCount: activeClearable.length,
+    };
+  }, [combinations]);
+
   return (
     <div className="flex flex-col items-center w-full min-h-screen px-4 py-6 select-none relative">
       {/* Game Header Bar */}
@@ -101,15 +157,66 @@ export const GamePage: React.FC = () => {
               Neko Neko Juju
             </span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="text-sm font-semibold px-3 py-1 bg-amber-50 dark:bg-zinc-800 text-amber-900 dark:text-amber-200 border border-amber-200 dark:border-zinc-700 rounded-lg">
-              Score: <span className="font-bold">{score}</span>
+          {/* 3-Part HUD Container */}
+          <div className="flex flex-col bg-amber-50/70 dark:bg-zinc-800/70 border border-amber-200/80 dark:border-zinc-700 rounded-xl p-2.5 shadow-xs font-mono text-xs gap-1.5 min-w-[290px]">
+            {/* Top Row: Left (Score Cleared & Span Hover) | Right (Clearable Moves & Combos) */}
+            <div className="flex items-center justify-between gap-3 pb-1.5 border-b border-amber-900/10 dark:border-zinc-700/80">
+              {/* Left: Score / Cleared */}
+              <div
+                className="flex items-center gap-1.5 cursor-help"
+                title={`Span Score: ${score} pts • Cleared: ${clearedTiles} of ${totalTiles} tiles`}
+              >
+                <span className="text-amber-800/80 dark:text-zinc-400 font-sans font-semibold">Score:</span>
+                <span className="text-sm font-black text-amber-950 dark:text-amber-200 font-mono">{clearedTiles}</span>
+                <span className="text-[10px] text-amber-700/70 dark:text-zinc-400 font-sans">cleared</span>
+              </div>
+
+              {/* Right: How many left (Clearable tiles & combinations) */}
+              <div
+                className="flex items-center gap-1.5 text-right font-mono cursor-help"
+                title={`${remainingTiles} tiles remaining on board • ${clearableTileCount} tiles matchable across ${clearableCombosCount} combinations`}
+              >
+                <span className={`text-xs font-bold ${clearableTileCount === 0 ? 'text-rose-500 animate-pulse' : 'text-amber-950 dark:text-amber-100'}`}>
+                  {clearableTileCount}
+                </span>
+                <span className="text-[10px] text-zinc-500 dark:text-zinc-400 font-sans">clearable</span>
+                <span className="text-[10px] font-semibold text-zinc-500 dark:text-zinc-400">
+                  ({clearableCombosCount} {clearableCombosCount === 1 ? 'combo' : 'combos'})
+                </span>
+              </div>
             </div>
-            <div
-              className="text-xs font-semibold px-2.5 py-1 bg-amber-50/60 dark:bg-zinc-800/60 text-amber-800 dark:text-zinc-300 border border-amber-200/60 dark:border-zinc-700 rounded-lg font-mono"
-              title={`Board Size: ${cols} columns × ${rows} rows (${cols * rows} tiles)`}
-            >
-              Size: <span className="font-bold text-amber-950 dark:text-amber-200">{cols}×{rows}</span>
+
+            {/* Bottom Row: Below it is size & total tiles (as big as top row fonts), and difficulty with total & exp sum */}
+            <div className="flex items-center justify-between gap-3 pt-0.5 font-mono text-xs">
+              {/* Left: Size & Total Tiles */}
+              <div
+                className="flex items-center gap-1.5 cursor-help"
+                title={`Board Size: ${cols} columns × ${rows} rows (${totalTiles} total tiles)`}
+              >
+                <span className="text-amber-800/80 dark:text-zinc-400 font-sans font-semibold">Size:</span>
+                <span className="text-sm font-black text-amber-950 dark:text-amber-200 font-mono">{cols}×{rows}</span>
+                <span className="text-xs font-bold text-amber-900/80 dark:text-zinc-300 font-mono">
+                  ({totalTiles} tiles)
+                </span>
+              </div>
+
+              {/* Right: Difficulty with total sum and exp sum */}
+              <div
+                className="flex items-center gap-1.5 text-right font-mono cursor-help"
+                title={`Statistical Difficulty: ${statDifficulty.label} (Z-Score: ${zScore > 0 ? '+' : ''}${zScore.toFixed(2)}, Avg: ${averageTile.toFixed(2)}) • Generated Board Sum: ${totalSum} • Expected Uniform Sum: ${expectedSum}`}
+              >
+                <span className={`inline-block w-1.5 h-1.5 rounded-full ${statDifficulty.dot}`} />
+                <span className={`text-[10px] font-bold uppercase tracking-wider font-sans ${statDifficulty.color}`}>
+                  {statDifficulty.label}
+                </span>
+                <span className="text-zinc-400 dark:text-zinc-600">•</span>
+                <span className="text-xs font-bold text-amber-950 dark:text-amber-100">
+                  {totalSum}
+                </span>
+                <span className="text-[10px] text-zinc-500 dark:text-zinc-400 font-normal">
+                  / exp {expectedSum}
+                </span>
+              </div>
             </div>
           </div>
         </div>
