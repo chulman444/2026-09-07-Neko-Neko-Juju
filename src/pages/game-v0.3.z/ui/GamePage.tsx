@@ -7,9 +7,9 @@ import { Link } from '@/shared/lib/router';
 import { useGameSessionStore } from '@/entities/game-session';
 import { useItemStore } from '@/entities/item';
 import { useGameSessionDriver } from '../model/useGameSessionDriver';
+import { FooterConsole } from '@/widgets/footer-console';
 import { ComboBar } from './ComboBar';
 import { HintBar } from './HintBar';
-import { ItemBar } from './ItemBar';
 import { SidePanel } from './SidePanel';
 
 export const GamePage: React.FC = () => {
@@ -22,6 +22,7 @@ export const GamePage: React.FC = () => {
   // Board Store Selectors & Actions
   const cols = useBoardStore((state) => state.cols);
   const rows = useBoardStore((state) => state.rows);
+  const panOffset = useBoardStore((state) => state.panOffset);
   const generateNewBoard = useBoardStore((state) => state.generateNewBoard);
   const restartCurrentBoard = useBoardStore((state) => state.restartCurrentBoard);
 
@@ -140,9 +141,9 @@ export const GamePage: React.FC = () => {
                 ? 'bg-amber-200/80 text-amber-950 border-amber-400 dark:bg-zinc-700 dark:text-white dark:border-zinc-500 shadow-sm'
                 : 'border-amber-900/20 bg-amber-50 hover:bg-amber-100 text-amber-950 dark:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700'
             }`}
-            title={showItemArea ? 'Hide item area' : 'Show item area'}
+            title={showItemArea ? 'Hide footer console' : 'Show footer console'}
           >
-            <span>🎒 Items</span>
+            <span>🎒 Console</span>
             <span className="text-[10px] opacity-75">{showItemArea ? '▲' : '▼'}</span>
           </button>
           <button
@@ -177,23 +178,31 @@ export const GamePage: React.FC = () => {
         </div>
       </header>
 
-      {/* Main Items Container / Item Bar */}
-      <ItemBar
+      {/* Main Play Area with Pan Transform */}
+      <main className="relative flex items-center justify-center w-full max-w-7xl overflow-hidden pb-28">
+        <div
+          style={{
+            transform: `translate(${panOffset.x}px, ${panOffset.y}px)`,
+            transition: 'transform 0.04s ease-out',
+          }}
+          className="relative flex items-center justify-center"
+        >
+          <GameBoardWidget
+            interactive={!isPaused}
+            highlightedTiles={highlightedTiles}
+            targetTile={targetTile}
+            onTilesCleared={handleTilesCleared}
+            onTileClick={handleTileClick}
+            className={isPaused ? 'opacity-80' : ''}
+          />
+        </div>
+      </main>
+
+      {/* Floating Mechanical Footer Console */}
+      <FooterConsole
         isCollapsed={!showItemArea}
         onToggleCollapse={() => setShowItemArea((prev) => !prev)}
       />
-
-      {/* Main Play Area */}
-      <main className="flex items-center justify-center w-full max-w-7xl">
-        <GameBoardWidget
-          interactive={!isPaused}
-          highlightedTiles={highlightedTiles}
-          targetTile={targetTile}
-          onTilesCleared={handleTilesCleared}
-          onTileClick={handleTileClick}
-          className={isPaused ? 'opacity-80' : ''}
-        />
-      </main>
 
       {/* Floating Edge Trigger when SidePanel is closed */}
       {!showSidePanel && (

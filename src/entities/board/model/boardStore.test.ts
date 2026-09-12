@@ -62,4 +62,32 @@ describe('boardStore - setDimensions', () => {
     expect(stateAfterRestart.matrix[0]![0]).toBe(firstTileVal);
     expect(stateAfterRestart.matrix).toEqual(originalInitial);
   });
+
+  it('manages panOffset and resets on board regeneration and restart', () => {
+    // Initial offset should be (0, 0)
+    useBoardStore.getState().resetPanOffset();
+    expect(useBoardStore.getState().panOffset).toEqual({ x: 0, y: 0 });
+
+    // Update with concrete value
+    useBoardStore.getState().setPanOffset({ x: 45, y: -30 });
+    expect(useBoardStore.getState().panOffset).toEqual({ x: 45, y: -30 });
+
+    // Update with functional updater
+    useBoardStore.getState().setPanOffset((prev) => ({ x: prev.x + 10, y: prev.y + 10 }));
+    expect(useBoardStore.getState().panOffset).toEqual({ x: 55, y: -20 });
+
+    // Reset via resetPanOffset
+    useBoardStore.getState().resetPanOffset();
+    expect(useBoardStore.getState().panOffset).toEqual({ x: 0, y: 0 });
+
+    // Reset on restartCurrentBoard
+    useBoardStore.getState().setPanOffset({ x: 100, y: 100 });
+    useBoardStore.getState().restartCurrentBoard();
+    expect(useBoardStore.getState().panOffset).toEqual({ x: 0, y: 0 });
+
+    // Reset on generateNewBoard
+    useBoardStore.getState().setPanOffset({ x: 80, y: 80 });
+    useBoardStore.getState().generateNewBoard();
+    expect(useBoardStore.getState().panOffset).toEqual({ x: 0, y: 0 });
+  });
 });
