@@ -7,14 +7,17 @@ interface UseTrackballOptions {
 }
 
 export function useTrackball(options: UseTrackballOptions = {}) {
-  const { sensitivity = 1.0, inverseMovement = false } = options;
-
   const rows = useBoardStore((state) => state.rows);
   const cols = useBoardStore((state) => state.cols);
   const shapeSize = useBoardStore((state) => state.shapeSize);
   const panOffset = useBoardStore((state) => state.panOffset);
+  const inversePan = useBoardStore((state) => state.inversePan);
+  const panSensitivity = useBoardStore((state) => state.panSensitivity);
   const setPanOffset = useBoardStore((state) => state.setPanOffset);
   const resetPanOffset = useBoardStore((state) => state.resetPanOffset);
+
+  const sensitivity = options.sensitivity ?? panSensitivity;
+  const inverseMovement = options.inverseMovement ?? inversePan;
 
   const [knobOffset, setKnobOffset] = useState({ x: 0, y: 0 });
   const trackballPadRef = useRef<HTMLDivElement | null>(null);

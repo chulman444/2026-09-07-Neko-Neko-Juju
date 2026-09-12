@@ -19,6 +19,8 @@ export interface BoardState {
   matrix: number[][];
   panOffset: { x: number; y: number };
   isPanMode: boolean;
+  inversePan: boolean;
+  panSensitivity: number;
   clearingAnimations: ClearingAnimation[];
   tileWeights?: number[];
   activeTilt?: number;
@@ -32,6 +34,9 @@ export interface BoardState {
   resetPanOffset: () => void;
   setIsPanMode: (isPanMode: boolean | ((prev: boolean) => boolean)) => void;
   togglePanMode: () => void;
+  setInversePan: (inversePan: boolean) => void;
+  toggleInversePan: () => void;
+  setPanSensitivity: (panSensitivity: number) => void;
   setDimensions: (cols: number, rows: number) => void;
   setTileWeights: (weights?: number[], activeTilt?: number) => void;
   setShapeSize: (shapeSize: number) => void;
@@ -74,6 +79,8 @@ export const useBoardStore = create<BoardState>((set, get) => ({
   matrix: initialGeneratedMatrix.map((r) => [...r]),
   panOffset: { x: 0, y: 0 },
   isPanMode: false,
+  inversePan: true,
+  panSensitivity: 1.5,
   clearingAnimations: [],
   tileWeights: undefined,
   activeTilt: 0,
@@ -93,6 +100,13 @@ export const useBoardStore = create<BoardState>((set, get) => ({
   },
 
   togglePanMode: () => set((state) => ({ isPanMode: !state.isPanMode })),
+
+  setInversePan: (inversePan) => set({ inversePan }),
+
+  toggleInversePan: () => set((state) => ({ inversePan: !state.inversePan })),
+
+  setPanSensitivity: (panSensitivity) =>
+    set({ panSensitivity: Math.max(0.2, Math.min(6.0, panSensitivity)) }),
 
   setDimensions: (cols, rows) => {
     const { minNum, maxNum, seed, tileWeights } = get();

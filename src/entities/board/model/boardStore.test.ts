@@ -122,4 +122,33 @@ describe('boardStore - setDimensions', () => {
     useBoardStore.getState().restartCurrentBoard();
     expect(useBoardStore.getState().isPanMode).toBe(false);
   });
+
+  it('manages inversePan and panSensitivity correctly', () => {
+    // Initial defaults
+    expect(useBoardStore.getState().inversePan).toBe(true);
+    expect(useBoardStore.getState().panSensitivity).toBe(1.5);
+
+    // Toggle inversePan
+    useBoardStore.getState().toggleInversePan();
+    expect(useBoardStore.getState().inversePan).toBe(false);
+
+    useBoardStore.getState().toggleInversePan();
+    expect(useBoardStore.getState().inversePan).toBe(true);
+
+    // Set inversePan directly
+    useBoardStore.getState().setInversePan(false);
+    expect(useBoardStore.getState().inversePan).toBe(false);
+
+    // Set panSensitivity within valid range
+    useBoardStore.getState().setPanSensitivity(2.5);
+    expect(useBoardStore.getState().panSensitivity).toBe(2.5);
+
+    // Clamps below minimum 0.2
+    useBoardStore.getState().setPanSensitivity(0.05);
+    expect(useBoardStore.getState().panSensitivity).toBe(0.2);
+
+    // Clamps above maximum 6.0
+    useBoardStore.getState().setPanSensitivity(10.0);
+    expect(useBoardStore.getState().panSensitivity).toBe(6.0);
+  });
 });
