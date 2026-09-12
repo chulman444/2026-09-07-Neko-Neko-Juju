@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { TimerBar } from '@/shared/ui';
-import { GameBoardWidget } from '@/widgets/game-board';
+import { GameBoardWidget, PannableContainer } from '@/widgets/game-board';
 import { useBoardStore, type TileCoord } from '@/entities/board';
 import { useSolverStore } from '@/features/look-ahead-solver';
 import { Link } from '@/shared/lib/router';
@@ -22,7 +22,6 @@ export const GamePage: React.FC = () => {
   // Board Store Selectors & Actions
   const cols = useBoardStore((state) => state.cols);
   const rows = useBoardStore((state) => state.rows);
-  const panOffset = useBoardStore((state) => state.panOffset);
   const generateNewBoard = useBoardStore((state) => state.generateNewBoard);
   const restartCurrentBoard = useBoardStore((state) => state.restartCurrentBoard);
 
@@ -178,15 +177,9 @@ export const GamePage: React.FC = () => {
         </div>
       </header>
 
-      {/* Main Play Area with Pan Transform */}
-      <main className="relative flex items-center justify-center w-full max-w-7xl overflow-hidden pb-28">
-        <div
-          style={{
-            transform: `translate(${panOffset.x}px, ${panOffset.y}px)`,
-            transition: 'transform 0.04s ease-out',
-          }}
-          className="relative flex items-center justify-center"
-        >
+      {/* Main Play Area with Pannable Container */}
+      <main className="relative flex items-center justify-center w-full max-w-7xl overflow-hidden pb-40">
+        <PannableContainer className="w-full min-h-[500px]">
           <GameBoardWidget
             interactive={!isPaused}
             highlightedTiles={highlightedTiles}
@@ -195,7 +188,7 @@ export const GamePage: React.FC = () => {
             onTileClick={handleTileClick}
             className={isPaused ? 'opacity-80' : ''}
           />
-        </div>
+        </PannableContainer>
       </main>
 
       {/* Floating Mechanical Footer Console */}

@@ -90,4 +90,36 @@ describe('boardStore - setDimensions', () => {
     useBoardStore.getState().generateNewBoard();
     expect(useBoardStore.getState().panOffset).toEqual({ x: 0, y: 0 });
   });
+
+  it('manages isPanMode and togglePanMode correctly', () => {
+    // Initial state is false
+    useBoardStore.setState({ isPanMode: false });
+    expect(useBoardStore.getState().isPanMode).toBe(false);
+
+    // Toggle on
+    useBoardStore.getState().togglePanMode();
+    expect(useBoardStore.getState().isPanMode).toBe(true);
+
+    // Toggle off
+    useBoardStore.getState().togglePanMode();
+    expect(useBoardStore.getState().isPanMode).toBe(false);
+
+    // Set explicitly
+    useBoardStore.getState().setIsPanMode(true);
+    expect(useBoardStore.getState().isPanMode).toBe(true);
+
+    // Functional setter
+    useBoardStore.getState().setIsPanMode((prev) => !prev);
+    expect(useBoardStore.getState().isPanMode).toBe(false);
+
+    // Resets to false on board regeneration
+    useBoardStore.getState().setIsPanMode(true);
+    useBoardStore.getState().generateNewBoard();
+    expect(useBoardStore.getState().isPanMode).toBe(false);
+
+    // Resets to false on board restart
+    useBoardStore.getState().setIsPanMode(true);
+    useBoardStore.getState().restartCurrentBoard();
+    expect(useBoardStore.getState().isPanMode).toBe(false);
+  });
 });

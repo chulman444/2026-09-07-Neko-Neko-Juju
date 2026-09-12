@@ -22,6 +22,8 @@ export const FooterConsole: React.FC<FooterConsoleProps> = ({
   const isPaused = useGameSessionStore((state) => state.isPaused);
   const panOffset = useBoardStore((state) => state.panOffset);
   const resetPanOffset = useBoardStore((state) => state.resetPanOffset);
+  const isPanMode = useBoardStore((state) => state.isPanMode);
+  const togglePanMode = useBoardStore((state) => state.togglePanMode);
 
   // Trackball Hook
   const {
@@ -90,6 +92,18 @@ export const FooterConsole: React.FC<FooterConsoleProps> = ({
           <span className="text-[11px] font-mono text-zinc-500 dark:text-zinc-400">
             (🎲 ×{counts.randomNumber} · 🎰 ×{counts.randomChoose} · 💡 ×{counts.hint})
           </span>
+          {isPanMode && (
+            <span
+              onClick={(e) => {
+                e.stopPropagation();
+                togglePanMode();
+              }}
+              className="text-[10px] bg-amber-400 dark:bg-amber-700 text-amber-950 dark:text-amber-100 px-1.5 py-0.5 rounded font-black hover:bg-amber-500 transition"
+              title="Click to toggle Pan Mode off"
+            >
+              ✋ Pan ON
+            </span>
+          )}
           {isPanned && (
             <span
               onClick={(e) => {
@@ -187,99 +201,133 @@ export const FooterConsole: React.FC<FooterConsoleProps> = ({
             </button>
           </div>
         )}
+        {/* State D: Panning Mode Active Banner */}
+        {isPanMode && !isRandomNumberActive && !isRandomChooseActive && (
+          <div className="flex items-center gap-2 px-3 py-1 rounded-xl bg-amber-500/20 border border-amber-500/60 shadow-md animate-in fade-in duration-150 text-xs text-amber-950 dark:text-amber-200 backdrop-blur-md">
+            <span className="font-bold flex items-center gap-1">
+              ✋ Pan Mode Active:
+            </span>
+            <span>Drag anywhere with Left, Middle, or Right click to pan board</span>
+            <button
+              type="button"
+              onClick={togglePanMode}
+              className="px-2 py-0.5 rounded text-[11px] font-bold bg-amber-600 hover:bg-amber-700 text-white transition cursor-pointer ml-1"
+            >
+              ✕ Exit Pan
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* Main Floating Console Deck (Fixed Dimensions) */}
-      <div className="relative flex items-center justify-between gap-3 bg-[#fff9f1]/95 dark:bg-zinc-900/95 backdrop-blur-md border-[3px] border-[#4a3422] dark:border-zinc-700 rounded-2xl shadow-2xl px-3 py-2 w-fit max-w-[480px] h-[92px] box-border">
-        {/* Left Cluster: Random Number & Random Choose */}
-        <div className="flex items-center gap-2.5">
-          {/* Button 1: Random Number */}
-          <MechanicalItemButton
-            icon="🎲"
-            label={`×${counts.randomNumber}`}
-            title={`Random Number Item (${counts.randomNumber} left). Click to arm, click right wing to toggle Continuous Mode.`}
-            leftWingState={isRandomNumberActive ? 'amber' : 'inactive'}
-            rightWingState={toggleCheck.randomNumber ? 'amber' : 'inactive'}
-            leftWingTitle={isRandomNumberActive ? 'Random Number Armed' : 'Item Disarmed'}
-            rightWingTitle={
-              toggleCheck.randomNumber
-                ? 'Continuous Mode Active (Stays armed after rolling)'
-                : 'Single Use Mode (Untoggles after 1 roll). Click to toggle Continuous'
-            }
-            onRightWingClick={() => setToggleCheck('randomNumber', !toggleCheck.randomNumber)}
-            onClick={() => toggleItem('randomNumber')}
-            disabled={isDepleted || isPaused || counts.randomNumber <= 0}
-          />
+      {/* Main Floating Console Deck (Fixed Dimensions with Row 1 & Row 2) */}
+      <div className="relative flex flex-col items-center justify-between bg-[#fff9f1]/95 dark:bg-zinc-900/95 backdrop-blur-md border-[3px] border-[#4a3422] dark:border-zinc-700 rounded-2xl shadow-2xl px-3.5 py-2.5 w-fit max-w-[480px] h-[138px] box-border gap-2">
+        {/* Row 1: Items & Trackball Deck */}
+        <div className="flex items-center justify-between gap-3 w-full">
+          {/* Left Cluster: Random Number & Random Choose */}
+          <div className="flex items-center gap-2.5">
+            {/* Button 1: Random Number */}
+            <MechanicalItemButton
+              icon="🎲"
+              label={`×${counts.randomNumber}`}
+              title={`Random Number Item (${counts.randomNumber} left). Click to arm, click right wing to toggle Continuous Mode.`}
+              leftWingState={isRandomNumberActive ? 'amber' : 'inactive'}
+              rightWingState={toggleCheck.randomNumber ? 'amber' : 'inactive'}
+              leftWingTitle={isRandomNumberActive ? 'Random Number Armed' : 'Item Disarmed'}
+              rightWingTitle={
+                toggleCheck.randomNumber
+                  ? 'Continuous Mode Active (Stays armed after rolling)'
+                  : 'Single Use Mode (Untoggles after 1 roll). Click to toggle Continuous'
+              }
+              onRightWingClick={() => setToggleCheck('randomNumber', !toggleCheck.randomNumber)}
+              onClick={() => toggleItem('randomNumber')}
+              disabled={isDepleted || isPaused || counts.randomNumber <= 0}
+            />
 
-          {/* Button 2: Random Choose */}
-          <MechanicalItemButton
-            icon="🎰"
-            label={`×${counts.randomChoose}`}
-            title={`Random Choose Item (${counts.randomChoose} left). Click to arm, click right wing to toggle Continuous Mode.`}
-            leftWingState={isRandomChooseActive ? 'purple' : 'inactive'}
-            rightWingState={toggleCheck.randomChoose ? 'purple' : 'inactive'}
-            leftWingTitle={isRandomChooseActive ? 'Random Choose Armed' : 'Item Disarmed'}
-            rightWingTitle={
-              toggleCheck.randomChoose
-                ? 'Continuous Mode Active'
-                : 'Single Use Mode. Click to toggle Continuous'
-            }
-            onRightWingClick={() => setToggleCheck('randomChoose', !toggleCheck.randomChoose)}
-            onClick={() => toggleItem('randomChoose')}
-            disabled={isDepleted || isPaused || counts.randomChoose <= 0}
-          />
-        </div>
+            {/* Button 2: Random Choose */}
+            <MechanicalItemButton
+              icon="🎰"
+              label={`×${counts.randomChoose}`}
+              title={`Random Choose Item (${counts.randomChoose} left). Click to arm, click right wing to toggle Continuous Mode.`}
+              leftWingState={isRandomChooseActive ? 'purple' : 'inactive'}
+              rightWingState={toggleCheck.randomChoose ? 'purple' : 'inactive'}
+              leftWingTitle={isRandomChooseActive ? 'Random Choose Armed' : 'Item Disarmed'}
+              rightWingTitle={
+                toggleCheck.randomChoose
+                  ? 'Continuous Mode Active'
+                  : 'Single Use Mode. Click to toggle Continuous'
+              }
+              onRightWingClick={() => setToggleCheck('randomChoose', !toggleCheck.randomChoose)}
+              onClick={() => toggleItem('randomChoose')}
+              disabled={isDepleted || isPaused || counts.randomChoose <= 0}
+            />
+          </div>
 
-        {/* Center: Trackball Control Pad */}
-        <div className="flex flex-col items-center justify-center relative px-1">
-          <div
-            ref={trackballPadRef}
-            onPointerDown={handleTrackballPointerDown}
-            onPointerMove={handleTrackballPointerMove}
-            onPointerUp={handleTrackballPointerUpOrCancel}
-            onPointerCancel={handleTrackballPointerUpOrCancel}
-            onDoubleClick={handleTrackballDoubleClick}
-            className="w-[72px] h-[72px] rounded-full border-[3px] border-[#4a3422] dark:border-zinc-700 bg-[#fff9f1] dark:bg-zinc-950 flex items-center justify-center cursor-grab active:cursor-grabbing shadow-[inset_0_-4px_0px_#edd4b2] dark:shadow-[inset_0_-4px_0px_#27272a] touch-none transition-shadow"
-            title="Drag trackball to pan board view • Double-click to re-center"
-          >
+          {/* Center: Trackball Control Pad */}
+          <div className="flex flex-col items-center justify-center relative px-1">
             <div
-              className="w-[26px] h-[26px] rounded-full border-[3px] border-[#4a3422] dark:border-zinc-700 bg-[#ffba53] shadow-[inset_0_-3px_0px_#c96a2e] pointer-events-none transition-transform duration-75"
-              style={{
-                transform: `translate(${knobOffset.x}px, ${knobOffset.y}px)`,
-              }}
+              ref={trackballPadRef}
+              onPointerDown={handleTrackballPointerDown}
+              onPointerMove={handleTrackballPointerMove}
+              onPointerUp={handleTrackballPointerUpOrCancel}
+              onPointerCancel={handleTrackballPointerUpOrCancel}
+              onDoubleClick={handleTrackballDoubleClick}
+              className="w-[72px] h-[72px] rounded-full border-[3px] border-[#4a3422] dark:border-zinc-700 bg-[#fff9f1] dark:bg-zinc-950 flex items-center justify-center cursor-grab active:cursor-grabbing shadow-[inset_0_-4px_0px_#edd4b2] dark:shadow-[inset_0_-4px_0px_#27272a] touch-none transition-shadow"
+              title="Drag trackball to pan board view • Double-click to re-center"
+            >
+              <div
+                className="w-[26px] h-[26px] rounded-full border-[3px] border-[#4a3422] dark:border-zinc-700 bg-[#ffba53] shadow-[inset_0_-3px_0px_#c96a2e] pointer-events-none transition-transform duration-75"
+                style={{
+                  transform: `translate(${knobOffset.x}px, ${knobOffset.y}px)`,
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Right Cluster: Hint & Re-Center Pan */}
+          <div className="flex items-center gap-2.5">
+            {/* Button 3: Hint Item */}
+            <MechanicalItemButton
+              icon="💡"
+              label={`×${counts.hint}`}
+              title={`Hint Item (${counts.hint} left). Highlights valid Match-10 groups on the board.`}
+              leftWingState={hintSuccessFlash ? 'emerald' : 'inactive'}
+              rightWingState={hintSuccessFlash ? 'emerald' : 'inactive'}
+              leftWingTitle="Hint Indicator"
+              rightWingTitle="Hint Indicator"
+              onClick={handleHintClick}
+              disabled={isDepleted || isPaused || counts.hint <= 0}
+            />
+
+            {/* Button 4: Re-Center Pan */}
+            <MechanicalItemButton
+              icon="⊙"
+              label={isPanned ? 'Pan' : '0,0'}
+              title={
+                isPanned
+                  ? `Board is panned by (${Math.round(panOffset.x)}, ${Math.round(panOffset.y)}). Click to re-center (0, 0).`
+                  : 'Board is centered (0, 0). Drag trackball to pan.'
+              }
+              leftWingState={isPanned ? 'amber' : 'inactive'}
+              rightWingState={isPanned ? 'amber' : 'inactive'}
+              leftWingTitle={isPanned ? 'Board Panned' : 'Board Centered'}
+              rightWingTitle={isPanned ? 'Board Panned' : 'Board Centered'}
+              onClick={resetPanOffset}
             />
           </div>
         </div>
 
-        {/* Right Cluster: Hint & Re-Center Pan */}
-        <div className="flex items-center gap-2.5">
-          {/* Button 3: Hint Item */}
+        {/* Row 2: Dedicated Pan Mode Toggle Button directly below trackball */}
+        <div className="flex items-center justify-center w-full pt-1.5 border-t border-[#edd4b2]/60 dark:border-zinc-800">
           <MechanicalItemButton
-            icon="💡"
-            label={`×${counts.hint}`}
-            title={`Hint Item (${counts.hint} left). Highlights valid Match-10 groups on the board.`}
-            leftWingState={hintSuccessFlash ? 'emerald' : 'inactive'}
-            rightWingState={hintSuccessFlash ? 'emerald' : 'inactive'}
-            leftWingTitle="Hint Indicator"
-            rightWingTitle="Hint Indicator"
-            onClick={handleHintClick}
-            disabled={isDepleted || isPaused || counts.hint <= 0}
-          />
-
-          {/* Button 4: Re-Center Pan */}
-          <MechanicalItemButton
-            icon="⊙"
-            label={isPanned ? 'Pan' : '0,0'}
-            title={
-              isPanned
-                ? `Board is panned by (${Math.round(panOffset.x)}, ${Math.round(panOffset.y)}). Click to re-center (0, 0).`
-                : 'Board is centered (0, 0). Drag trackball to pan.'
-            }
-            leftWingState={isPanned ? 'amber' : 'inactive'}
-            rightWingState={isPanned ? 'amber' : 'inactive'}
-            leftWingTitle={isPanned ? 'Board Panned' : 'Board Centered'}
-            rightWingTitle={isPanned ? 'Board Panned' : 'Board Centered'}
-            onClick={resetPanOffset}
+            icon="✋"
+            size="sm"
+            label={isPanMode ? 'PANNING ACTIVE' : 'PAN MODE'}
+            title="Toggle Panning Mode: when enabled, drag anywhere on or off the board with Left, Middle, or Right Click to pan"
+            leftWingState={isPanMode ? 'amber' : 'inactive'}
+            rightWingState={isPanMode ? 'amber' : 'inactive'}
+            leftWingTitle={isPanMode ? 'Pan Mode Active' : 'Pan Mode Inactive'}
+            rightWingTitle={isPanMode ? 'Pan Mode Active' : 'Pan Mode Inactive'}
+            onClick={togglePanMode}
           />
         </div>
 

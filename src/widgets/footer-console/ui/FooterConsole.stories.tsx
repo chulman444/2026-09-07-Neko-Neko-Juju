@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
+import { useBoardStore } from '@/entities/board';
 import { FooterConsole } from './FooterConsole';
 
 const meta = {
@@ -32,4 +33,13 @@ export const Collapsed: Story = {
   args: {
     isCollapsed: true,
   },
+};
+
+export const PanModeActive: Story = {
+  decorators: [
+    (Story) => {
+      useBoardStore.setState({ isPanMode: true });
+      return <Story />;
+    },
+  ],
 };

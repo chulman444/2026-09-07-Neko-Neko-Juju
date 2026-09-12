@@ -18,6 +18,7 @@ export interface BoardState {
   initialMatrix: number[][];
   matrix: number[][];
   panOffset: { x: number; y: number };
+  isPanMode: boolean;
   clearingAnimations: ClearingAnimation[];
   tileWeights?: number[];
   activeTilt?: number;
@@ -29,6 +30,8 @@ export interface BoardState {
       | ((prev: { x: number; y: number }) => { x: number; y: number })
   ) => void;
   resetPanOffset: () => void;
+  setIsPanMode: (isPanMode: boolean | ((prev: boolean) => boolean)) => void;
+  togglePanMode: () => void;
   setDimensions: (cols: number, rows: number) => void;
   setTileWeights: (weights?: number[], activeTilt?: number) => void;
   setShapeSize: (shapeSize: number) => void;
@@ -70,6 +73,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
   initialMatrix: initialGeneratedMatrix,
   matrix: initialGeneratedMatrix.map((r) => [...r]),
   panOffset: { x: 0, y: 0 },
+  isPanMode: false,
   clearingAnimations: [],
   tileWeights: undefined,
   activeTilt: 0,
@@ -81,6 +85,14 @@ export const useBoardStore = create<BoardState>((set, get) => ({
   },
 
   resetPanOffset: () => set({ panOffset: { x: 0, y: 0 } }),
+
+  setIsPanMode: (isPanMode) => {
+    set((state) => ({
+      isPanMode: typeof isPanMode === 'function' ? isPanMode(state.isPanMode) : isPanMode,
+    }));
+  },
+
+  togglePanMode: () => set((state) => ({ isPanMode: !state.isPanMode })),
 
   setDimensions: (cols, rows) => {
     const { minNum, maxNum, seed, tileWeights } = get();
@@ -158,6 +170,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
       seedHistory: updatedHistory,
       clearingAnimations: [],
       panOffset: { x: 0, y: 0 },
+      isPanMode: false,
     });
   },
 
@@ -171,6 +184,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
       matrix: initialMatrix.map((r) => [...r]),
       clearingAnimations: [],
       panOffset: { x: 0, y: 0 },
+      isPanMode: false,
     });
   },
 

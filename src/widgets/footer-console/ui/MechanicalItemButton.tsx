@@ -6,6 +6,7 @@ export interface MechanicalItemButtonProps {
   icon: React.ReactNode;
   label?: string | number;
   title: string;
+  size?: 'sm' | 'md';
   leftWingState?: WingState;
   rightWingState?: WingState;
   leftWingTitle?: string;
@@ -36,6 +37,7 @@ export const MechanicalItemButton: React.FC<MechanicalItemButtonProps> = ({
   icon,
   label,
   title,
+  size = 'md',
   leftWingState = 'inactive',
   rightWingState = 'inactive',
   leftWingTitle,
@@ -45,9 +47,13 @@ export const MechanicalItemButton: React.FC<MechanicalItemButtonProps> = ({
   disabled = false,
   className = '',
 }) => {
+  const isSm = size === 'sm';
+
   return (
     <div
-      className={`inline-flex items-stretch select-none transition-transform duration-100 h-11 ${
+      className={`inline-flex items-stretch select-none transition-transform duration-100 ${
+        isSm ? 'h-8 text-xs' : 'h-11 text-sm'
+      } ${
         disabled
           ? 'opacity-40 pointer-events-none cursor-not-allowed'
           : 'cursor-pointer active:translate-y-0.5 hover:-translate-y-0.5'
@@ -65,17 +71,27 @@ export const MechanicalItemButton: React.FC<MechanicalItemButtonProps> = ({
     >
       {/* Left Wing Indicator */}
       <div
-        className={`w-2.5 border-[2.5px] border-[#4a3422] dark:border-zinc-700 border-r-0 rounded-l-lg transition-colors duration-150 ${getWingBgClass(
+        className={`${
+          isSm ? 'w-2 border-2' : 'w-2.5 border-[2.5px]'
+        } border-[#4a3422] dark:border-zinc-700 border-r-0 rounded-l-lg transition-colors duration-150 ${getWingBgClass(
           leftWingState
         )}`}
         title={leftWingTitle}
       />
 
       {/* Center Core Button Deck */}
-      <div className="bg-[#fff9f1] dark:bg-zinc-900 border-[2.5px] border-[#4a3422] dark:border-zinc-700 px-3 font-mono text-sm font-bold flex items-center justify-center gap-1.5 shadow-[inset_0_-3px_0px_#edd4b2] dark:shadow-[inset_0_-3px_0px_#27272a] z-[2] text-[#4a3422] dark:text-zinc-100">
-        <span className="text-base leading-none">{icon}</span>
+      <div
+        className={`bg-[#fff9f1] dark:bg-zinc-900 ${
+          isSm ? 'border-2 px-2.5 gap-1 text-xs' : 'border-[2.5px] px-3 gap-1.5 text-sm'
+        } border-[#4a3422] dark:border-zinc-700 font-mono font-bold flex items-center justify-center shadow-[inset_0_-3px_0px_#edd4b2] dark:shadow-[inset_0_-3px_0px_#27272a] z-[2] text-[#4a3422] dark:text-zinc-100`}
+      >
+        <span className={`${isSm ? 'text-sm' : 'text-base'} leading-none`}>{icon}</span>
         {label !== undefined && (
-          <span className="text-xs font-black tracking-tight text-[#4a3422] dark:text-zinc-200">
+          <span
+            className={`${
+              isSm ? 'text-[11px]' : 'text-xs'
+            } font-black tracking-tight text-[#4a3422] dark:text-zinc-200`}
+          >
             {label}
           </span>
         )}
@@ -83,7 +99,9 @@ export const MechanicalItemButton: React.FC<MechanicalItemButtonProps> = ({
 
       {/* Right Wing Indicator / Optional Multi-use Toggle Click Target */}
       <div
-        className={`w-2.5 border-[2.5px] border-[#4a3422] dark:border-zinc-700 border-l-0 rounded-r-lg transition-colors duration-150 ${getWingBgClass(
+        className={`${
+          isSm ? 'w-2 border-2' : 'w-2.5 border-[2.5px]'
+        } border-[#4a3422] dark:border-zinc-700 border-l-0 rounded-r-lg transition-colors duration-150 ${getWingBgClass(
           rightWingState
         )} ${onRightWingClick ? 'hover:opacity-80' : ''}`}
         title={rightWingTitle}

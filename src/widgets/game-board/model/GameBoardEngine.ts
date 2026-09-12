@@ -63,6 +63,7 @@ export class GameBoardEngine {
     const ctxAccess: BoardContextAccess = {
       getTargetSum: () => this.targetSum,
       isInteractive: () => this.interactive,
+      isPanMode: () => useBoardStore.getState().isPanMode,
       getBoardState: () => this.getBoardState(),
       getVisualConfig: () => this.visualConfig,
       onClear: (tiles, sum) => this.handleClear(tiles, sum),

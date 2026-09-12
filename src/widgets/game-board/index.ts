@@ -1,2 +1,4 @@
 export { GameBoardWidget } from './ui/GameBoardWidget';
 export type { GameBoardWidgetProps } from './ui/GameBoardWidget';
+export { PannableContainer } from './ui/PannableContainer';
+export type { PannableContainerProps } from './ui/PannableContainer';

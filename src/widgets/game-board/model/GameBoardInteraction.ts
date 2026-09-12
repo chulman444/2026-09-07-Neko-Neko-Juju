@@ -9,6 +9,7 @@ import type { InteractionSnapshot, SelectMode, BoardVisualConfig } from './types
 export interface BoardContextAccess {
   getTargetSum: () => number;
   isInteractive: () => boolean;
+  isPanMode?: () => boolean;
   getBoardState: () => {
     matrix: number[][];
     cols: number;
@@ -118,6 +119,7 @@ export class GameBoardInteraction {
 
   private handlePointerDown = (e: PointerEvent): void => {
     if (!this.ctxAccess.isInteractive()) return;
+    if (this.ctxAccess.isPanMode?.()) return;
     if (e.pointerType === 'mouse' && e.button !== 0 && e.button !== 2) return;
 
     this.isPointerDownOnCanvas = true;
@@ -334,6 +336,13 @@ export class GameBoardInteraction {
       if (this.lastCursor !== 'not-allowed') {
         this.lastCursor = 'not-allowed';
         this.canvas.style.cursor = 'not-allowed';
+      }
+      return;
+    }
+    if (this.ctxAccess.isPanMode?.()) {
+      if (this.lastCursor !== 'grab') {
+        this.lastCursor = 'grab';
+        this.canvas.style.cursor = 'grab';
       }
       return;
     }
