@@ -1,6 +1,6 @@
 import { useBoardStore, type TileCoord } from '@/entities/board';
 import { useItemStore } from '@/entities/item';
-import { GameBoardInteraction, type BoardContextAccess } from './GameBoardInteraction';
+import { GameBoardInteraction, type BoardContextAccess, type SelectionMeta } from './GameBoardInteraction';
 import { GameBoardRenderer } from './GameBoardRenderer';
 import type { BoardVisualConfig, BoardRenderState } from './types';
 
@@ -13,7 +13,7 @@ export interface GameBoardEngineOptions {
   targetTile?: TileCoord | null;
   visualConfig?: Partial<BoardVisualConfig>;
   onTilesCleared?: (tiles: TileCoord[], sum: number, actualCount?: number) => void;
-  onSelectionChange?: (tiles: TileCoord[], sum: number, isValid: boolean) => void;
+  onSelectionChange?: (tiles: TileCoord[], sum: number, isValid: boolean, meta?: SelectionMeta) => void;
   onTileClick?: (tile: TileCoord) => boolean | void;
   isItemActive?: () => boolean;
 }
@@ -32,7 +32,7 @@ export class GameBoardEngine {
   private highlightedTiles: TileCoord[] = [];
   private targetTile: TileCoord | null = null;
   private onTilesCleared?: (tiles: TileCoord[], sum: number, actualCount?: number) => void;
-  private onSelectionChange?: (tiles: TileCoord[], sum: number, isValid: boolean) => void;
+  private onSelectionChange?: (tiles: TileCoord[], sum: number, isValid: boolean, meta?: SelectionMeta) => void;
   private onTileClick?: (tile: TileCoord) => boolean | void;
   private isItemActiveProp?: () => boolean;
   private visualConfig: BoardVisualConfig;
@@ -75,7 +75,7 @@ export class GameBoardEngine {
       getBoardState: () => this.getBoardState(),
       getVisualConfig: () => this.visualConfig,
       onClear: (tiles, sum) => this.handleClear(tiles, sum),
-      onSelectionChange: (tiles, sum, isValid) => this.onSelectionChange?.(tiles, sum, isValid),
+      onSelectionChange: (tiles, sum, isValid, meta) => this.onSelectionChange?.(tiles, sum, isValid, meta),
       onTileClick: (tile) => (this.onTileClick ? Boolean(this.onTileClick(tile)) : false),
     };
 
@@ -110,7 +110,7 @@ export class GameBoardEngine {
 
   public setCallbacks(
     onTilesCleared?: (tiles: TileCoord[], sum: number, actualCount?: number) => void,
-    onSelectionChange?: (tiles: TileCoord[], sum: number, isValid: boolean) => void,
+    onSelectionChange?: (tiles: TileCoord[], sum: number, isValid: boolean, meta?: SelectionMeta) => void,
     onTileClick?: (tile: TileCoord) => boolean | void
   ): void {
     this.onTilesCleared = onTilesCleared;

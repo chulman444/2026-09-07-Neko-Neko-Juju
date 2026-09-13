@@ -381,5 +381,44 @@ describe('gameSessionStore - Hint Highlight Invalidation', () => {
     expect(useGameSessionStore.getState().activeHintCombos).toEqual([]);
     expect(useGameSessionStore.getState().highlightedTiles).toEqual([]);
   });
+
+  it('sets, clears, and resets real-time selection state correctly', () => {
+    const tiles = [{ row: 0, col: 0 }, { row: 0, col: 1 }];
+    useGameSessionStore.getState().setSelection({
+      selectedTiles: tiles,
+      selectedSum: 8,
+      diagonalSum: 10,
+      isSquareSelection: true,
+      activeSelectionType: 'box',
+    });
+
+    let state = useGameSessionStore.getState();
+    expect(state.selectedTiles).toEqual(tiles);
+    expect(state.selectedSum).toBe(8);
+    expect(state.diagonalSum).toBe(10);
+    expect(state.isSquareSelection).toBe(true);
+    expect(state.activeSelectionType).toBe('box');
+
+    // Clear selection
+    useGameSessionStore.getState().clearSelection();
+    state = useGameSessionStore.getState();
+    expect(state.selectedTiles).toEqual([]);
+    expect(state.selectedSum).toBe(0);
+    expect(state.diagonalSum).toBe(0);
+    expect(state.isSquareSelection).toBe(false);
+    expect(state.activeSelectionType).toBeNull();
+
+    // Re-set and verify resetSession clears it
+    useGameSessionStore.getState().setSelection({
+      selectedTiles: tiles,
+      selectedSum: 10,
+      activeSelectionType: 'diagonal',
+    });
+    useGameSessionStore.getState().resetSession();
+    state = useGameSessionStore.getState();
+    expect(state.selectedTiles).toEqual([]);
+    expect(state.selectedSum).toBe(0);
+    expect(state.activeSelectionType).toBeNull();
+  });
 });
 

@@ -2,6 +2,7 @@ import React, { useRef, useEffect } from 'react';
 import { useBoardStore, type TileCoord, type CheckerboardMode } from '@/entities/board';
 import { useItemStore } from '@/entities/item';
 import { GameBoardEngine } from '../model/GameBoardEngine';
+import type { SelectionMeta } from '../model/GameBoardInteraction';
 import { getGridPitch } from '../lib/coordinates';
 
 export interface GameBoardWidgetProps {
@@ -19,9 +20,9 @@ export interface GameBoardWidgetProps {
   highlightedTiles?: TileCoord[];
   /** Targeted tile coordinate for item application (e.g. Random Choose) */
   targetTile?: TileCoord | null;
-  /** Board background color override */
+  /** Background canvas fill color */
   gameBg?: string;
-  /** Checkerboard background mode override */
+  /** Checkerboard style mode override */
   checkerboardMode?: CheckerboardMode;
   /** Checkerboard colors override */
   checkerColors?: [string, string];
@@ -30,7 +31,7 @@ export interface GameBoardWidgetProps {
   /** Callback fired when a valid set of tiles is matched and cleared */
   onTilesCleared?: (tiles: TileCoord[], sum: number, actualCount?: number) => void;
   /** Callback fired whenever user selects tiles */
-  onSelectionChange?: (tiles: TileCoord[], sum: number, isValid: boolean) => void;
+  onSelectionChange?: (tiles: TileCoord[], sum: number, isValid: boolean, meta?: SelectionMeta) => void;
   /** Callback fired when a single tile is clicked without drag (e.g. for item placement) */
   onTileClick?: (tile: TileCoord) => boolean | void;
   className?: string;

@@ -11,6 +11,8 @@ import { FooterConsole } from '@/widgets/footer-console';
 import { ComboBar } from './ComboBar';
 import { HintBar } from './HintBar';
 import { SidePanel } from './SidePanel';
+import { SelectionSumHUD } from './SelectionSumHUD';
+import type { SelectionMeta } from '@/widgets/game-board';
 
 export const GamePage: React.FC = () => {
   const [showSidePanel, setShowSidePanel] = useState<boolean>(false);
@@ -91,6 +93,24 @@ export const GamePage: React.FC = () => {
       return false;
     },
     [isToggled, handleBoardTileClick]
+  );
+
+  const handleSelectionChange = useCallback(
+    (
+      tiles: TileCoord[],
+      sum: number,
+      _isValid: boolean,
+      meta?: SelectionMeta
+    ) => {
+      useGameSessionStore.getState().setSelection({
+        selectedTiles: tiles,
+        selectedSum: sum,
+        diagonalSum: meta?.diagonalSum ?? 0,
+        isSquareSelection: meta?.isSquare ?? false,
+        activeSelectionType: meta?.selectionType ?? null,
+      });
+    },
+    []
   );
 
   // Derived Board & Clearable Metrics
@@ -232,6 +252,7 @@ export const GamePage: React.FC = () => {
           </div>
           <HintBar />
           <ComboBar />
+          <SelectionSumHUD />
           {noHintsAvailableMsg && (
             <div className="text-[10px] font-bold text-zinc-500 bg-zinc-200/50 dark:bg-zinc-800/50 px-2 py-0.5 rounded-full border border-zinc-300 dark:border-zinc-700 animate-in fade-in duration-200">
               {noHintsAvailableMsg}
@@ -295,6 +316,7 @@ export const GamePage: React.FC = () => {
             targetTile={targetTile}
             isItemActive={isToggled}
             onTilesCleared={handleTilesCleared}
+            onSelectionChange={handleSelectionChange}
             onTileClick={handleTileClick}
             className={isPaused ? 'opacity-80' : ''}
           />

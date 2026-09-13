@@ -129,6 +129,13 @@ export interface GameSessionState {
   comboPct: number;
   comboConfig: ComboConfig;
 
+  // Real-Time Selection State
+  selectedTiles: TileCoord[];
+  selectedSum: number;
+  diagonalSum: number;
+  isSquareSelection: boolean;
+  activeSelectionType: 'box' | 'diagonal' | null;
+
   // Actions
   tick: (deltaSeconds: number) => void;
   setScore: (score: number | ((prev: number) => number)) => void;
@@ -140,6 +147,14 @@ export interface GameSessionState {
   removeClearedTiles: (clearedTiles: TileCoord[]) => void;
   validateActiveHints: () => void;
   triggerHint: () => boolean;
+  setSelection: (selection: {
+    selectedTiles: TileCoord[];
+    selectedSum: number;
+    diagonalSum?: number;
+    isSquareSelection?: boolean;
+    activeSelectionType?: 'box' | 'diagonal' | null;
+  }) => void;
+  clearSelection: () => void;
 
   // Tuning Setters
   setMaxCountdown: (val: number) => void;
@@ -207,6 +222,33 @@ export const useGameSessionStore = create<GameSessionState>((set, get) => ({
   comboCount: 0,
   comboPct: 0,
   comboConfig: { ...DEFAULT_COMBO_CONFIG },
+
+  // Real-Time Selection Initial State
+  selectedTiles: [],
+  selectedSum: 0,
+  diagonalSum: 0,
+  isSquareSelection: false,
+  activeSelectionType: null,
+
+  setSelection: (selection) => {
+    set({
+      selectedTiles: selection.selectedTiles,
+      selectedSum: selection.selectedSum,
+      diagonalSum: selection.diagonalSum ?? 0,
+      isSquareSelection: selection.isSquareSelection ?? false,
+      activeSelectionType: selection.activeSelectionType ?? null,
+    });
+  },
+
+  clearSelection: () => {
+    set({
+      selectedTiles: [],
+      selectedSum: 0,
+      diagonalSum: 0,
+      isSquareSelection: false,
+      activeSelectionType: null,
+    });
+  },
 
   setScore: (score) => {
     set((state) => ({
@@ -632,6 +674,11 @@ export const useGameSessionStore = create<GameSessionState>((set, get) => ({
       isPhase1Over: false,
       comboCount: 0,
       comboPct: 0,
+      selectedTiles: [],
+      selectedSum: 0,
+      diagonalSum: 0,
+      isSquareSelection: false,
+      activeSelectionType: null,
     }));
   },
 }));

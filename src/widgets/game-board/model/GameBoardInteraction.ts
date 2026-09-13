@@ -20,8 +20,14 @@ export interface BoardContextAccess {
   };
   getVisualConfig: () => BoardVisualConfig;
   onClear: (tiles: TileCoord[], sum: number) => void;
-  onSelectionChange?: (tiles: TileCoord[], sum: number, isValid: boolean) => void;
+  onSelectionChange?: (tiles: TileCoord[], sum: number, isValid: boolean, meta?: SelectionMeta) => void;
   onTileClick?: (tile: TileCoord) => boolean | void;
+}
+
+export interface SelectionMeta {
+  diagonalSum?: number;
+  isSquare?: boolean;
+  selectionType?: 'box' | 'diagonal' | null;
 }
 
 export class GameBoardInteraction {
@@ -363,7 +369,11 @@ export class GameBoardInteraction {
         if (this.lastSelectionKey !== selectionKey) {
           this.lastSelectionKey = selectionKey;
           const isValid = this.boxSum === targetSum || this.diagSum === targetSum;
-          this.ctxAccess.onSelectionChange?.(detailed.boxTiles, this.boxSum, isValid);
+          this.ctxAccess.onSelectionChange?.(detailed.boxTiles, this.boxSum, isValid, {
+            diagonalSum: this.diagSum,
+            isSquare: true,
+            selectionType: 'box',
+          });
         }
       } else {
         const tiles = detailed.boxTiles;
@@ -376,7 +386,11 @@ export class GameBoardInteraction {
         if (this.lastSelectionKey !== selectionKey) {
           this.lastSelectionKey = selectionKey;
           const isValid = this.boxSum === targetSum;
-          this.ctxAccess.onSelectionChange?.(tiles, this.boxSum, isValid);
+          this.ctxAccess.onSelectionChange?.(tiles, this.boxSum, isValid, {
+            diagonalSum: 0,
+            isSquare: false,
+            selectionType: 'box',
+          });
         }
       }
     } else if (this.activeAction === 'diagonal' && !this.isShiftPressed) {
@@ -397,7 +411,11 @@ export class GameBoardInteraction {
       if (this.lastSelectionKey !== selectionKey) {
         this.lastSelectionKey = selectionKey;
         const isValid = this.diagSum === targetSum;
-        this.ctxAccess.onSelectionChange?.(selected, this.diagSum, isValid);
+        this.ctxAccess.onSelectionChange?.(selected, this.diagSum, isValid, {
+          diagonalSum: this.diagSum,
+          isSquare: false,
+          selectionType: 'diagonal',
+        });
       }
     }
   }
@@ -445,7 +463,11 @@ export class GameBoardInteraction {
     this.diagSum = 0;
     this.lastSelectionKey = '';
     this.updateCursor();
-    this.ctxAccess.onSelectionChange?.([], 0, false);
+    this.ctxAccess.onSelectionChange?.([], 0, false, {
+      diagonalSum: 0,
+      isSquare: false,
+      selectionType: null,
+    });
   }
 
   private calculateTileSum(tiles: TileCoord[], matrix: number[][]): number {
