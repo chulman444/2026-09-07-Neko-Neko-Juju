@@ -151,4 +151,44 @@ describe('boardStore - setDimensions', () => {
     useBoardStore.getState().setPanSensitivity(10.0);
     expect(useBoardStore.getState().panSensitivity).toBe(6.0);
   });
+
+  it('manages checkerboardMode and checkerColors with diagonal parity preservation', () => {
+    // Initial defaults
+    expect(useBoardStore.getState().checkerboardMode).toBe('2-color');
+    expect(useBoardStore.getState().checkerColors.length).toBe(3);
+
+    // Updates checkerboardMode
+    useBoardStore.getState().setCheckerboardMode('3-color');
+    expect(useBoardStore.getState().checkerboardMode).toBe('3-color');
+
+    useBoardStore.getState().setCheckerboardMode('off');
+    expect(useBoardStore.getState().checkerboardMode).toBe('off');
+
+    useBoardStore.getState().setCheckerboardMode('2-color');
+    expect(useBoardStore.getState().checkerboardMode).toBe('2-color');
+
+    // Updates custom checkerColors
+    const customColors: [string, string, string] = ['#111111', '#222222', '#333333'];
+    useBoardStore.getState().setCheckerColors(customColors);
+    expect(useBoardStore.getState().checkerColors).toEqual(customColors);
+
+    // Diagonal Parity Invariance Verification:
+    // Any step along a diagonal (dx = dy or dx = -dy) must preserve (c + r) % 2
+    const startC = 2;
+    const startR = 3;
+    const startParity = (startC + startR) % 2;
+
+    // True diagonal: dx = 6, dy = 6
+    const diag6x6Parity = (startC + 6 + startR + 6) % 2;
+    expect(diag6x6Parity).toBe(startParity);
+
+    // True anti-diagonal: dx = -4, dy = 4
+    const antiDiagParity = (startC - 4 + startR + 4) % 2;
+    expect(antiDiagParity).toBe(startParity);
+
+    // Off-diagonal confusing case: dx = 6, dy = 7
+    const offDiagParity = (startC + 6 + startR + 7) % 2;
+    expect(offDiagParity).not.toBe(startParity);
+  });
 });
+

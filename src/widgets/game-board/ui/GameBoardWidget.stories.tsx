@@ -29,6 +29,11 @@ const meta = {
       control: 'color',
       description: 'Background color of the board canvas',
     },
+    checkerboardMode: {
+      control: 'radio',
+      options: ['off', '2-color', '3-color'],
+      description: 'Diagonal-preserving checkerboard background mode',
+    },
   },
 } satisfies Meta<typeof GameBoardWidget>;
 
@@ -180,5 +185,36 @@ export const BoardWithTimerDemo: Story = {
         </div>
       </div>
     );
+  },
+};
+
+/**
+ * 6. Two-Color Checkerboard (Default)
+ * Tiles on any diagonal share the identical checker color, distinguishing
+ * 6Δx × 7Δy non-diagonal tiles from 6Δx × 6Δy diagonal tiles at a glance.
+ */
+export const CheckerboardTwoColor: Story = {
+  args: {
+    checkerboardMode: '2-color',
+  },
+};
+
+/**
+ * 7. Three-Color Diagonal Bands
+ * Alternating tri-color bands grouping parallel diagonals into 3 families.
+ */
+export const CheckerboardThreeColor: Story = {
+  args: {
+    checkerboardMode: '3-color',
+  },
+};
+
+/**
+ * 8. Solid Background (Checkerboard Off)
+ * Classic flat background fill without alternating checker squares.
+ */
+export const CheckerboardOff: Story = {
+  args: {
+    checkerboardMode: 'off',
   },
 };

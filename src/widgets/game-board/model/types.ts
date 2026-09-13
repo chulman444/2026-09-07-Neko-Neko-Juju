@@ -1,4 +1,4 @@
-import type { TileCoord, ClearingAnimation } from '@/entities/board';
+import type { TileCoord, ClearingAnimation, CheckerboardMode } from '@/entities/board';
 
 export type SelectMode = 'drag' | 'tap';
 
@@ -41,6 +41,8 @@ export interface BoardVisualConfig {
   munchDuration: number;
   fadeoutDuration: number;
   munchSpeed: number;
+  checkerboardMode?: CheckerboardMode;
+  checkerColors?: string[];
   twoClickSelection?: boolean;
   hoverLiveSelection?: boolean;
 }

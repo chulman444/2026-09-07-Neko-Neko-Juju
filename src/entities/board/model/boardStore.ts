@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { generateSeed, seededRandomGenerator } from '@/shared/lib/prng';
 import { DEFAULT_CONFIG } from '@/shared/config';
 import { createBoardMatrix } from './boardGenerators';
-import type { TileCoord, ClearingAnimation } from './types';
+import type { TileCoord, ClearingAnimation, CheckerboardMode } from './types';
 
 export interface BoardState {
   cols: number;
@@ -24,8 +24,12 @@ export interface BoardState {
   clearingAnimations: ClearingAnimation[];
   tileWeights?: number[];
   activeTilt?: number;
+  checkerboardMode: CheckerboardMode;
+  checkerColors: [string, string, string];
 
   // Actions
+  setCheckerboardMode: (mode: CheckerboardMode) => void;
+  setCheckerColors: (colors: [string, string, string]) => void;
   setPanOffset: (
     offset:
       | { x: number; y: number }
@@ -85,6 +89,11 @@ export const useBoardStore = create<BoardState>((set, get) => ({
   clearingAnimations: [],
   tileWeights: undefined,
   activeTilt: 0,
+  checkerboardMode: DEFAULT_CONFIG.checkerboardMode ?? '2-color',
+  checkerColors: [DEFAULT_CONFIG.checker1, DEFAULT_CONFIG.checker2, DEFAULT_CONFIG.checker3],
+
+  setCheckerboardMode: (checkerboardMode) => set({ checkerboardMode }),
+  setCheckerColors: (checkerColors) => set({ checkerColors }),
 
   setPanOffset: (offset) => {
     set((state) => ({

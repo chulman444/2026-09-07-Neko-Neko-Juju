@@ -85,10 +85,35 @@ export class GameBoardRenderer {
     this.drawClearingAnimations();
   }
 
-  // Layer 1: Background
+  // Layer 1: Background & Checkerboard
   private drawBackground(): void {
-    this.ctx.fillStyle = this.visualConfig.gameBg;
+    const { cols, rows } = this.board;
+    const mode = this.visualConfig.checkerboardMode ?? '2-color';
+    const bg = this.visualConfig.gameBg;
+
+    // Fill entire canvas with base background
+    this.ctx.fillStyle = bg;
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+    if (mode === 'off' || !this.pitch) {
+      return;
+    }
+
+    const defaultColors = ['#fbf2df', '#ebd6b3', '#dcbe8e'];
+    const colors =
+      this.visualConfig.checkerColors && this.visualConfig.checkerColors.length > 0
+        ? this.visualConfig.checkerColors
+        : defaultColors;
+
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const colorIdx = mode === '3-color' ? ((r + c) % 3 + 3) % 3 : (r + c) % 2;
+        const color = colors[colorIdx % colors.length] ?? colors[0];
+
+        this.ctx.fillStyle = color;
+        this.ctx.fillRect(c * this.pitch, r * this.pitch, this.pitch, this.pitch);
+      }
+    }
   }
 
   // Layer 2: Base Bowls (with vector fallback)

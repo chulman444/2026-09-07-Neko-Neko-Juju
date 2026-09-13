@@ -60,6 +60,8 @@ export class GameBoardEngine {
       munchDuration: options.visualConfig?.munchDuration ?? 600,
       fadeoutDuration: options.visualConfig?.fadeoutDuration ?? 400,
       munchSpeed: options.visualConfig?.munchSpeed ?? 80,
+      checkerboardMode: options.visualConfig?.checkerboardMode ?? '2-color',
+      checkerColors: options.visualConfig?.checkerColors,
       twoClickSelection: options.visualConfig?.twoClickSelection ?? true,
       hoverLiveSelection: options.visualConfig?.hoverLiveSelection ?? true,
     };

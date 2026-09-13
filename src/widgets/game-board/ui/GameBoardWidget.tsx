@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { useBoardStore, type TileCoord } from '@/entities/board';
+import { useBoardStore, type TileCoord, type CheckerboardMode } from '@/entities/board';
 import { useItemStore } from '@/entities/item';
 import { GameBoardEngine } from '../model/GameBoardEngine';
 import { getGridPitch } from '../lib/coordinates';
@@ -21,6 +21,10 @@ export interface GameBoardWidgetProps {
   targetTile?: TileCoord | null;
   /** Board background color override */
   gameBg?: string;
+  /** Checkerboard background mode override */
+  checkerboardMode?: CheckerboardMode;
+  /** Checkerboard colors override */
+  checkerColors?: [string, string, string];
   /** Whether an item is currently armed/active (bypasses box/tap selection) */
   isItemActive?: boolean;
   /** Callback fired when a valid set of tiles is matched and cleared */
@@ -41,6 +45,8 @@ export const GameBoardWidget: React.FC<GameBoardWidgetProps> = ({
   highlightedTiles = [],
   targetTile = null,
   gameBg = '#fbf2df',
+  checkerboardMode: checkerboardModeProp,
+  checkerColors: checkerColorsProp,
   isItemActive,
   onTilesCleared,
   onSelectionChange,
@@ -54,6 +60,11 @@ export const GameBoardWidget: React.FC<GameBoardWidgetProps> = ({
   const tileBorder = useBoardStore((state) => state.tileBorder);
   const storeCols = useBoardStore((state) => state.cols);
   const storeRows = useBoardStore((state) => state.rows);
+  const storeCheckerboardMode = useBoardStore((state) => state.checkerboardMode);
+  const storeCheckerColors = useBoardStore((state) => state.checkerColors);
+
+  const checkerboardMode = checkerboardModeProp ?? storeCheckerboardMode;
+  const checkerColors = checkerColorsProp ?? storeCheckerColors;
 
   const cols = matrix && matrix.length > 0 ? (matrix[0]?.length ?? storeCols) : storeCols;
   const rows = matrix ? matrix.length : storeRows;
@@ -77,7 +88,7 @@ export const GameBoardWidget: React.FC<GameBoardWidgetProps> = ({
       matrix,
       highlightedTiles,
       targetTile,
-      visualConfig: { gameBg, twoClickSelection, hoverLiveSelection },
+      visualConfig: { gameBg, checkerboardMode, checkerColors, twoClickSelection, hoverLiveSelection },
       onTilesCleared,
       onSelectionChange,
       onTileClick,
@@ -127,9 +138,15 @@ export const GameBoardWidget: React.FC<GameBoardWidgetProps> = ({
 
   useEffect(() => {
     if (engineRef.current) {
-      engineRef.current.setVisualConfig({ gameBg, twoClickSelection, hoverLiveSelection });
+      engineRef.current.setVisualConfig({
+        gameBg,
+        checkerboardMode,
+        checkerColors,
+        twoClickSelection,
+        hoverLiveSelection,
+      });
     }
-  }, [gameBg, twoClickSelection, hoverLiveSelection]);
+  }, [gameBg, checkerboardMode, checkerColors, twoClickSelection, hoverLiveSelection]);
 
   const lastMatrixPropRef = useRef<number[][] | undefined>(matrix ? matrix.map((r) => [...r]) : undefined);
 
