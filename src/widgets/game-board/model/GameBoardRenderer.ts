@@ -1,4 +1,4 @@
-import type { TileCoord } from '@/entities/board';
+import { type TileCoord, isOmniTile } from '@/entities/board';
 import { gameAssets } from '@/shared/lib/assets';
 import { getGridPitch } from '../lib/coordinates';
 import type { InteractionSnapshot, BoardRenderState, BoardVisualConfig } from './types';
@@ -464,13 +464,18 @@ export class GameBoardRenderer {
         const cx = (c + 0.5) * this.pitch;
         const cy = (r + 0.5) * this.pitch;
 
-        this.ctx.font = `900 ${textSize}px 'Segoe UI', sans-serif`;
-        this.ctx.lineWidth = 3;
-        this.ctx.strokeStyle = textBorderColor;
-        this.ctx.strokeText(val.toString(), cx, cy + 2);
+        const isOmni = isOmniTile(val);
+        const textToDraw = isOmni ? '*' : val.toString();
+        const effectiveSize = isOmni ? Math.round(textSize * 1.5) : textSize;
+        const textOffsetY = isOmni ? cy + Math.round(textSize * 0.35) : cy + 2;
 
-        this.ctx.fillStyle = textColor;
-        this.ctx.fillText(val.toString(), cx, cy + 2);
+        this.ctx.font = `900 ${effectiveSize}px 'Segoe UI', sans-serif`;
+        this.ctx.lineWidth = isOmni ? 4 : 3;
+        this.ctx.strokeStyle = isOmni ? '#78350f' : textBorderColor;
+        this.ctx.strokeText(textToDraw, cx, textOffsetY);
+
+        this.ctx.fillStyle = isOmni ? '#fbbf24' : textColor;
+        this.ctx.fillText(textToDraw, cx, textOffsetY);
       }
     }
   }
@@ -555,13 +560,18 @@ export class GameBoardRenderer {
       }
 
       if (anim.val !== undefined) {
-        this.ctx.font = `900 ${textSize}px 'Segoe UI', sans-serif`;
-        this.ctx.lineWidth = 3;
-        this.ctx.strokeStyle = textBorderColor;
-        this.ctx.strokeText(anim.val.toString(), cx, cy + 2);
+        const isOmni = isOmniTile(anim.val);
+        const textToDraw = isOmni ? '*' : anim.val.toString();
+        const effectiveSize = isOmni ? Math.round(textSize * 1.5) : textSize;
+        const textOffsetY = isOmni ? cy + Math.round(textSize * 0.35) : cy + 2;
 
-        this.ctx.fillStyle = textColor;
-        this.ctx.fillText(anim.val.toString(), cx, cy + 2);
+        this.ctx.font = `900 ${effectiveSize}px 'Segoe UI', sans-serif`;
+        this.ctx.lineWidth = isOmni ? 4 : 3;
+        this.ctx.strokeStyle = isOmni ? '#78350f' : textBorderColor;
+        this.ctx.strokeText(textToDraw, cx, textOffsetY);
+
+        this.ctx.fillStyle = isOmni ? '#fbbf24' : textColor;
+        this.ctx.fillText(textToDraw, cx, textOffsetY);
       }
 
       this.ctx.restore();

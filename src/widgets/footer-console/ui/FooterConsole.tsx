@@ -47,12 +47,23 @@ export const FooterConsole: React.FC<FooterConsoleProps> = ({
   const confirmRandomChoose = useItemStore((state) => state.confirmRandomChoose);
   const cancelTargetTile = useItemStore((state) => state.cancelTargetTile);
   const triggerHintItem = useItemStore((state) => state.triggerHintItem);
+  const triggerShakeItem = useItemStore((state) => state.triggerShakeItem);
 
-  // State for momentary visual success flash on Hint trigger
+  // State for momentary visual success flash on Hint & Shake triggers
   const [hintSuccessFlash, setHintSuccessFlash] = useState(false);
+  const [shakeSuccessFlash, setShakeSuccessFlash] = useState(false);
+
+  // Unsolvable state for Free Shake
+  const combinations = useSolverStore((state) => state.combinations);
+  const isCalculated = useSolverStore((state) => state.isCalculated);
+  const clearableCount = combinations.filter(
+    (c) => c.isActive && c.blockers.length === 0
+  ).length;
+  const isUnsolvable = isCalculated && clearableCount === 0;
 
   const isRandomNumberActive = isToggled && activeItem === 'randomNumber';
   const isRandomChooseActive = isToggled && activeItem === 'randomChoose';
+  const isOmnitileActive = isToggled && activeItem === 'omnitile';
   const isPanned = Math.abs(panOffset.x) > 1 || Math.abs(panOffset.y) > 1;
 
   const handleHintClick = () => {
@@ -61,6 +72,19 @@ export const FooterConsole: React.FC<FooterConsoleProps> = ({
     if (success) {
       setHintSuccessFlash(true);
       setTimeout(() => setHintSuccessFlash(false), 500);
+    }
+  };
+
+  const handleShakeClick = () => {
+    if (isPaused) return;
+    if (!isUnsolvable && counts.shake <= 0) return;
+    const success = triggerShakeItem(isUnsolvable);
+    if (success) {
+      setShakeSuccessFlash(true);
+      setTimeout(() => setShakeSuccessFlash(false), 500);
+      useSolverStore
+        .getState()
+        .recalculate(useBoardStore.getState().matrix, useBoardStore.getState().seed);
     }
   };
 
@@ -88,8 +112,20 @@ export const FooterConsole: React.FC<FooterConsoleProps> = ({
           <span className="text-sm">🎒</span>
           <span>Footer Console</span>
           <span className="text-[11px] font-mono text-zinc-500 dark:text-zinc-400">
-            (🎲 ×{counts.randomNumber} · 🎰 ×{counts.randomChoose} · 💡 ×{counts.hint})
+            (🎲 ×{counts.randomNumber} · 🎰 ×{counts.randomChoose} · ⭐ ×{counts.omnitile} · 💡 ×{counts.hint} · 🔀 ×{counts.shake})
           </span>
+          {isUnsolvable && (
+            <span
+              onClick={(e) => {
+                e.stopPropagation();
+                handleShakeClick();
+              }}
+              className="text-[10px] bg-emerald-500 hover:bg-emerald-400 text-zinc-950 px-2 py-0.5 rounded font-black animate-pulse transition"
+              title="Click to use Free Shake to break deadlock"
+            >
+              🔀 FREE SHAKE
+            </span>
+          )}
           {isPanMode && (
             <span
               onClick={(e) => {
@@ -199,8 +235,26 @@ export const FooterConsole: React.FC<FooterConsoleProps> = ({
             </button>
           </div>
         )}
-        {/* State D: Panning Mode Active Banner */}
-        {isPanMode && !isRandomNumberActive && !isRandomChooseActive && (
+
+        {/* State D: Omnitile Armed - Awaiting Tile Tap */}
+        {isOmnitileActive && (
+          <div className="flex items-center gap-2 px-3 py-1 rounded-xl bg-amber-500/15 border border-amber-500/50 shadow-md animate-in fade-in duration-150 text-xs text-amber-950 dark:text-amber-200 backdrop-blur-md">
+            <span className="inline-block w-2 h-2 rounded-full bg-amber-500 animate-ping shrink-0" />
+            <span className="font-medium">
+              ⭐ Click tile to convert to Omnitile (*) ({activeItemStage === 2 ? 'Stage 2: Multi-Use' : 'Stage 1: Single Use'})
+            </span>
+            <button
+              type="button"
+              onClick={untoggle}
+              className="px-2 py-0.5 rounded text-[11px] font-bold bg-amber-600 hover:bg-amber-700 text-white transition cursor-pointer ml-1"
+            >
+              ✕ Disarm
+            </button>
+          </div>
+        )}
+
+        {/* State E: Panning Mode Active Banner */}
+        {isPanMode && !isRandomNumberActive && !isRandomChooseActive && !isOmnitileActive && (
           <div className="flex items-center gap-2 px-3 py-1 rounded-xl bg-amber-500/20 border border-amber-500/60 shadow-md animate-in fade-in duration-150 text-xs text-amber-950 dark:text-amber-200 backdrop-blur-md">
             <span className="font-bold flex items-center gap-1">
               ✋ Pan Mode Active:
@@ -324,19 +378,80 @@ export const FooterConsole: React.FC<FooterConsoleProps> = ({
           </div>
         </div>
 
-        {/* Row 2: Dedicated Pan Mode Toggle Button directly below trackball */}
-        <div className="flex items-center justify-center w-full pt-1.5 border-t border-[#edd4b2]/60 dark:border-zinc-800">
-          <MechanicalItemButton
-            icon="✋"
-            size="sm"
-            label={isPanMode ? 'PANNING ACTIVE' : 'PAN MODE'}
-            title="Toggle Panning Mode: when enabled, drag anywhere on or off the board with Left, Middle, or Right Click to pan"
-            leftWingState={isPanMode ? 'amber' : 'inactive'}
-            rightWingState={isPanMode ? 'amber' : 'inactive'}
-            leftWingTitle={isPanMode ? 'Pan Mode Active' : 'Pan Mode Inactive'}
-            rightWingTitle={isPanMode ? 'Pan Mode Active' : 'Pan Mode Inactive'}
-            onClick={togglePanMode}
-          />
+        {/* Row 2: Items Extension & Pan Mode (Symmetric 3-column grid matching Row 1) */}
+        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2.5 w-full pt-1.5 border-t border-[#edd4b2]/60 dark:border-zinc-800">
+          {/* Left: Omnitile (below Random Number & Choose) */}
+          <div className="flex items-center justify-end">
+            <MechanicalItemButton
+              icon="⭐"
+              size="sm"
+              label={`×${counts.omnitile}`}
+              title={
+                !isOmnitileActive
+                  ? `Omnitile (${counts.omnitile} left). Click to arm Stage 1 (Single Use). Acts as 0-10 on selection.`
+                  : activeItemStage === 1
+                    ? `Omnitile: Stage 1 (Single Use). Click again to advance to Stage 2 (Multi-Use).`
+                    : `Omnitile: Stage 2 (Multi-Use Active). Click to disarm.`
+              }
+              leftWingState={isOmnitileActive && activeItemStage >= 1 ? 'amber' : 'inactive'}
+              rightWingState={isOmnitileActive && activeItemStage === 2 ? 'amber' : 'inactive'}
+              leftWingTitle={isOmnitileActive ? 'Stage 1 Active (Single Use)' : 'Disarmed'}
+              rightWingTitle={
+                isOmnitileActive && activeItemStage === 2
+                  ? 'Stage 2 Active (Multi-Use Mode)'
+                  : 'Stage 2 Inactive'
+              }
+              onClick={() => toggleItem('omnitile')}
+              disabled={isPaused || counts.omnitile <= 0}
+            />
+          </div>
+
+          {/* Center: Pan Mode (below Trackball) */}
+          <div className="flex items-center justify-center">
+            <MechanicalItemButton
+              icon="✋"
+              size="sm"
+              label={isPanMode ? 'PANNING ACTIVE' : 'PAN MODE'}
+              title="Toggle Panning Mode: when enabled, drag anywhere on or off the board with Left, Middle, or Right Click to pan"
+              leftWingState={isPanMode ? 'amber' : 'inactive'}
+              rightWingState={isPanMode ? 'amber' : 'inactive'}
+              leftWingTitle={isPanMode ? 'Pan Mode Active' : 'Pan Mode Inactive'}
+              rightWingTitle={isPanMode ? 'Pan Mode Active' : 'Pan Mode Inactive'}
+              onClick={togglePanMode}
+            />
+          </div>
+
+          {/* Right: Shake Item (below Hint & Center) */}
+          <div className="flex items-center justify-start">
+            <MechanicalItemButton
+              icon="🔀"
+              size="sm"
+              label={isUnsolvable ? 'FREE' : `×${counts.shake}`}
+              title={
+                isUnsolvable
+                  ? 'No clearable moves remaining! Free Shake is available to break deadlock.'
+                  : `Shake Item (${counts.shake} left). Shuffles live tile positions.`
+              }
+              leftWingState={
+                shakeSuccessFlash
+                  ? 'emerald'
+                  : isUnsolvable
+                    ? 'emerald'
+                    : 'inactive'
+              }
+              rightWingState={
+                shakeSuccessFlash
+                  ? 'emerald'
+                  : isUnsolvable
+                    ? 'emerald'
+                    : 'inactive'
+              }
+              leftWingTitle={isUnsolvable ? 'Free Shake Available' : 'Shake'}
+              rightWingTitle={isUnsolvable ? 'Free Shake Available' : 'Shake'}
+              onClick={handleShakeClick}
+              disabled={isPaused || (!isUnsolvable && counts.shake <= 0)}
+            />
+          </div>
         </div>
 
         {/* Optional Collapse Mini Button on Console Frame */}

@@ -351,6 +351,22 @@ export function runSolverEngine(board: number[][]): {
     runPassB(familyPoints, activeGridOrig, satFamilyFlipped, family, cols, board, masterCombinations);
   });
 
+  // Solo Omnitile matches (value = 10)
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      if (board[r]?.[c] === 10) {
+        masterCombinations.push({
+          id: masterCombinations.length + 1,
+          family: 'Omnitile',
+          shape: '1x1',
+          required: [{ row: r, col: c }],
+          blockers: [],
+          isActive: true,
+        });
+      }
+    }
+  }
+
   const dependencyGraph = buildDependencyGraph(rows, cols, masterCombinations);
 
   return {
@@ -367,6 +383,26 @@ export function findClearableCombinationsOnly(board: number[][]): SolverCombinat
   const sat = calculateSAT(board, rows, cols);
   const clearableCombinations: SolverCombination[] = [];
   const seenKeys = new Set<string>();
+
+  // 0. Detect 1x1 Omnitiles (each Omnitile is an instant valid solo match)
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      if (board[r]?.[c] === 10) {
+        const key = `1x1:${r},${c}`;
+        if (!seenKeys.has(key)) {
+          seenKeys.add(key);
+          clearableCombinations.push({
+            id: clearableCombinations.length + 1,
+            family: 'Omnitile',
+            shape: '1x1',
+            required: [{ row: r, col: c }],
+            blockers: [],
+            isActive: true,
+          });
+        }
+      }
+    }
+  }
 
   // 1. Scan tight rectangles [r1..r2, c1..c2]
   for (let r1 = 0; r1 < rows; r1++) {

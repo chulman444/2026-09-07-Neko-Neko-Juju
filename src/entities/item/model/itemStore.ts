@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { useBoardStore, type TileCoord } from '@/entities/board';
+import { useBoardStore, type TileCoord, OMNITILE_VALUE } from '@/entities/board';
 import { useGameSessionStore } from '@/entities/game-session';
 import { generateSeed, seededRandomGenerator } from '@/shared/lib/prng';
 import type { ItemState, ItemCounts, ItemType } from './types';
@@ -7,6 +7,8 @@ import type { ItemState, ItemCounts, ItemType } from './types';
 export const DEFAULT_ITEM_COUNTS: ItemCounts = {
   randomNumber: 5,
   randomChoose: 5,
+  omnitile: 5,
+  shake: 5,
   hint: 5,
 };
 
@@ -34,6 +36,7 @@ export const useItemStore = create<ItemState>((set, get) => ({
   toggleCheck: {
     randomNumber: false,
     randomChoose: false,
+    omnitile: false,
   },
   targetTile: null,
 
@@ -47,7 +50,7 @@ export const useItemStore = create<ItemState>((set, get) => ({
   useBoardSeed: true,
   itemSeed: initialSeed,
 
-  toggleItem: (item: 'randomNumber' | 'randomChoose') => {
+  toggleItem: (item: 'randomNumber' | 'randomChoose' | 'omnitile') => {
     const state = get();
     if (state.activeItem !== item) {
       // 1st click: Arm in Stage 1 (or Stage 2 if toggleCheck was already pre-enabled)
@@ -62,6 +65,7 @@ export const useItemStore = create<ItemState>((set, get) => ({
         toggleCheck: {
           randomNumber: item === 'randomNumber' ? stage === 2 : false,
           randomChoose: item === 'randomChoose' ? stage === 2 : false,
+          omnitile: item === 'omnitile' ? stage === 2 : false,
         },
       });
     } else if (state.activeItemStage === 1) {
@@ -101,11 +105,12 @@ export const useItemStore = create<ItemState>((set, get) => ({
       toggleCheck: {
         randomNumber: false,
         randomChoose: false,
+        omnitile: false,
       },
     });
   },
 
-  setToggleCheck: (item: 'randomNumber' | 'randomChoose', enabled: boolean) => {
+  setToggleCheck: (item: 'randomNumber' | 'randomChoose' | 'omnitile', enabled: boolean) => {
     const state = get();
     const nextStage = state.activeItem === item ? (enabled ? 2 : 1) : state.activeItemStage;
     set({
@@ -192,6 +197,34 @@ export const useItemStore = create<ItemState>((set, get) => ({
         targetTile: coord,
         randomChooseOptions: options,
         selectedChooseNumber: options[0],
+      });
+
+      return true;
+    }
+
+    if (state.activeItem === 'omnitile') {
+      if (!isFree && state.counts.omnitile <= 0) {
+        return false;
+      }
+
+      useBoardStore.getState().setTileValue(coord.col, coord.row, OMNITILE_VALUE);
+
+      const nextCounts = isFree
+        ? state.counts
+        : { ...state.counts, omnitile: Math.max(0, state.counts.omnitile - 1) };
+
+      const isMultipleUse = state.activeItemStage === 2 || state.toggleCheck.omnitile;
+      const shouldStayArmed = isMultipleUse && (isFree || nextCounts.omnitile > 0);
+
+      set({
+        counts: nextCounts,
+        isToggled: shouldStayArmed,
+        activeItem: shouldStayArmed ? 'omnitile' : null,
+        activeItemStage: shouldStayArmed ? 2 : 0,
+        toggleCheck: {
+          ...state.toggleCheck,
+          omnitile: shouldStayArmed,
+        },
       });
 
       return true;
@@ -333,6 +366,25 @@ export const useItemStore = create<ItemState>((set, get) => ({
     return success;
   },
 
+  triggerShakeItem: (isFree = false) => {
+    const state = get();
+    if (!isFree && state.counts.shake <= 0) {
+      return false;
+    }
+
+    useBoardStore.getState().shakeBoard();
+
+    if (!isFree) {
+      set({
+        counts: {
+          ...state.counts,
+          shake: Math.max(0, state.counts.shake - 1),
+        },
+      });
+    }
+    return true;
+  },
+
   clearRollHistory: () => {
     set({ rollHistory: [] });
   },
@@ -383,6 +435,7 @@ export const useItemStore = create<ItemState>((set, get) => ({
     if (!state.isToggled) return null;
     if (state.activeItem === 'randomNumber') return state.currentRolledNumber;
     if (state.activeItem === 'randomChoose') return state.selectedChooseNumber;
+    if (state.activeItem === 'omnitile') return OMNITILE_VALUE;
     return null;
   },
 }));

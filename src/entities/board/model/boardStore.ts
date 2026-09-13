@@ -50,6 +50,7 @@ export interface BoardState {
   setMatrix: (matrix: number[][]) => void;
   clearTiles: (tiles: TileCoord[]) => number;
   setTileValue: (col: number, row: number, val: number) => void;
+  shakeBoard: () => number[][];
   addClearingAnimation: (anim: ClearingAnimation) => void;
   removeExpiredAnimations: (now: number) => void;
 }
@@ -237,6 +238,41 @@ export const useBoardStore = create<BoardState>((set, get) => ({
       rIdx === row ? r.map((c, cIdx) => (cIdx === col ? val : c)) : [...r]
     );
     set({ matrix: newMatrix });
+  },
+
+  shakeBoard: () => {
+    const { matrix, minNum, maxNum, tileWeights } = get();
+    const count = maxNum - minNum + 1;
+    let normalizedWeights: number[] | null = null;
+    if (tileWeights && tileWeights.length === count) {
+      const sum = tileWeights.reduce((a, b) => a + b, 0);
+      if (sum > 0) {
+        normalizedWeights = tileWeights.map((w) => w / sum);
+      }
+    }
+
+    const newMatrix = matrix.map((row) =>
+      row.map((val) => {
+        if (val <= 0) return 0;
+        if (normalizedWeights) {
+          const roll = Math.random();
+          let acc = 0;
+          let chosen = maxNum;
+          for (let i = 0; i < normalizedWeights.length; i++) {
+            acc += normalizedWeights[i]!;
+            if (roll <= acc || i === normalizedWeights.length - 1) {
+              chosen = minNum + i;
+              break;
+            }
+          }
+          return chosen;
+        }
+        return Math.floor(Math.random() * (maxNum - minNum + 1)) + minNum;
+      })
+    );
+
+    set({ matrix: newMatrix });
+    return newMatrix;
   },
 
   addClearingAnimation: (anim) => {

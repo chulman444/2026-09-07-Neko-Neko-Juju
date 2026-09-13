@@ -436,4 +436,142 @@ describe('GameBoardInteraction - Two-Click Selection', () => {
 
     interaction.unbind();
   });
+
+  describe('Omnitile Matching (*)', () => {
+    // Board with Omnitile (10) at (0, 0), 3 at (1, 0), 7 at (0, 1), 8 at (1, 1), 1 at (2, 0), 9 at (2, 1)
+    const omniMatrix = [
+      [10, 3, 1],
+      [7, 8, 9],
+      [0, 0, 0],
+    ];
+
+    const omniBoardState = {
+      matrix: omniMatrix,
+      cols: 3,
+      rows: 3,
+      shapeSize: 36,
+      tileBorder: 2,
+    };
+
+    it('clears solitary Omnitile on single tap because it acts as 10', () => {
+      const mockCanvas = createMockCanvas();
+      const onClear = vi.fn();
+      const onTileClick = vi.fn().mockReturnValue(false);
+
+      const ctxAccess: BoardContextAccess = {
+        getTargetSum: () => 10,
+        isInteractive: () => true,
+        getBoardState: () => omniBoardState,
+        getVisualConfig: () => defaultVisualConfig,
+        onClear,
+        onTileClick,
+      };
+
+      const interaction = new GameBoardInteraction(mockCanvas as unknown as HTMLCanvasElement, ctxAccess);
+      interaction.bind();
+
+      // Click on Omnitile at (0, 0)
+      mockCanvas.trigger('pointerdown', { clientX: 20, clientY: 20, button: 0, pointerType: 'mouse' });
+      triggerWindow('pointerup', { clientX: 20, clientY: 20, button: 0, pointerType: 'mouse' });
+
+      // Should directly trigger clear for the solitary Omnitile!
+      expect(onClear).toHaveBeenCalledWith([{ col: 0, row: 0 }], 10);
+      interaction.unbind();
+    });
+
+    it('clears Omnitile + 3 as 10 (acts as 7)', () => {
+      const mockCanvas = createMockCanvas();
+      const onClear = vi.fn();
+
+      const ctxAccess: BoardContextAccess = {
+        getTargetSum: () => 10,
+        isInteractive: () => true,
+        getBoardState: () => omniBoardState,
+        getVisualConfig: () => defaultVisualConfig,
+        onClear,
+      };
+
+      const interaction = new GameBoardInteraction(mockCanvas as unknown as HTMLCanvasElement, ctxAccess);
+      interaction.bind();
+
+      // Drag from (0, 0) to (1, 0): Omnitile + 3
+      mockCanvas.trigger('pointerdown', { clientX: 20, clientY: 20, button: 0, pointerType: 'mouse' });
+      triggerWindow('pointermove', { clientX: 60, clientY: 20, button: 0, pointerType: 'mouse' });
+      triggerWindow('pointerup', { clientX: 60, clientY: 20, button: 0, pointerType: 'mouse' });
+
+      expect(onClear).toHaveBeenCalledWith(
+        expect.arrayContaining([{ col: 0, row: 0 }, { col: 1, row: 0 }]),
+        10
+      );
+      interaction.unbind();
+    });
+
+    it('clears Omnitile + 1 + 9 as 10 (acts as 0)', () => {
+      const mockCanvas = createMockCanvas();
+      const onClear = vi.fn();
+
+      // Box covering (0, 0) to (2, 1) has 10 (omni), 3, 1, 7, 8, 9 - sum is too high
+      // Let's create a specific line board: Omnitile at (0, 0), 1 at (1, 0), 9 at (2, 0)
+      const lineMatrix = [
+        [10, 1, 9],
+        [0, 0, 0],
+        [0, 0, 0],
+      ];
+      const lineBoardState = { ...omniBoardState, matrix: lineMatrix };
+
+      const ctxAccess: BoardContextAccess = {
+        getTargetSum: () => 10,
+        isInteractive: () => true,
+        getBoardState: () => lineBoardState,
+        getVisualConfig: () => defaultVisualConfig,
+        onClear,
+      };
+
+      const interaction = new GameBoardInteraction(mockCanvas as unknown as HTMLCanvasElement, ctxAccess);
+      interaction.bind();
+
+      // Drag line from (0, 0) to (2, 0)
+      mockCanvas.trigger('pointerdown', { clientX: 20, clientY: 20, button: 0, pointerType: 'mouse' });
+      triggerWindow('pointermove', { clientX: 100, clientY: 20, button: 0, pointerType: 'mouse' });
+      triggerWindow('pointerup', { clientX: 100, clientY: 20, button: 0, pointerType: 'mouse' });
+
+      expect(onClear).toHaveBeenCalledWith(
+        expect.arrayContaining([{ col: 0, row: 0 }, { col: 1, row: 0 }, { col: 2, row: 0 }]),
+        10
+      );
+      interaction.unbind();
+    });
+
+    it('rejects selection if regular sum > 10 (Omnitile cannot act as negative)', () => {
+      const mockCanvas = createMockCanvas();
+      const onClear = vi.fn();
+
+      // Line: Omnitile at (0, 0), 7 at (1, 0), 8 at (2, 0) -> regular sum = 15 > 10
+      const lineMatrix = [
+        [10, 7, 8],
+        [0, 0, 0],
+        [0, 0, 0],
+      ];
+      const lineBoardState = { ...omniBoardState, matrix: lineMatrix };
+
+      const ctxAccess: BoardContextAccess = {
+        getTargetSum: () => 10,
+        isInteractive: () => true,
+        getBoardState: () => lineBoardState,
+        getVisualConfig: () => defaultVisualConfig,
+        onClear,
+      };
+
+      const interaction = new GameBoardInteraction(mockCanvas as unknown as HTMLCanvasElement, ctxAccess);
+      interaction.bind();
+
+      // Drag line from (0, 0) to (2, 0)
+      mockCanvas.trigger('pointerdown', { clientX: 20, clientY: 20, button: 0, pointerType: 'mouse' });
+      triggerWindow('pointermove', { clientX: 100, clientY: 20, button: 0, pointerType: 'mouse' });
+      triggerWindow('pointerup', { clientX: 100, clientY: 20, button: 0, pointerType: 'mouse' });
+
+      expect(onClear).not.toHaveBeenCalled();
+      interaction.unbind();
+    });
+  });
 });

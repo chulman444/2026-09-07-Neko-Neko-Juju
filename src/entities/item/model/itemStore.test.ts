@@ -6,9 +6,10 @@ describe('useItemStore', () => {
   beforeEach(() => {
     useBoardStore.getState().generateNewBoard('test-stream-seed');
     useItemStore.setState({
-      counts: { randomNumber: 5, randomChoose: 5, hint: 5 },
+      counts: { randomNumber: 5, randomChoose: 5, omnitile: 5, shake: 5, hint: 5 },
       activeItem: null,
       isToggled: false,
+      activeItemStage: 0,
       historyConstraintN: 3,
       rollHistory: [],
       currentRolledNumber: null,
@@ -257,6 +258,85 @@ describe('useItemStore', () => {
       store.toggleItem('randomChoose');
       expect(useItemStore.getState().activeItem).toBe('randomChoose');
       expect(useItemStore.getState().activeItemStage).toBe(1);
+    });
+
+    it('arms Omnitile and places OMNITILE_VALUE (10) on board', () => {
+      const store = useItemStore.getState();
+      store.toggleItem('omnitile');
+      expect(useItemStore.getState().activeItem).toBe('omnitile');
+      expect(useItemStore.getState().isToggled).toBe(true);
+      expect(useItemStore.getState().activeItemStage).toBe(1);
+
+      // Click board tile (0, 0)
+      const success = store.handleBoardTileClick({ col: 0, row: 0 }, false);
+      expect(success).toBe(true);
+
+      // Value on board should now be 10 (OMNITILE_VALUE)
+      expect(useBoardStore.getState().matrix[0][0]).toBe(10);
+      // Count decremented by 1
+      expect(useItemStore.getState().counts.omnitile).toBe(4);
+      // Stage 1 disarms after single use
+      expect(useItemStore.getState().isToggled).toBe(false);
+      expect(useItemStore.getState().activeItem).toBeNull();
+    });
+
+    it('Omnitile in Stage 2 stays armed for continuous placement', () => {
+      const store = useItemStore.getState();
+      store.toggleItem('omnitile'); // Stage 1
+      store.toggleItem('omnitile'); // Stage 2
+      expect(useItemStore.getState().activeItemStage).toBe(2);
+
+      store.handleBoardTileClick({ col: 0, row: 0 }, false);
+      expect(useBoardStore.getState().matrix[0][0]).toBe(10);
+      expect(useItemStore.getState().counts.omnitile).toBe(4);
+      expect(useItemStore.getState().isToggled).toBe(true);
+      expect(useItemStore.getState().activeItem).toBe('omnitile');
+
+      store.handleBoardTileClick({ col: 1, row: 0 }, false);
+      expect(useBoardStore.getState().matrix[0][1]).toBe(10);
+      expect(useItemStore.getState().counts.omnitile).toBe(3);
+      expect(useItemStore.getState().isToggled).toBe(true);
+    });
+
+    it('triggers Shake board and re-rolls fresh values for live tiles', () => {
+      const store = useItemStore.getState();
+      useBoardStore.setState({
+        matrix: [
+          [3, 3, 3],
+          [0, 0, 0],
+          [0, 0, 0],
+        ],
+        minNum: 1,
+        maxNum: 9,
+      });
+
+      const success = store.triggerShakeItem(false);
+      expect(success).toBe(true);
+      expect(useItemStore.getState().counts.shake).toBe(4);
+
+      const matrix = useBoardStore.getState().matrix;
+      expect(matrix[0][0]).toBeGreaterThanOrEqual(1);
+      expect(matrix[0][0]).toBeLessThanOrEqual(9);
+      expect(matrix[0][1]).toBeGreaterThanOrEqual(1);
+      expect(matrix[0][1]).toBeLessThanOrEqual(9);
+      expect(matrix[0][2]).toBeGreaterThanOrEqual(1);
+      expect(matrix[0][2]).toBeLessThanOrEqual(9);
+      expect(matrix[1][0]).toBe(0);
+      expect(matrix[2][0]).toBe(0);
+    });
+
+    it('allows Free Shake with 0 inventory cost when isFree is true', () => {
+      const store = useItemStore.getState();
+      useItemStore.setState({
+        counts: { randomNumber: 5, randomChoose: 5, omnitile: 5, shake: 0, hint: 5 },
+      });
+
+      // Regular shake with 0 inventory fails
+      expect(store.triggerShakeItem(false)).toBe(false);
+
+      // Free shake succeeds and does not go negative
+      expect(store.triggerShakeItem(true)).toBe(true);
+      expect(useItemStore.getState().counts.shake).toBe(0);
     });
   });
 });

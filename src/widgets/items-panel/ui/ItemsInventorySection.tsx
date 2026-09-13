@@ -31,7 +31,7 @@ export const ItemsInventorySection: React.FC = () => {
           Configure available item counts in the main game container.
         </p>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
           {/* Random Number Count */}
           <div className="flex flex-col gap-1.5 p-2 rounded-lg bg-zinc-900/60 border border-zinc-700/60">
             <div className="flex items-center justify-between">
@@ -89,6 +89,70 @@ export const ItemsInventorySection: React.FC = () => {
               <button
                 type="button"
                 onClick={() => handleStep('randomChoose', 1)}
+                className="flex-1 py-1 text-xs font-bold rounded bg-zinc-700 hover:bg-zinc-600 text-zinc-200 cursor-pointer"
+              >
+                +
+              </button>
+            </div>
+          </div>
+
+          {/* Omnitile Count */}
+          <div className="flex flex-col gap-1.5 p-2 rounded-lg bg-zinc-900/60 border border-zinc-700/60">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-zinc-200">⭐ Omnitile</span>
+              <span className="text-xs font-mono font-bold text-amber-400">{counts.omnitile}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => handleStep('omnitile', -1)}
+                className="flex-1 py-1 text-xs font-bold rounded bg-zinc-700 hover:bg-zinc-600 text-zinc-200 cursor-pointer"
+              >
+                -
+              </button>
+              <input
+                type="number"
+                min={0}
+                max={99}
+                value={counts.omnitile}
+                onChange={(e) => setItemCount('omnitile', parseInt(e.target.value, 10) || 0)}
+                className="w-12 text-center text-xs font-mono bg-zinc-800 border border-zinc-600 rounded py-0.5 text-white"
+              />
+              <button
+                type="button"
+                onClick={() => handleStep('omnitile', 1)}
+                className="flex-1 py-1 text-xs font-bold rounded bg-zinc-700 hover:bg-zinc-600 text-zinc-200 cursor-pointer"
+              >
+                +
+              </button>
+            </div>
+          </div>
+
+          {/* Shake Count */}
+          <div className="flex flex-col gap-1.5 p-2 rounded-lg bg-zinc-900/60 border border-zinc-700/60">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-zinc-200">🔀 Shake</span>
+              <span className="text-xs font-mono font-bold text-amber-400">{counts.shake}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => handleStep('shake', -1)}
+                className="flex-1 py-1 text-xs font-bold rounded bg-zinc-700 hover:bg-zinc-600 text-zinc-200 cursor-pointer"
+              >
+                -
+              </button>
+              <input
+                type="number"
+                min={0}
+                max={99}
+                value={counts.shake}
+                onChange={(e) => setItemCount('shake', parseInt(e.target.value, 10) || 0)}
+                className="w-12 text-center text-xs font-mono bg-zinc-800 border border-zinc-600 rounded py-0.5 text-white"
+              />
+              <button
+                type="button"
+                onClick={() => handleStep('shake', 1)}
                 className="flex-1 py-1 text-xs font-bold rounded bg-zinc-700 hover:bg-zinc-600 text-zinc-200 cursor-pointer"
               >
                 +

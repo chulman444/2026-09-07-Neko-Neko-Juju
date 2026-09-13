@@ -1,16 +1,19 @@
 import type { TileCoord } from '@/entities/board';
 
-export type ItemType = 'randomNumber' | 'randomChoose' | 'hint';
+export type ItemType = 'randomNumber' | 'randomChoose' | 'omnitile' | 'shake' | 'hint';
 
 export interface ItemCounts {
   randomNumber: number;
   randomChoose: number;
+  omnitile: number;
+  shake: number;
   hint: number;
 }
 
 export interface ToggleCheckConfig {
   randomNumber: boolean;
   randomChoose: boolean;
+  omnitile: boolean;
 }
 
 export interface ItemState {
@@ -18,7 +21,7 @@ export interface ItemState {
   counts: ItemCounts;
 
   // Active Item & Toggle State
-  activeItem: 'randomNumber' | 'randomChoose' | null;
+  activeItem: 'randomNumber' | 'randomChoose' | 'omnitile' | null;
   isToggled: boolean;
   activeItemStage: 0 | 1 | 2;
 
@@ -42,9 +45,9 @@ export interface ItemState {
   itemSeed: string;
 
   // Actions
-  toggleItem: (item: 'randomNumber' | 'randomChoose') => void;
+  toggleItem: (item: 'randomNumber' | 'randomChoose' | 'omnitile') => void;
   untoggle: () => void;
-  setToggleCheck: (item: 'randomNumber' | 'randomChoose', enabled: boolean) => void;
+  setToggleCheck: (item: 'randomNumber' | 'randomChoose' | 'omnitile', enabled: boolean) => void;
   handleBoardTileClick: (coord: TileCoord, isFree?: boolean) => boolean;
   confirmRandomChoose: (val: number, isFree?: boolean) => boolean;
   cancelTargetTile: () => void;
@@ -54,6 +57,7 @@ export interface ItemState {
   rollRandomChoose: (isFree?: boolean) => [number, number, number] | null;
   selectChooseNumber: (val: number) => void;
   triggerHintItem: (isFree?: boolean) => boolean;
+  triggerShakeItem: (isFree?: boolean) => boolean;
   clearRollHistory: () => void;
   setHistoryConstraintN: (n: number) => void;
   setItemCount: (item: ItemType, count: number) => void;

@@ -1,4 +1,4 @@
-import type { TileCoord } from '@/entities/board';
+import { type TileCoord, OMNITILE_VALUE } from '@/entities/board';
 import {
   calculateDetailedBoxSelection,
   calculateDiagonalSelection,
@@ -250,6 +250,12 @@ export class GameBoardInteraction {
 
     if (this.selectMode === 'tap') {
       if (endTile.col === this.startTile.col && endTile.row === this.startTile.row) {
+        const targetSum = this.ctxAccess.getTargetSum();
+        if (this.boxSum === targetSum && this.boxTiles.length > 0) {
+          this.evaluateSelection();
+          this.resetSelectionState();
+          return;
+        }
         if (this.ctxAccess.onTileClick) {
           this.ctxAccess.onTileClick(endTile);
         }
@@ -267,6 +273,12 @@ export class GameBoardInteraction {
     if (endTile.col === this.startTile.col && endTile.row === this.startTile.row) {
       const handled = this.ctxAccess.onTileClick?.(endTile);
       if (handled) {
+        this.resetSelectionState();
+        return;
+      }
+      const targetSum = this.ctxAccess.getTargetSum();
+      if (this.boxSum === targetSum && this.boxTiles.length > 0) {
+        this.evaluateSelection();
         this.resetSelectionState();
         return;
       }
@@ -437,12 +449,20 @@ export class GameBoardInteraction {
   }
 
   private calculateTileSum(tiles: TileCoord[], matrix: number[][]): number {
-    let sum = 0;
+    let regularSum = 0;
+    let omniCount = 0;
     for (let i = 0; i < tiles.length; i++) {
       const t = tiles[i];
-      const val = matrix[t.row]?.[t.col];
-      if (val !== undefined) sum += val;
+      const val = matrix[t.row]?.[t.col] ?? 0;
+      if (val === OMNITILE_VALUE) {
+        omniCount++;
+      } else if (val > 0) {
+        regularSum += val;
+      }
     }
-    return sum;
+    if (omniCount > 0) {
+      return regularSum <= 10 ? 10 : regularSum;
+    }
+    return regularSum;
   }
 }

@@ -13,3 +13,6 @@ export interface ClearingAnimation {
   duration: number;
   bounceSpeed: number;
 }
+
+export const OMNITILE_VALUE = 10;
+export const isOmniTile = (val: number): boolean => val === OMNITILE_VALUE;
