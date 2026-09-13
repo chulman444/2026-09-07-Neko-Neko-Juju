@@ -253,3 +253,133 @@ describe('gameSessionStore - Pause All Timers When Clearable Hints Exhausted', (
     expect(useGameSessionStore.getState().difficultyNoiseSpread).toBe(0);
   });
 });
+
+describe('gameSessionStore - Hint Highlight Invalidation', () => {
+  beforeEach(() => {
+    useGameSessionStore.getState().resetSession();
+    useSolverStore.getState().reset();
+  });
+
+  it('removes entire hint highlight when a tile belonging to the hint is cleared (e.g. 7-3 clears 7 from 1-1-1-7)', () => {
+    // Board: [1, 1, 1, 7, 3]
+    const matrix = [[1, 1, 1, 7, 3]];
+    useBoardStore.getState().setMatrix(matrix);
+
+    const hintCombo1 = [
+      { row: 0, col: 0 },
+      { row: 0, col: 1 },
+      { row: 0, col: 2 },
+      { row: 0, col: 3 },
+    ];
+
+    useGameSessionStore.setState({
+      activeHintCombos: [hintCombo1],
+      highlightedTiles: [...hintCombo1],
+    });
+
+    expect(useGameSessionStore.getState().highlightedTiles.length).toBe(4);
+
+    // Now player clears the 7-3 pair: { col: 3, row: 0 } and { col: 4, row: 0 }
+    useBoardStore.getState().clearTiles([
+      { row: 0, col: 3 },
+      { row: 0, col: 4 },
+    ]);
+    useGameSessionStore.getState().removeClearedTiles([
+      { row: 0, col: 3 },
+      { row: 0, col: 4 },
+    ]);
+
+    // The remaining 1-1-1 must NOT linger highlighted!
+    expect(useGameSessionStore.getState().highlightedTiles).toEqual([]);
+    expect(useGameSessionStore.getState().activeHintCombos).toEqual([]);
+  });
+
+  it('preserves an independent second hint when only the first hint is broken', () => {
+    // Board: [1, 1, 1, 7, 3] on row 0, [5, 5, 0, 0, 0] on row 1
+    const matrix = [
+      [1, 1, 1, 7, 3],
+      [5, 5, 0, 0, 0],
+    ];
+    useBoardStore.getState().setMatrix(matrix);
+
+    const hint1 = [
+      { row: 0, col: 0 },
+      { row: 0, col: 1 },
+      { row: 0, col: 2 },
+      { row: 0, col: 3 },
+    ];
+    const hint2 = [
+      { row: 1, col: 0 },
+      { row: 1, col: 1 },
+    ];
+
+    useGameSessionStore.setState({
+      activeHintCombos: [hint1, hint2],
+      highlightedTiles: [...hint1, ...hint2],
+    });
+
+    expect(useGameSessionStore.getState().highlightedTiles.length).toBe(6);
+
+    // Clear 7-3 on row 0
+    useBoardStore.getState().clearTiles([
+      { row: 0, col: 3 },
+      { row: 0, col: 4 },
+    ]);
+    useGameSessionStore.getState().removeClearedTiles([
+      { row: 0, col: 3 },
+      { row: 0, col: 4 },
+    ]);
+
+    // Hint 1 is gone, but Hint 2 (5-5) remains highlighted!
+    expect(useGameSessionStore.getState().activeHintCombos).toEqual([hint2]);
+    expect(useGameSessionStore.getState().highlightedTiles).toEqual(hint2);
+  });
+
+  it('preserves hint when a hinted tile is replaced with an Omnitile that still sums to 10', () => {
+    const matrix = [[1, 1, 1, 7]];
+    useBoardStore.getState().setMatrix(matrix);
+
+    const hint = [
+      { row: 0, col: 0 },
+      { row: 0, col: 1 },
+      { row: 0, col: 2 },
+      { row: 0, col: 3 },
+    ];
+
+    useGameSessionStore.setState({
+      activeHintCombos: [hint],
+      highlightedTiles: [...hint],
+    });
+
+    // Replace 7 at (row 0, col 3) with Omnitile (10)
+    useBoardStore.getState().setTileValue(3, 0, 10);
+
+    // 1 + 1 + 1 + * still sums to 10 with Omnitile rules
+    expect(useGameSessionStore.getState().activeHintCombos).toEqual([hint]);
+    expect(useGameSessionStore.getState().highlightedTiles).toEqual(hint);
+  });
+
+  it('removes hint when a hinted tile is replaced with an incompatible number', () => {
+    const matrix = [[1, 1, 1, 7]];
+    useBoardStore.getState().setMatrix(matrix);
+
+    const hint = [
+      { row: 0, col: 0 },
+      { row: 0, col: 1 },
+      { row: 0, col: 2 },
+      { row: 0, col: 3 },
+    ];
+
+    useGameSessionStore.setState({
+      activeHintCombos: [hint],
+      highlightedTiles: [...hint],
+    });
+
+    // Change 7 to 4: 1 + 1 + 1 + 4 = 7 != 10
+    useBoardStore.getState().setTileValue(3, 0, 4);
+
+    expect(useGameSessionStore.getState().activeHintCombos).toEqual([]);
+    expect(useGameSessionStore.getState().highlightedTiles).toEqual([]);
+  });
+});
+

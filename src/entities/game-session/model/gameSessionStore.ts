@@ -1,6 +1,26 @@
 import { create } from 'zustand';
-import { useBoardStore, type TileCoord } from '@/entities/board';
+import { useBoardStore, type TileCoord, OMNITILE_VALUE } from '@/entities/board';
 import { useSolverStore, findClearableCombinationsOnly, type SolverCombination } from '@/features/look-ahead-solver';
+
+export function isHintComboValid(combo: TileCoord[], matrix: number[][]): boolean {
+  if (!combo || combo.length === 0) return false;
+  let regularSum = 0;
+  let omniCount = 0;
+  for (let i = 0; i < combo.length; i++) {
+    const t = combo[i]!;
+    const val = matrix[t.row]?.[t.col] ?? 0;
+    if (val <= 0) return false;
+    if (val === OMNITILE_VALUE) {
+      omniCount++;
+    } else {
+      regularSum += val;
+    }
+  }
+  if (omniCount > 0) {
+    return regularSum <= 10;
+  }
+  return regularSum === 10;
+}
 
 function getClearableHints(): SolverCombination[] {
   const solverStore = useSolverStore.getState();
@@ -102,6 +122,7 @@ export interface GameSessionState {
   hintCountdown: number;
   hintPhaseStarted: boolean;
   isPhase1Over: boolean;
+  activeHintCombos: TileCoord[][];
 
   // Combo System
   comboCount: number;
@@ -117,6 +138,7 @@ export interface GameSessionState {
   registerMatch: (clearedTileCount: number, spanTileCount?: number) => void;
   setHighlightedTiles: (tiles: TileCoord[] | ((prev: TileCoord[]) => TileCoord[])) => void;
   removeClearedTiles: (clearedTiles: TileCoord[]) => void;
+  validateActiveHints: () => void;
   triggerHint: () => boolean;
 
   // Tuning Setters
@@ -179,6 +201,7 @@ export const useGameSessionStore = create<GameSessionState>((set, get) => ({
   hintCountdown: 4,
   hintPhaseStarted: false,
   isPhase1Over: false,
+  activeHintCombos: [],
 
   // Combo System Initial State
   comboCount: 0,
@@ -200,17 +223,52 @@ export const useGameSessionStore = create<GameSessionState>((set, get) => ({
   },
 
   setHighlightedTiles: (tiles) => {
-    set((state) => ({
-      highlightedTiles: typeof tiles === 'function' ? tiles(state.highlightedTiles) : tiles,
-    }));
+    set((state) => {
+      const nextTiles = typeof tiles === 'function' ? tiles(state.highlightedTiles) : tiles;
+      return {
+        highlightedTiles: nextTiles,
+        activeHintCombos: nextTiles.length === 0 ? [] : state.activeHintCombos,
+      };
+    });
   },
 
   removeClearedTiles: (clearedTiles) => {
-    set((state) => ({
-      highlightedTiles: state.highlightedTiles.filter(
-        (p) => !clearedTiles.some((c) => c.row === p.row && c.col === p.col)
-      ),
-    }));
+    const matrix = useBoardStore.getState().matrix;
+    set((state) => {
+      let nextCombos: TileCoord[][] = [];
+      let nextHighlighted: TileCoord[] = [];
+
+      if (state.activeHintCombos.length > 0) {
+        nextCombos = state.activeHintCombos.filter((combo) => {
+          const intersects = combo.some((t) =>
+            clearedTiles.some((c) => c.row === t.row && c.col === t.col)
+          );
+          if (intersects) return false;
+          return isHintComboValid(combo, matrix);
+        });
+
+        const allCoords: TileCoord[] = [];
+        nextCombos.forEach((c) => {
+          c.forEach((coord) => {
+            if (!allCoords.some((m) => m.row === coord.row && m.col === coord.col)) {
+              allCoords.push(coord);
+            }
+          });
+        });
+        nextHighlighted = allCoords;
+      } else if (state.highlightedTiles.length > 0) {
+        // Fallback for manually assigned highlightedTiles
+        const intersects = state.highlightedTiles.some((t) =>
+          clearedTiles.some((c) => c.row === t.row && c.col === t.col)
+        );
+        nextHighlighted = intersects ? [] : state.highlightedTiles;
+      }
+
+      return {
+        activeHintCombos: nextCombos,
+        highlightedTiles: nextHighlighted,
+      };
+    });
     useSolverStore.getState().cascadeTiles(clearedTiles);
 
     // Re-evaluate clearable hints after clearing tiles
@@ -222,6 +280,40 @@ export const useGameSessionStore = create<GameSessionState>((set, get) => ({
     } else if (!get().isPhase1Over) {
       set({ noHintsAvailableMsg: 'No more hints available.' });
     }
+  },
+
+  validateActiveHints: () => {
+    const matrix = useBoardStore.getState().matrix;
+    set((state) => {
+      if (state.activeHintCombos.length === 0 && state.highlightedTiles.length === 0) {
+        return state;
+      }
+
+      const nextCombos = state.activeHintCombos.filter((combo) =>
+        isHintComboValid(combo, matrix)
+      );
+
+      let nextHighlighted: TileCoord[] = [];
+      if (state.activeHintCombos.length > 0) {
+        const allCoords: TileCoord[] = [];
+        nextCombos.forEach((c) => {
+          c.forEach((coord) => {
+            if (!allCoords.some((m) => m.row === coord.row && m.col === coord.col)) {
+              allCoords.push(coord);
+            }
+          });
+        });
+        nextHighlighted = allCoords;
+      } else if (state.highlightedTiles.length > 0) {
+        const hasCleared = state.highlightedTiles.some((t) => (matrix[t.row]?.[t.col] ?? 0) <= 0);
+        nextHighlighted = hasCleared ? [] : state.highlightedTiles;
+      }
+
+      return {
+        activeHintCombos: nextCombos,
+        highlightedTiles: nextHighlighted,
+      };
+    });
   },
 
   addTime: (seconds) => {
@@ -294,7 +386,8 @@ export const useGameSessionStore = create<GameSessionState>((set, get) => ({
       const targetCombo = candidates[randomIndex];
       if (!targetCombo) return state;
 
-      const newCoords = targetCombo.required.map((t) => ({ row: t.row, col: t.col }));
+      const newCoords: TileCoord[] = targetCombo.required.map((t) => ({ row: t.row, col: t.col }));
+      const nextCombos = [...state.activeHintCombos, newCoords];
       const merged = [...state.highlightedTiles];
       newCoords.forEach((coord) => {
         if (!merged.some((m) => m.row === coord.row && m.col === coord.col)) {
@@ -303,6 +396,7 @@ export const useGameSessionStore = create<GameSessionState>((set, get) => ({
       });
 
       return {
+        activeHintCombos: nextCombos,
         highlightedTiles: merged,
         noHintsAvailableMsg: null,
       };
@@ -526,6 +620,7 @@ export const useGameSessionStore = create<GameSessionState>((set, get) => ({
     set((state) => ({
       score: 0,
       clearedTiles: 0,
+      activeHintCombos: [],
       highlightedTiles: [],
       noHintsAvailableMsg: null,
       countdown: state.maxCountdown,
@@ -540,3 +635,12 @@ export const useGameSessionStore = create<GameSessionState>((set, get) => ({
     }));
   },
 }));
+
+let lastMatrix = useBoardStore.getState().matrix;
+useBoardStore.subscribe((state) => {
+  if (state.matrix !== lastMatrix) {
+    lastMatrix = state.matrix;
+    useGameSessionStore.getState().validateActiveHints();
+  }
+});
+
