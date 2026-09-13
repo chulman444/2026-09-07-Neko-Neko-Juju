@@ -24,7 +24,7 @@ export interface GameBoardWidgetProps {
   /** Checkerboard background mode override */
   checkerboardMode?: CheckerboardMode;
   /** Checkerboard colors override */
-  checkerColors?: [string, string, string];
+  checkerColors?: [string, string];
   /** Whether an item is currently armed/active (bypasses box/tap selection) */
   isItemActive?: boolean;
   /** Callback fired when a valid set of tiles is matched and cleared */

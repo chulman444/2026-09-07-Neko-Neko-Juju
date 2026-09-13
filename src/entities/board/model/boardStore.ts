@@ -25,11 +25,11 @@ export interface BoardState {
   tileWeights?: number[];
   activeTilt?: number;
   checkerboardMode: CheckerboardMode;
-  checkerColors: [string, string, string];
+  checkerColors: [string, string];
 
   // Actions
   setCheckerboardMode: (mode: CheckerboardMode) => void;
-  setCheckerColors: (colors: [string, string, string]) => void;
+  setCheckerColors: (colors: [string, string]) => void;
   setPanOffset: (
     offset:
       | { x: number; y: number }
@@ -90,7 +90,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
   tileWeights: undefined,
   activeTilt: 0,
   checkerboardMode: DEFAULT_CONFIG.checkerboardMode ?? '2-color',
-  checkerColors: [DEFAULT_CONFIG.checker1, DEFAULT_CONFIG.checker2, DEFAULT_CONFIG.checker3],
+  checkerColors: [DEFAULT_CONFIG.checker1, DEFAULT_CONFIG.checker2],
 
   setCheckerboardMode: (checkerboardMode) => set({ checkerboardMode }),
   setCheckerColors: (checkerColors) => set({ checkerColors }),

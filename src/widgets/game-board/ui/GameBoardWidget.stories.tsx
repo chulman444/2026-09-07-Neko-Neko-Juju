@@ -31,7 +31,7 @@ const meta = {
     },
     checkerboardMode: {
       control: 'radio',
-      options: ['off', '2-color', '3-color'],
+      options: ['off', '2-color'],
       description: 'Diagonal-preserving checkerboard background mode',
     },
   },
@@ -200,17 +200,7 @@ export const CheckerboardTwoColor: Story = {
 };
 
 /**
- * 7. Three-Color Diagonal Bands
- * Alternating tri-color bands grouping parallel diagonals into 3 families.
- */
-export const CheckerboardThreeColor: Story = {
-  args: {
-    checkerboardMode: '3-color',
-  },
-};
-
-/**
- * 8. Solid Background (Checkerboard Off)
+ * 7. Solid Background (Checkerboard Off)
  * Classic flat background fill without alternating checker squares.
  */
 export const CheckerboardOff: Story = {
@@ -218,3 +208,4 @@ export const CheckerboardOff: Story = {
     checkerboardMode: 'off',
   },
 };
+

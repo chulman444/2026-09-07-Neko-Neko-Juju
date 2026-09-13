@@ -9,17 +9,12 @@ export const CheckerboardSection: React.FC = () => {
   const modes: { id: CheckerboardMode; label: string; desc: string }[] = [
     {
       id: '2-color',
-      label: '2-Color',
+      label: '2-Color Checker',
       desc: 'Invariant along both diagonals: (r + c) % 2. Instantly distinguishes 6Δx × 7Δy non-diagonals from true diagonals.',
     },
     {
-      id: '3-color',
-      label: '3-Color',
-      desc: 'Tri-color diagonal bands: (r + c) % 3. Groups parallel anti-diagonals into 3 distinct color families.',
-    },
-    {
       id: 'off',
-      label: 'Off',
+      label: 'Off (Solid)',
       desc: 'Solid flat background fill without alternating checker squares.',
     },
   ];
@@ -31,7 +26,7 @@ export const CheckerboardSection: React.FC = () => {
       </h4>
       <div className="flex flex-col gap-3 bg-zinc-800/60 p-3 rounded-xl border border-zinc-700/70">
         {/* Mode Selector Buttons */}
-        <div className="grid grid-cols-3 gap-1.5 p-1 bg-zinc-900/60 rounded-lg border border-zinc-700/50">
+        <div className="grid grid-cols-2 gap-1.5 p-1 bg-zinc-900/60 rounded-lg border border-zinc-700/50">
           {modes.map((m) => {
             const isActive = checkerboardMode === m.id;
             return (
@@ -75,15 +70,6 @@ export const CheckerboardSection: React.FC = () => {
               >
                 1
               </div>
-              {checkerboardMode === '3-color' && (
-                <div
-                  className="w-5 h-5 rounded border border-zinc-600 shadow-inner flex items-center justify-center text-[9px] font-bold text-zinc-800"
-                  style={{ backgroundColor: checkerColors[2] }}
-                  title={`Color 2: ${checkerColors[2]}`}
-                >
-                  2
-                </div>
-              )}
             </div>
           </div>
         )}

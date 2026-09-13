@@ -99,7 +99,7 @@ export class GameBoardRenderer {
       return;
     }
 
-    const defaultColors = ['#fbf2df', '#ebd6b3', '#dcbe8e'];
+    const defaultColors = ['#fbf2df', '#ebd6b3'];
     const colors =
       this.visualConfig.checkerColors && this.visualConfig.checkerColors.length > 0
         ? this.visualConfig.checkerColors
@@ -107,7 +107,7 @@ export class GameBoardRenderer {
 
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
-        const colorIdx = mode === '3-color' ? ((r + c) % 3 + 3) % 3 : (r + c) % 2;
+        const colorIdx = (r + c) % 2;
         const color = colors[colorIdx % colors.length] ?? colors[0];
 
         this.ctx.fillStyle = color;

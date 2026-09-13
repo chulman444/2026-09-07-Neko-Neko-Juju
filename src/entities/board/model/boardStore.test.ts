@@ -155,12 +155,9 @@ describe('boardStore - setDimensions', () => {
   it('manages checkerboardMode and checkerColors with diagonal parity preservation', () => {
     // Initial defaults
     expect(useBoardStore.getState().checkerboardMode).toBe('2-color');
-    expect(useBoardStore.getState().checkerColors.length).toBe(3);
+    expect(useBoardStore.getState().checkerColors.length).toBe(2);
 
     // Updates checkerboardMode
-    useBoardStore.getState().setCheckerboardMode('3-color');
-    expect(useBoardStore.getState().checkerboardMode).toBe('3-color');
-
     useBoardStore.getState().setCheckerboardMode('off');
     expect(useBoardStore.getState().checkerboardMode).toBe('off');
 
@@ -168,7 +165,7 @@ describe('boardStore - setDimensions', () => {
     expect(useBoardStore.getState().checkerboardMode).toBe('2-color');
 
     // Updates custom checkerColors
-    const customColors: [string, string, string] = ['#111111', '#222222', '#333333'];
+    const customColors: [string, string] = ['#111111', '#222222'];
     useBoardStore.getState().setCheckerColors(customColors);
     expect(useBoardStore.getState().checkerColors).toEqual(customColors);
 
