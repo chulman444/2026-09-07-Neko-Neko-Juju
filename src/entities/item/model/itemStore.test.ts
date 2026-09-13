@@ -166,6 +166,9 @@ describe('useItemStore', () => {
       const success = store.handleBoardTileClick({ col: 4, row: 2 }, false);
       expect(success).toBe(true);
 
+      // Verify count is decremented immediately on roll
+      expect(useItemStore.getState().counts.randomChoose).toBe(4);
+
       const target = useItemStore.getState().targetTile;
       expect(target).toEqual({ col: 4, row: 2 });
 
@@ -179,7 +182,7 @@ describe('useItemStore', () => {
       // Verify board tile at (4, 2) is now 7
       expect(useBoardStore.getState().matrix[2]?.[4]).toBe(7);
 
-      // Verify count decremented
+      // Verify count is NOT double-decremented
       expect(useItemStore.getState().counts.randomChoose).toBe(4);
 
       // Verify target cleared and auto-untoggled
@@ -195,6 +198,8 @@ describe('useItemStore', () => {
 
       // Target tile (0, 0)
       store.handleBoardTileClick({ col: 0, row: 0 }, false);
+      expect(useItemStore.getState().counts.randomChoose).toBe(4);
+
       store.confirmRandomChoose(8, false);
 
       expect(useBoardStore.getState().matrix[0]?.[0]).toBe(8);
@@ -337,6 +342,77 @@ describe('useItemStore', () => {
       // Free shake succeeds and does not go negative
       expect(store.triggerShakeItem(true)).toBe(true);
       expect(useItemStore.getState().counts.shake).toBe(0);
+    });
+
+    it('charges randomChoose immediately on tile click and costs an additional item to re-roll', () => {
+      const store = useItemStore.getState();
+      store.toggleItem('randomChoose');
+
+      expect(useItemStore.getState().counts.randomChoose).toBe(5);
+
+      // 1st roll on tile (0, 0)
+      const roll1 = store.handleBoardTileClick({ col: 0, row: 0 }, false);
+      expect(roll1).toBe(true);
+      expect(useItemStore.getState().counts.randomChoose).toBe(4);
+      expect(useItemStore.getState().targetTile).toEqual({ col: 0, row: 0 });
+
+      // 2nd roll (re-roll on tile 1, 0) costs another item
+      const roll2 = store.handleBoardTileClick({ col: 1, row: 0 }, false);
+      expect(roll2).toBe(true);
+      expect(useItemStore.getState().counts.randomChoose).toBe(3);
+      expect(useItemStore.getState().targetTile).toEqual({ col: 1, row: 0 });
+
+      // Confirm chosen value - count remains 3 (no double charge)
+      const confirm = store.confirmRandomChoose(9, false);
+      expect(confirm).toBe(true);
+      expect(useBoardStore.getState().matrix[0]?.[1]).toBe(9);
+      expect(useItemStore.getState().counts.randomChoose).toBe(3);
+    });
+
+    it('rejects tile click and re-roll for randomChoose when count is 0', () => {
+      const store = useItemStore.getState();
+      useItemStore.setState({
+        counts: { randomNumber: 5, randomChoose: 0, omnitile: 5, shake: 5, hint: 5 },
+      });
+      store.toggleItem('randomChoose');
+
+      const roll = store.handleBoardTileClick({ col: 0, row: 0 }, false);
+      expect(roll).toBe(false);
+      expect(useItemStore.getState().targetTile).toBeNull();
+      expect(useItemStore.getState().randomChooseOptions).toBeNull();
+    });
+
+    it('rejects tile click on empty or cleared cells (matrix <= 0) for all items without consuming counts', () => {
+      const store = useItemStore.getState();
+      // Set cell (0, 0) as cleared (0)
+      useBoardStore.setState({
+        matrix: [
+          [0, 5, 5],
+          [5, 5, 5],
+          [5, 5, 5],
+        ],
+      });
+
+      // 1. Random Number on empty cell
+      store.toggleItem('randomNumber');
+      const resRandomNumber = store.handleBoardTileClick({ col: 0, row: 0 }, false);
+      expect(resRandomNumber).toBe(false);
+      expect(useItemStore.getState().counts.randomNumber).toBe(5);
+      expect(useBoardStore.getState().matrix[0]?.[0]).toBe(0);
+
+      // 2. Random Choose on empty cell
+      store.toggleItem('randomChoose');
+      const resRandomChoose = store.handleBoardTileClick({ col: 0, row: 0 }, false);
+      expect(resRandomChoose).toBe(false);
+      expect(useItemStore.getState().counts.randomChoose).toBe(5);
+      expect(useItemStore.getState().targetTile).toBeNull();
+
+      // 3. Omnitile on empty cell
+      store.toggleItem('omnitile');
+      const resOmnitile = store.handleBoardTileClick({ col: 0, row: 0 }, false);
+      expect(resOmnitile).toBe(false);
+      expect(useItemStore.getState().counts.omnitile).toBe(5);
+      expect(useBoardStore.getState().matrix[0]?.[0]).toBe(0);
     });
   });
 });

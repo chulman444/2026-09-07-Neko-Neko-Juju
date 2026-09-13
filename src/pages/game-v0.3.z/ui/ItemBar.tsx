@@ -116,7 +116,17 @@ export const ItemBar: React.FC<ItemBarProps> = ({
                 <button
                   type="button"
                   onClick={cancelTargetTile}
-                  className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-300 dark:hover:bg-zinc-600 transition cursor-pointer"
+                  disabled={counts.randomChoose <= 0}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition ${
+                    counts.randomChoose <= 0
+                      ? 'opacity-40 cursor-not-allowed bg-zinc-200 dark:bg-zinc-800 text-zinc-500'
+                      : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-300 dark:hover:bg-zinc-600 cursor-pointer'
+                  }`}
+                  title={
+                    counts.randomChoose <= 0
+                      ? 'No Random Choose items remaining to reroll'
+                      : 'Change target tile (-1 🎰)'
+                  }
                 >
                   Change Target Tile
                 </button>

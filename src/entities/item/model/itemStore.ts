@@ -126,6 +126,13 @@ export const useItemStore = create<ItemState>((set, get) => ({
     const state = get();
     if (!state.isToggled || !state.activeItem) return false;
 
+    // Guard against targeting empty / already cleared cells
+    const { matrix } = useBoardStore.getState();
+    const currentTileValue = matrix[coord.row]?.[coord.col];
+    if (currentTileValue === undefined || currentTileValue <= 0) {
+      return false;
+    }
+
     if (state.activeItem === 'randomNumber') {
       if (!isFree && state.counts.randomNumber <= 0) {
         return false;
@@ -193,7 +200,12 @@ export const useItemStore = create<ItemState>((set, get) => ({
         Math.floor(getItemRandom(state) * range) + minNum,
       ];
 
+      const nextCounts = isFree
+        ? state.counts
+        : { ...state.counts, randomChoose: Math.max(0, state.counts.randomChoose - 1) };
+
       set({
+        counts: nextCounts,
         targetTile: coord,
         randomChooseOptions: options,
         selectedChooseNumber: options[0],
@@ -236,18 +248,13 @@ export const useItemStore = create<ItemState>((set, get) => ({
   confirmRandomChoose: (val: number, isFree = false) => {
     const state = get();
     if (!state.targetTile) return false;
-    if (!isFree && state.counts.randomChoose <= 0) return false;
 
     useBoardStore.getState().setTileValue(state.targetTile.col, state.targetTile.row, val);
 
-    const nextCounts = isFree
-      ? state.counts
-      : { ...state.counts, randomChoose: Math.max(0, state.counts.randomChoose - 1) };
-
+    // Roll was already consumed upon tile click. Do not double-decrement counts.
     const isMultipleUse = state.activeItemStage === 2 || state.toggleCheck.randomChoose;
-    const shouldStayArmed = isMultipleUse && (isFree || nextCounts.randomChoose > 0);
+    const shouldStayArmed = isMultipleUse && (isFree || state.counts.randomChoose > 0);
     set({
-      counts: nextCounts,
       targetTile: null,
       randomChooseOptions: null,
       selectedChooseNumber: null,
