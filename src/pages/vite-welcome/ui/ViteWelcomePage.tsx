@@ -1,12 +1,12 @@
-import { useState } from 'react'
-import { Link } from '@/shared/lib/router'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './ViteWelcomePage.css'
+import { useState } from 'react';
+import { Link } from '@/shared/lib/router';
+import heroImg from './assets/hero.png';
+import reactLogo from './assets/react.svg';
+import viteLogo from './assets/vite.svg';
+import './ViteWelcomePage.css';
 
 export const ViteWelcomePage = () => {
-  const [count, setCount] = useState(0)
+  const [count, setCount] = useState(0);
 
   return (
     <>
@@ -19,14 +19,11 @@ export const ViteWelcomePage = () => {
         <div>
           <h1>Get started</h1>
           <p>
-            Edit <code>src/pages/vite-welcome/ui/ViteWelcomePage.tsx</code> and save to test <code>HMR</code>
+            Edit <code>src/pages/vite-welcome/ui/ViteWelcomePage.tsx</code> and save to test{' '}
+            <code>HMR</code>
           </p>
         </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
+        <button type="button" className="counter" onClick={() => setCount((count) => count + 1)}>
           Count is {count}
         </button>
 
@@ -34,7 +31,9 @@ export const ViteWelcomePage = () => {
         <div className="flex flex-col items-center gap-3 w-full max-w-md p-5 rounded-2xl bg-amber-50/80 dark:bg-zinc-800/70 border border-amber-200/80 dark:border-zinc-700 shadow-sm text-center">
           <div className="flex items-center gap-2">
             <span className="text-xl">🐾</span>
-            <h2 className="text-lg font-bold text-amber-950 dark:text-zinc-100 m-0">Neko Neko Juju</h2>
+            <h2 className="text-lg font-bold text-amber-950 dark:text-zinc-100 m-0">
+              Neko Neko Juju
+            </h2>
           </div>
           <p className="text-xs text-amber-900/80 dark:text-zinc-400 m-0">
             Select game layout and component combinations
@@ -69,7 +68,9 @@ export const ViteWelcomePage = () => {
           </div>
           <div className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1 flex items-center gap-1.5">
             <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span>Active target: <strong>v0.3.z</strong> (Modular Widgets + Session Engine)</span>
+            <span>
+              Active target: <strong>v0.3.z</strong> (Modular Widgets + Session Engine)
+            </span>
           </div>
         </div>
       </section>
@@ -107,11 +108,7 @@ export const ViteWelcomePage = () => {
           <ul>
             <li>
               <a href="https://github.com/vitejs/vite" target="_blank" rel="noreferrer">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
+                <svg className="button-icon" role="presentation" aria-hidden="true">
                   <use href="/icons.svg#github-icon"></use>
                 </svg>
                 GitHub
@@ -119,11 +116,7 @@ export const ViteWelcomePage = () => {
             </li>
             <li>
               <a href="https://chat.vite.dev/" target="_blank" rel="noreferrer">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
+                <svg className="button-icon" role="presentation" aria-hidden="true">
                   <use href="/icons.svg#discord-icon"></use>
                 </svg>
                 Discord
@@ -131,11 +124,7 @@ export const ViteWelcomePage = () => {
             </li>
             <li>
               <a href="https://x.com/vite_js" target="_blank" rel="noreferrer">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
+                <svg className="button-icon" role="presentation" aria-hidden="true">
                   <use href="/icons.svg#x-icon"></use>
                 </svg>
                 X.com
@@ -143,11 +132,7 @@ export const ViteWelcomePage = () => {
             </li>
             <li>
               <a href="https://bsky.app/profile/vite.dev" target="_blank" rel="noreferrer">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
+                <svg className="button-icon" role="presentation" aria-hidden="true">
                   <use href="/icons.svg#bluesky-icon"></use>
                 </svg>
                 Bluesky
@@ -160,5 +145,5 @@ export const ViteWelcomePage = () => {
       <div className="ticks"></div>
       <section id="spacer"></section>
     </>
-  )
-}
+  );
+};

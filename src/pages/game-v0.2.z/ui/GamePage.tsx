@@ -25,7 +25,9 @@ export const GamePage: React.FC = () => {
 
   // Initial solver recalculation on mount
   useEffect(() => {
-    useSolverStore.getState().recalculate(useBoardStore.getState().matrix, useBoardStore.getState().seed);
+    useSolverStore
+      .getState()
+      .recalculate(useBoardStore.getState().matrix, useBoardStore.getState().seed);
   }, []);
 
   // Game Session Selectors (Only what GamePage itself needs)
@@ -54,13 +56,17 @@ export const GamePage: React.FC = () => {
   const handleRetryGame = useCallback(() => {
     restartCurrentBoard();
     resetSession();
-    useSolverStore.getState().recalculate(useBoardStore.getState().matrix, useBoardStore.getState().seed);
+    useSolverStore
+      .getState()
+      .recalculate(useBoardStore.getState().matrix, useBoardStore.getState().seed);
   }, [restartCurrentBoard, resetSession]);
 
   const handleNewGame = useCallback(() => {
     generateNewBoard();
     resetSession();
-    useSolverStore.getState().recalculate(useBoardStore.getState().matrix, useBoardStore.getState().seed);
+    useSolverStore
+      .getState()
+      .recalculate(useBoardStore.getState().matrix, useBoardStore.getState().seed);
   }, [generateNewBoard, resetSession]);
 
   return (
@@ -87,19 +93,20 @@ export const GamePage: React.FC = () => {
               className="text-xs font-semibold px-2.5 py-1 bg-amber-50/60 dark:bg-zinc-800/60 text-amber-800 dark:text-zinc-300 border border-amber-200/60 dark:border-zinc-700 rounded-lg font-mono"
               title={`Board Size: ${cols} columns × ${rows} rows (${cols * rows} tiles)`}
             >
-              Size: <span className="font-bold text-amber-950 dark:text-amber-200">{cols}×{rows}</span>
+              Size:{' '}
+              <span className="font-bold text-amber-950 dark:text-amber-200">
+                {cols}×{rows}
+              </span>
             </div>
           </div>
         </div>
 
         {/* Center TimerBar, HintBar & ComboBar */}
         <div className="flex flex-col items-center gap-1.5 flex-1 min-w-[200px]">
-          <div className={`transition-all duration-500 ${isPhase1Over ? 'opacity-50 grayscale' : ''}`}>
-            <TimerBar
-              countdown={countdown}
-              maxCountdown={maxCountdown}
-              isPaused={isPaused}
-            />
+          <div
+            className={`transition-all duration-500 ${isPhase1Over ? 'opacity-50 grayscale' : ''}`}
+          >
+            <TimerBar countdown={countdown} maxCountdown={maxCountdown} isPaused={isPaused} />
           </div>
           <HintBar />
           <ComboBar />
@@ -172,10 +179,7 @@ export const GamePage: React.FC = () => {
       )}
 
       {/* Full-Height Viewport Docked Side Panel */}
-      <SidePanel
-        isOpen={showSidePanel}
-        onClose={() => setShowSidePanel(false)}
-      />
+      <SidePanel isOpen={showSidePanel} onClose={() => setShowSidePanel(false)} />
 
       {/* Player Settings Modal */}
       <PlayerSettingsModal onOpenDevTools={() => setShowSidePanel(true)} />

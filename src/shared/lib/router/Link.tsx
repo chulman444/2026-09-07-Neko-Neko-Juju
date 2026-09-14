@@ -6,7 +6,14 @@ export interface LinkProps extends React.AnchorHTMLAttributes<HTMLAnchorElement>
   replace?: boolean;
 }
 
-export const Link: React.FC<LinkProps> = ({ href, replace, onClick, target, children, ...rest }) => {
+export const Link: React.FC<LinkProps> = ({
+  href,
+  replace,
+  onClick,
+  target,
+  children,
+  ...rest
+}) => {
   const { navigate } = useRouter();
 
   const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {

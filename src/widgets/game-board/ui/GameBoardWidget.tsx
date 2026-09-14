@@ -32,7 +32,12 @@ export interface GameBoardWidgetProps {
   /** Callback fired when a valid set of tiles is matched and cleared */
   onTilesCleared?: (tiles: TileCoord[], sum: number, actualCount?: number) => void;
   /** Callback fired whenever user selects tiles */
-  onSelectionChange?: (tiles: TileCoord[], sum: number, isValid: boolean, meta?: SelectionMeta) => void;
+  onSelectionChange?: (
+    tiles: TileCoord[],
+    sum: number,
+    isValid: boolean,
+    meta?: SelectionMeta
+  ) => void;
   /** Callback fired when a single tile is clicked without drag (e.g. for item placement) */
   onTileClick?: (tile: TileCoord) => boolean | void;
   className?: string;
@@ -90,11 +95,18 @@ export const GameBoardWidget: React.FC<GameBoardWidgetProps> = ({
       matrix,
       highlightedTiles,
       targetTile,
-      visualConfig: { gameBg, checkerboardMode, checkerColors, twoClickSelection, hoverLiveSelection },
+      visualConfig: {
+        gameBg,
+        checkerboardMode,
+        checkerColors,
+        twoClickSelection,
+        hoverLiveSelection,
+      },
       onTilesCleared,
       onSelectionChange,
       onTileClick,
-      isItemActive: () => (isItemActive !== undefined ? isItemActive : useItemStore.getState().isToggled),
+      isItemActive: () =>
+        isItemActive !== undefined ? isItemActive : useItemStore.getState().isToggled,
     });
     engineRef.current = engine;
     engine.start();
@@ -150,7 +162,9 @@ export const GameBoardWidget: React.FC<GameBoardWidgetProps> = ({
     }
   }, [gameBg, checkerboardMode, checkerColors, twoClickSelection, hoverLiveSelection]);
 
-  const lastMatrixPropRef = useRef<number[][] | undefined>(matrix ? matrix.map((r) => [...r]) : undefined);
+  const lastMatrixPropRef = useRef<number[][] | undefined>(
+    matrix ? matrix.map((r) => [...r]) : undefined
+  );
 
   useEffect(() => {
     if (!engineRef.current) return;
@@ -162,7 +176,9 @@ export const GameBoardWidget: React.FC<GameBoardWidgetProps> = ({
         matrix.length === prev.length &&
         matrix.every((row, r) => {
           const prevRow = prev[r];
-          return prevRow && row.length === prevRow.length && row.every((val, c) => val === prevRow[c]);
+          return (
+            prevRow && row.length === prevRow.length && row.every((val, c) => val === prevRow[c])
+          );
         }));
 
     if (!isSame) {

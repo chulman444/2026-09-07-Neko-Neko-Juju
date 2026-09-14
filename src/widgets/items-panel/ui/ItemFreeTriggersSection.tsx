@@ -23,9 +23,7 @@ export const ItemFreeTriggersSection: React.FC = () => {
 
   const combinations = useSolverStore((state) => state.combinations);
   const isCalculated = useSolverStore((state) => state.isCalculated);
-  const clearableCount = combinations.filter(
-    (c) => c.isActive && c.blockers.length === 0
-  ).length;
+  const clearableCount = combinations.filter((c) => c.isActive && c.blockers.length === 0).length;
   const isUnsolvable = isCalculated && clearableCount === 0;
 
   const isRandomNumberToggled = isToggled && activeItem === 'randomNumber';
@@ -80,9 +78,7 @@ export const ItemFreeTriggersSection: React.FC = () => {
         {/* 1. Free Random Number Item */}
         <div className="flex flex-col gap-2 p-2.5 rounded-lg bg-zinc-900/60 border border-zinc-700/60">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-zinc-200">
-              🎲 Random Number
-            </span>
+            <span className="text-xs font-bold text-zinc-200">🎲 Random Number</span>
             {isRandomNumberToggled && (
               <span className="text-[10px] text-amber-400 font-mono font-bold bg-amber-950/60 px-1.5 py-0.5 rounded border border-amber-600/50">
                 ARMED (TAP BOARD TILE)
@@ -131,12 +127,12 @@ export const ItemFreeTriggersSection: React.FC = () => {
         {/* 2. Free Random Choose Item */}
         <div className="flex flex-col gap-2 p-2.5 rounded-lg bg-zinc-900/60 border border-zinc-700/60">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-zinc-200">
-              🎰 Random Choose
-            </span>
+            <span className="text-xs font-bold text-zinc-200">🎰 Random Choose</span>
             {isRandomChooseToggled && (
               <span className="text-[10px] text-purple-400 font-mono font-bold bg-purple-950/60 px-1.5 py-0.5 rounded border border-purple-600/50">
-                {targetTile ? `TARGETED (${targetTile.col + 1}, ${targetTile.row + 1})` : 'ARMED (TAP TILE)'}
+                {targetTile
+                  ? `TARGETED (${targetTile.col + 1}, ${targetTile.row + 1})`
+                  : 'ARMED (TAP TILE)'}
               </span>
             )}
           </div>
@@ -175,9 +171,7 @@ export const ItemFreeTriggersSection: React.FC = () => {
 
           {randomChooseOptions && (
             <div className="flex flex-col gap-1 mt-1 pt-1.5 border-t border-zinc-700/60">
-              <span className="text-[10px] text-zinc-400 font-semibold">
-                Available choices:
-              </span>
+              <span className="text-[10px] text-zinc-400 font-semibold">Available choices:</span>
               <div className="grid grid-cols-3 gap-1.5">
                 {randomChooseOptions.map((opt, i) => (
                   <button
@@ -201,9 +195,7 @@ export const ItemFreeTriggersSection: React.FC = () => {
         {/* 3. Free Omnitile Item */}
         <div className="flex flex-col gap-2 p-2.5 rounded-lg bg-zinc-900/60 border border-zinc-700/60">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-zinc-200">
-              ⭐ Omnitile (*)
-            </span>
+            <span className="text-xs font-bold text-zinc-200">⭐ Omnitile (*)</span>
             {isOmnitileToggled && (
               <span className="text-[10px] text-amber-400 font-mono font-bold bg-amber-950/60 px-1.5 py-0.5 rounded border border-amber-600/50">
                 ARMED (TAP BOARD TILE)

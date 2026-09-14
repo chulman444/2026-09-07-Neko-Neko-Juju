@@ -7,6 +7,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
+    "format": "prettier --write \"src/**/*.{ts,tsx,css,json}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,css,json}\"",
     "preview": "vite preview",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
@@ -33,6 +35,7 @@
     "@vitest/coverage-v8": "latest",
     "oxlint": "^1.79.0",
     "playwright": "latest",
+    "prettier": "^3.9.6",
     "storybook": "^10.6.0",
     "typescript": "~6.0.2",
     "vite": "^8.2.2",

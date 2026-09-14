@@ -8,10 +8,7 @@ export interface ItemBarProps {
   onToggleCollapse?: () => void;
 }
 
-export const ItemBar: React.FC<ItemBarProps> = ({
-  isCollapsed = false,
-  onToggleCollapse,
-}) => {
+export const ItemBar: React.FC<ItemBarProps> = ({ isCollapsed = false, onToggleCollapse }) => {
   const counts = useItemStore((state) => state.counts);
   const activeItem = useItemStore((state) => state.activeItem);
   const isToggled = useItemStore((state) => state.isToggled);
@@ -64,9 +61,14 @@ export const ItemBar: React.FC<ItemBarProps> = ({
             <div className="flex items-center gap-2">
               <span className="inline-block w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping shrink-0" />
               <span>
-                🎲 <strong>Random Number Armed:</strong> Click any tile on the board to roll a new number directly on it.
+                🎲 <strong>Random Number Armed:</strong> Click any tile on the board to roll a new
+                number directly on it.
                 <span className="text-zinc-500 dark:text-zinc-400 text-[11px] ml-1.5">
-                  ({toggleCheck.randomNumber ? 'Multiple Use: stays armed for repeated rolling' : 'Single Use: auto-untoggles after 1 roll'})
+                  (
+                  {toggleCheck.randomNumber
+                    ? 'Multiple Use: stays armed for repeated rolling'
+                    : 'Single Use: auto-untoggles after 1 roll'}
+                  )
                 </span>
               </span>
             </div>
@@ -86,7 +88,8 @@ export const ItemBar: React.FC<ItemBarProps> = ({
             <div className="flex items-center gap-2">
               <span className="inline-block w-2.5 h-2.5 rounded-full bg-purple-500 animate-ping shrink-0" />
               <span>
-                🎰 <strong>Random Choose Armed:</strong> Click any tile on the board to mark it as the target.
+                🎰 <strong>Random Choose Armed:</strong> Click any tile on the board to mark it as
+                the target.
                 <span className="text-zinc-500 dark:text-zinc-400 text-[11px] ml-1.5">
                   ({toggleCheck.randomChoose ? 'Multiple Use active' : 'Single Use'})
                 </span>
@@ -109,7 +112,11 @@ export const ItemBar: React.FC<ItemBarProps> = ({
               <div className="flex items-center gap-2">
                 <span className="text-lg">🎯</span>
                 <span className="text-xs font-bold text-purple-950 dark:text-purple-100">
-                  Target tile at <strong>Col {targetTile.col + 1}, Row {targetTile.row + 1}</strong> will be changed! Pick your number:
+                  Target tile at{' '}
+                  <strong>
+                    Col {targetTile.col + 1}, Row {targetTile.row + 1}
+                  </strong>{' '}
+                  will be changed! Pick your number:
                 </span>
               </div>
               <div className="flex items-center gap-2">
@@ -150,7 +157,9 @@ export const ItemBar: React.FC<ItemBarProps> = ({
                   title={`Replace target tile with ${opt}`}
                 >
                   <span>{opt}</span>
-                  <span className="text-[10px] font-sans font-medium text-zinc-400">Choice {i + 1}</span>
+                  <span className="text-[10px] font-sans font-medium text-zinc-400">
+                    Choice {i + 1}
+                  </span>
                 </button>
               ))}
             </div>
@@ -302,7 +311,9 @@ export const ItemBar: React.FC<ItemBarProps> = ({
             <div className="flex items-center justify-between gap-1 mb-1.5">
               <div className="flex items-center gap-1.5">
                 <span className="text-base">💡</span>
-                <span className="text-xs font-bold text-amber-950 dark:text-zinc-100">Hint Item</span>
+                <span className="text-xs font-bold text-amber-950 dark:text-zinc-100">
+                  Hint Item
+                </span>
               </div>
               <span
                 className={`text-xs font-mono font-bold px-1.5 py-0.5 rounded-md ${
@@ -338,9 +349,14 @@ export const ItemBar: React.FC<ItemBarProps> = ({
           <div className="flex items-center gap-2">
             <span className="inline-block w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping shrink-0" />
             <span>
-              🎲 <strong>Random Number Armed:</strong> Click any tile on the board to roll a new number directly on it.
+              🎲 <strong>Random Number Armed:</strong> Click any tile on the board to roll a new
+              number directly on it.
               <span className="text-zinc-500 dark:text-zinc-400 text-[11px] ml-1.5">
-                ({toggleCheck.randomNumber ? 'Multiple Use: stays armed for repeated rolling' : 'Single Use: auto-untoggles after 1 roll'})
+                (
+                {toggleCheck.randomNumber
+                  ? 'Multiple Use: stays armed for repeated rolling'
+                  : 'Single Use: auto-untoggles after 1 roll'}
+                )
               </span>
             </span>
           </div>
@@ -360,7 +376,8 @@ export const ItemBar: React.FC<ItemBarProps> = ({
           <div className="flex items-center gap-2">
             <span className="inline-block w-2.5 h-2.5 rounded-full bg-purple-500 animate-ping shrink-0" />
             <span>
-              🎰 <strong>Random Choose Armed:</strong> Click any tile on the board to mark it as the target.
+              🎰 <strong>Random Choose Armed:</strong> Click any tile on the board to mark it as the
+              target.
               <span className="text-zinc-500 dark:text-zinc-400 text-[11px] ml-1.5">
                 ({toggleCheck.randomChoose ? 'Multiple Use active' : 'Single Use'})
               </span>
@@ -383,7 +400,11 @@ export const ItemBar: React.FC<ItemBarProps> = ({
             <div className="flex items-center gap-2">
               <span className="text-lg">🎯</span>
               <span className="text-xs font-bold text-purple-950 dark:text-purple-100">
-                Target tile at <strong>Col {targetTile.col + 1}, Row {targetTile.row + 1}</strong> will be changed! Pick your number:
+                Target tile at{' '}
+                <strong>
+                  Col {targetTile.col + 1}, Row {targetTile.row + 1}
+                </strong>{' '}
+                will be changed! Pick your number:
               </span>
             </div>
             <div className="flex items-center gap-2">
@@ -414,7 +435,9 @@ export const ItemBar: React.FC<ItemBarProps> = ({
                 title={`Replace target tile with ${opt}`}
               >
                 <span>{opt}</span>
-                <span className="text-[10px] font-sans font-medium text-zinc-400">Choice {i + 1}</span>
+                <span className="text-[10px] font-sans font-medium text-zinc-400">
+                  Choice {i + 1}
+                </span>
               </button>
             ))}
           </div>
@@ -423,4 +446,3 @@ export const ItemBar: React.FC<ItemBarProps> = ({
     </div>
   );
 };
-

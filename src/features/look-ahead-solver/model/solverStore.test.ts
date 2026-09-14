@@ -69,7 +69,10 @@ describe('solverStore - hintMode & baseline caching', () => {
       [0, 0, 0],
     ];
     useBoardStore.getState().setMatrix(updatedBoard);
-    useSolverStore.getState().cascadeTiles([{ row: 0, col: 0 }, { row: 0, col: 1 }]);
+    useSolverStore.getState().cascadeTiles([
+      { row: 0, col: 0 },
+      { row: 0, col: 1 },
+    ]);
 
     // No matches remain on all-zero board
     expect(useSolverStore.getState().combinations).toHaveLength(0);
@@ -96,4 +99,3 @@ describe('solverStore - hintMode & baseline caching', () => {
     expect(useSolverStore.getState().combinations.length).toBe(firstRunTotal);
   });
 });
-

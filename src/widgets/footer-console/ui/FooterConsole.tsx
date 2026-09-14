@@ -56,9 +56,7 @@ export const FooterConsole: React.FC<FooterConsoleProps> = ({
   // Unsolvable state for Free Shake
   const combinations = useSolverStore((state) => state.combinations);
   const isCalculated = useSolverStore((state) => state.isCalculated);
-  const clearableCount = combinations.filter(
-    (c) => c.isActive && c.blockers.length === 0
-  ).length;
+  const clearableCount = combinations.filter((c) => c.isActive && c.blockers.length === 0).length;
   const isUnsolvable = isCalculated && clearableCount === 0;
 
   const isRandomNumberActive = isToggled && activeItem === 'randomNumber';
@@ -112,7 +110,8 @@ export const FooterConsole: React.FC<FooterConsoleProps> = ({
           <span className="text-sm">🎒</span>
           <span>Footer Console</span>
           <span className="text-[11px] font-mono text-zinc-500 dark:text-zinc-400">
-            (🎲 ×{counts.randomNumber} · 🎰 ×{counts.randomChoose} · ⭐ ×{counts.omnitile} · 💡 ×{counts.hint} · 🔀 ×{counts.shake})
+            (🎲 ×{counts.randomNumber} · 🎰 ×{counts.randomChoose} · ⭐ ×{counts.omnitile} · 💡 ×
+            {counts.hint} · 🔀 ×{counts.shake})
           </span>
           {isUnsolvable && (
             <span
@@ -216,7 +215,8 @@ export const FooterConsole: React.FC<FooterConsoleProps> = ({
           <div className="flex items-center gap-2 px-3 py-1 rounded-xl bg-amber-500/15 border border-amber-500/50 shadow-md animate-in fade-in duration-150 text-xs text-amber-950 dark:text-amber-200 backdrop-blur-md">
             <span className="inline-block w-2 h-2 rounded-full bg-amber-500 animate-ping shrink-0" />
             <span className="font-medium">
-              🎲 Click tile to roll ({activeItemStage === 2 ? 'Stage 2: Multi-Use' : 'Stage 1: Single Use'})
+              🎲 Click tile to roll (
+              {activeItemStage === 2 ? 'Stage 2: Multi-Use' : 'Stage 1: Single Use'})
             </span>
             <button
               type="button"
@@ -233,7 +233,8 @@ export const FooterConsole: React.FC<FooterConsoleProps> = ({
           <div className="flex items-center gap-2 px-3 py-1 rounded-xl bg-purple-500/15 border border-purple-500/50 shadow-md animate-in fade-in duration-150 text-xs text-purple-950 dark:text-purple-200 backdrop-blur-md">
             <span className="inline-block w-2 h-2 rounded-full bg-purple-500 animate-ping shrink-0" />
             <span className="font-medium">
-              🎰 Click target tile on board ({activeItemStage === 2 ? 'Stage 2: Multi-Use' : 'Stage 1: Single Use'})
+              🎰 Click target tile on board (
+              {activeItemStage === 2 ? 'Stage 2: Multi-Use' : 'Stage 1: Single Use'})
             </span>
             <button
               type="button"
@@ -250,7 +251,8 @@ export const FooterConsole: React.FC<FooterConsoleProps> = ({
           <div className="flex items-center gap-2 px-3 py-1 rounded-xl bg-amber-500/15 border border-amber-500/50 shadow-md animate-in fade-in duration-150 text-xs text-amber-950 dark:text-amber-200 backdrop-blur-md">
             <span className="inline-block w-2 h-2 rounded-full bg-amber-500 animate-ping shrink-0" />
             <span className="font-medium">
-              ⭐ Click tile to convert to Omnitile (*) ({activeItemStage === 2 ? 'Stage 2: Multi-Use' : 'Stage 1: Single Use'})
+              ⭐ Click tile to convert to Omnitile (*) (
+              {activeItemStage === 2 ? 'Stage 2: Multi-Use' : 'Stage 1: Single Use'})
             </span>
             <button
               type="button"
@@ -265,9 +267,7 @@ export const FooterConsole: React.FC<FooterConsoleProps> = ({
         {/* State E: Panning Mode Active Banner */}
         {isPanMode && !isRandomNumberActive && !isRandomChooseActive && !isOmnitileActive && (
           <div className="flex items-center gap-2 px-3 py-1 rounded-xl bg-amber-500/20 border border-amber-500/60 shadow-md animate-in fade-in duration-150 text-xs text-amber-950 dark:text-amber-200 backdrop-blur-md">
-            <span className="font-bold flex items-center gap-1">
-              ✋ Pan Mode Active:
-            </span>
+            <span className="font-bold flex items-center gap-1">✋ Pan Mode Active:</span>
             <span>Drag anywhere with Left, Middle, or Right click to pan board</span>
             <button
               type="button"
@@ -441,20 +441,8 @@ export const FooterConsole: React.FC<FooterConsoleProps> = ({
                   ? 'No clearable moves remaining! Free Shake is available to break deadlock.'
                   : `Shake Item (${counts.shake} left). Shuffles live tile positions.`
               }
-              leftWingState={
-                shakeSuccessFlash
-                  ? 'emerald'
-                  : isUnsolvable
-                    ? 'emerald'
-                    : 'inactive'
-              }
-              rightWingState={
-                shakeSuccessFlash
-                  ? 'emerald'
-                  : isUnsolvable
-                    ? 'emerald'
-                    : 'inactive'
-              }
+              leftWingState={shakeSuccessFlash ? 'emerald' : isUnsolvable ? 'emerald' : 'inactive'}
+              rightWingState={shakeSuccessFlash ? 'emerald' : isUnsolvable ? 'emerald' : 'inactive'}
               leftWingTitle={isUnsolvable ? 'Free Shake Available' : 'Shake'}
               rightWingTitle={isUnsolvable ? 'Free Shake Available' : 'Shake'}
               onClick={handleShakeClick}

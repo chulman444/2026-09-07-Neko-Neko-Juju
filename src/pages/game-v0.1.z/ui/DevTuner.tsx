@@ -72,7 +72,9 @@ export const DevTuner: React.FC<DevTunerProps> = ({
           <label className="flex flex-col gap-1">
             <div className="flex justify-between text-xs">
               <span className="text-zinc-300">Drain Exponent</span>
-              <span className="font-mono font-bold text-amber-400">{comboConfig.drainExponent.toFixed(2)}</span>
+              <span className="font-mono font-bold text-amber-400">
+                {comboConfig.drainExponent.toFixed(2)}
+              </span>
             </div>
             <input
               type="range"
@@ -88,7 +90,9 @@ export const DevTuner: React.FC<DevTunerProps> = ({
           <label className="flex flex-col gap-1">
             <div className="flex justify-between text-xs">
               <span className="text-zinc-300">Drain Multiplier</span>
-              <span className="font-mono font-bold text-amber-400">{comboConfig.multiplier.toFixed(1)}</span>
+              <span className="font-mono font-bold text-amber-400">
+                {comboConfig.multiplier.toFixed(1)}
+              </span>
             </div>
             <input
               type="range"
@@ -104,7 +108,9 @@ export const DevTuner: React.FC<DevTunerProps> = ({
           <label className="flex flex-col gap-1">
             <div className="flex justify-between text-xs">
               <span className="text-zinc-300">Fixed Min Drain (%/s)</span>
-              <span className="font-mono font-bold text-amber-400">{comboConfig.fixedMinimalDrain}</span>
+              <span className="font-mono font-bold text-amber-400">
+                {comboConfig.fixedMinimalDrain}
+              </span>
             </div>
             <input
               type="range"
@@ -131,7 +137,9 @@ export const DevTuner: React.FC<DevTunerProps> = ({
             min="0"
             step="0.1"
             value={baseSecondsPerTile}
-            onChange={(e) => onBaseSecondsPerTileChange(Math.max(0, parseFloat(e.target.value) || 0))}
+            onChange={(e) =>
+              onBaseSecondsPerTileChange(Math.max(0, parseFloat(e.target.value) || 0))
+            }
             className="bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-right font-mono text-white focus:border-amber-500 focus:outline-none"
           />
 

@@ -53,9 +53,7 @@ export const DifficultySection: React.FC = () => {
             <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">
               Difficulty Tiers (Tilt %)
             </span>
-            <span className="text-[10px] text-zinc-400">
-              Slope: +% boosts 1-3, -% boosts 7-9
-            </span>
+            <span className="text-[10px] text-zinc-400">Slope: +% boosts 1-3, -% boosts 7-9</span>
           </div>
           {DIFFICULTY_TIERS.map((tier) => {
             const [minTilt, maxTilt] = difficultyTiltRanges[tier];
@@ -127,7 +125,11 @@ export const DifficultySection: React.FC = () => {
 
                 {isSelected && (
                   <div className="text-[10px] font-mono text-zinc-400 pl-5">
-                    Exp. Sum for {cols}×{rows}: <span className="text-amber-300">~{minSum}–{maxSum}</span> (Avg {minAvg.toFixed(2)}–{maxAvg.toFixed(2)})
+                    Exp. Sum for {cols}×{rows}:{' '}
+                    <span className="text-amber-300">
+                      ~{minSum}–{maxSum}
+                    </span>{' '}
+                    (Avg {minAvg.toFixed(2)}–{maxAvg.toFixed(2)})
                   </div>
                 )}
               </label>
@@ -155,7 +157,9 @@ export const DifficultySection: React.FC = () => {
               <span className="text-zinc-300">
                 Noise Scatter (σ):{' '}
                 <span className="text-[10px] text-zinc-400">
-                  {difficultyNoiseSpread === 0 ? 'Disabled' : `±${(difficultyNoiseSpread * 100).toFixed(1)}%`}
+                  {difficultyNoiseSpread === 0
+                    ? 'Disabled'
+                    : `±${(difficultyNoiseSpread * 100).toFixed(1)}%`}
                 </span>
               </span>
               <span className="font-mono font-bold text-amber-400">

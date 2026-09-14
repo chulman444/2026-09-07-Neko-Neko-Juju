@@ -1,6 +1,10 @@
 import { create } from 'zustand';
 import { useBoardStore, type TileCoord, OMNITILE_VALUE } from '@/entities/board';
-import { useSolverStore, findClearableCombinationsOnly, type SolverCombination } from '@/features/look-ahead-solver';
+import {
+  useSolverStore,
+  findClearableCombinationsOnly,
+  type SolverCombination,
+} from '@/features/look-ahead-solver';
 
 export function isHintComboValid(combo: TileCoord[], matrix: number[][]): boolean {
   if (!combo || combo.length === 0) return false;
@@ -331,9 +335,7 @@ export const useGameSessionStore = create<GameSessionState>((set, get) => ({
         return state;
       }
 
-      const nextCombos = state.activeHintCombos.filter((combo) =>
-        isHintComboValid(combo, matrix)
-      );
+      const nextCombos = state.activeHintCombos.filter((combo) => isHintComboValid(combo, matrix));
 
       let nextHighlighted: TileCoord[] = [];
       if (state.activeHintCombos.length > 0) {
@@ -420,7 +422,9 @@ export const useGameSessionStore = create<GameSessionState>((set, get) => ({
     set((state) => {
       // Find all clearable combinations whose tiles are not yet fully highlighted
       const unhighlightedCombos = activeClearables.filter((combo) =>
-        combo.required.some((req) => !state.highlightedTiles.some((p) => p.row === req.row && p.col === req.col))
+        combo.required.some(
+          (req) => !state.highlightedTiles.some((p) => p.row === req.row && p.col === req.col)
+        )
       );
 
       const candidates = unhighlightedCombos.length > 0 ? unhighlightedCombos : activeClearables;
@@ -558,7 +562,9 @@ export const useGameSessionStore = create<GameSessionState>((set, get) => ({
     const sanitized = Math.max(0, val);
     set((state) => {
       // If hint phase hasn't started yet, adjust hintsRemaining to match new max
-      const nextRemaining = !state.hintPhaseStarted ? sanitized : Math.min(state.hintsRemaining, sanitized);
+      const nextRemaining = !state.hintPhaseStarted
+        ? sanitized
+        : Math.min(state.hintsRemaining, sanitized);
       return {
         maxFreeHints: sanitized,
         hintsRemaining: nextRemaining,
@@ -690,4 +696,3 @@ useBoardStore.subscribe((state) => {
     useGameSessionStore.getState().validateActiveHints();
   }
 });
-

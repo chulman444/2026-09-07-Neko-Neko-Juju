@@ -1,1 +1,1 @@
-export { ViteWelcomePage } from './ui/ViteWelcomePage'
+export { ViteWelcomePage } from './ui/ViteWelcomePage';

@@ -82,7 +82,10 @@ export const PlayerSettingsModal: React.FC<PlayerSettingsModalProps> = ({
         <div className="flex items-center justify-between pb-3 border-b border-amber-900/10 dark:border-zinc-800">
           <div className="flex items-center gap-2">
             <span className="text-xl">⚙️</span>
-            <h2 id="player-settings-title" className="text-base font-extrabold text-amber-950 dark:text-amber-200">
+            <h2
+              id="player-settings-title"
+              className="text-base font-extrabold text-amber-950 dark:text-amber-200"
+            >
               Player Settings
             </h2>
           </div>
@@ -118,7 +121,9 @@ export const PlayerSettingsModal: React.FC<PlayerSettingsModalProps> = ({
 
             <label className="flex flex-col gap-1.5">
               <div className="flex justify-between text-xs">
-                <span className="font-semibold text-zinc-700 dark:text-zinc-300">Trackball Sensitivity</span>
+                <span className="font-semibold text-zinc-700 dark:text-zinc-300">
+                  Trackball Sensitivity
+                </span>
                 <span className="font-mono font-bold text-amber-600 dark:text-amber-400">
                   {panSensitivity.toFixed(1)}x
                 </span>
@@ -135,7 +140,9 @@ export const PlayerSettingsModal: React.FC<PlayerSettingsModalProps> = ({
             </label>
 
             <label className="flex items-center justify-between cursor-pointer pt-1 border-t border-amber-900/10 dark:border-zinc-700/50">
-              <span className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">Inverse Pan Movement</span>
+              <span className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">
+                Inverse Pan Movement
+              </span>
               <input
                 type="checkbox"
                 checked={inversePan}
@@ -182,7 +189,9 @@ export const PlayerSettingsModal: React.FC<PlayerSettingsModalProps> = ({
 
             {checkerboardMode !== 'off' && (
               <div className="flex items-center justify-between pt-1 border-t border-amber-900/10 dark:border-zinc-700/50">
-                <span className="text-xs text-zinc-600 dark:text-zinc-300 font-medium">Palette Swatches</span>
+                <span className="text-xs text-zinc-600 dark:text-zinc-300 font-medium">
+                  Palette Swatches
+                </span>
                 <div className="flex items-center gap-1.5">
                   <div
                     className="w-5 h-5 rounded border border-zinc-400/80 shadow-inner flex items-center justify-center text-[9px] font-bold text-zinc-800"

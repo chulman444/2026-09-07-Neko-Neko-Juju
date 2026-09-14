@@ -228,4 +228,3 @@ export const useSolverStore = create<SolverState>((set, get) => ({
     });
   },
 }));
-

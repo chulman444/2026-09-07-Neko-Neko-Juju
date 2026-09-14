@@ -94,22 +94,19 @@ export function useTrackball(options: UseTrackballOptions = {}) {
     [sensitivity, inverseMovement, panLimitX, panLimitY, setPanOffset]
   );
 
-  const handleTrackballPointerUpOrCancel = useCallback(
-    (e: React.PointerEvent<HTMLDivElement>) => {
-      if (!dragStateRef.current.isDragging) return;
+  const handleTrackballPointerUpOrCancel = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    if (!dragStateRef.current.isDragging) return;
 
-      dragStateRef.current.isDragging = false;
+    dragStateRef.current.isDragging = false;
 
-      const pad = trackballPadRef.current;
-      if (pad && pad.hasPointerCapture(e.pointerId)) {
-        pad.releasePointerCapture(e.pointerId);
-      }
+    const pad = trackballPadRef.current;
+    if (pad && pad.hasPointerCapture(e.pointerId)) {
+      pad.releasePointerCapture(e.pointerId);
+    }
 
-      // Spring back to center
-      setKnobOffset({ x: 0, y: 0 });
-    },
-    []
-  );
+    // Spring back to center
+    setKnobOffset({ x: 0, y: 0 });
+  }, []);
 
   const handleTrackballDoubleClick = useCallback(
     (e: React.MouseEvent) => {

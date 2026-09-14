@@ -21,7 +21,9 @@ export const ItemHistoryConstraintSection: React.FC = () => {
       <div className="flex flex-col gap-3 bg-zinc-800/60 p-3 rounded-xl border border-zinc-700/70">
         <div className="flex flex-col gap-1.5">
           <div className="flex justify-between items-center text-xs text-zinc-300">
-            <span>Do not repeat last <strong>{historyConstraintN}</strong> rolled numbers</span>
+            <span>
+              Do not repeat last <strong>{historyConstraintN}</strong> rolled numbers
+            </span>
             <span className="text-[10px] text-zinc-400 font-mono">Max: 8 (Full Cycle)</span>
           </div>
           <input

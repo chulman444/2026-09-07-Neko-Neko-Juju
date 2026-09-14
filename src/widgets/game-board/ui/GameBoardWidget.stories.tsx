@@ -208,4 +208,3 @@ export const CheckerboardOff: Story = {
     checkerboardMode: 'off',
   },
 };
-

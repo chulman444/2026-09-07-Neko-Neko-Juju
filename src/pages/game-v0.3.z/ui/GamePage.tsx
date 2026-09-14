@@ -39,7 +39,9 @@ export const GamePage: React.FC = () => {
 
   // Initial solver recalculation on mount
   useEffect(() => {
-    useSolverStore.getState().recalculate(useBoardStore.getState().matrix, useBoardStore.getState().seed);
+    useSolverStore
+      .getState()
+      .recalculate(useBoardStore.getState().matrix, useBoardStore.getState().seed);
   }, []);
 
   // Game Session Selectors (Only what GamePage itself needs)
@@ -72,13 +74,17 @@ export const GamePage: React.FC = () => {
   const handleRetryGame = useCallback(() => {
     restartCurrentBoard();
     resetSession();
-    useSolverStore.getState().recalculate(useBoardStore.getState().matrix, useBoardStore.getState().seed);
+    useSolverStore
+      .getState()
+      .recalculate(useBoardStore.getState().matrix, useBoardStore.getState().seed);
   }, [restartCurrentBoard, resetSession]);
 
   const handleNewGame = useCallback(() => {
     generateNewBoard();
     resetSession();
-    useSolverStore.getState().recalculate(useBoardStore.getState().matrix, useBoardStore.getState().seed);
+    useSolverStore
+      .getState()
+      .recalculate(useBoardStore.getState().matrix, useBoardStore.getState().seed);
   }, [generateNewBoard, resetSession]);
 
   const handleTileClick = useCallback(
@@ -97,12 +103,7 @@ export const GamePage: React.FC = () => {
   );
 
   const handleSelectionChange = useCallback(
-    (
-      tiles: TileCoord[],
-      sum: number,
-      _isValid: boolean,
-      meta?: SelectionMeta
-    ) => {
+    (tiles: TileCoord[], sum: number, _isValid: boolean, meta?: SelectionMeta) => {
       useGameSessionStore.getState().setSelection({
         selectedTiles: tiles,
         selectedSum: sum,
@@ -147,9 +148,7 @@ export const GamePage: React.FC = () => {
   }, [zScore]);
 
   const { clearableTileCount, clearableCombosCount } = useMemo(() => {
-    const activeClearable = combinations.filter(
-      (c) => c.isActive && c.blockers.length === 0
-    );
+    const activeClearable = combinations.filter((c) => c.isActive && c.blockers.length === 0);
     const uniqueCoords = new Set<string>();
     for (const combo of activeClearable) {
       for (const tile of combo.required) {
@@ -187,9 +186,15 @@ export const GamePage: React.FC = () => {
                 className="flex items-center gap-1.5 cursor-help"
                 title={`Span Score: ${score} pts • Cleared: ${clearedTiles} of ${totalTiles} tiles`}
               >
-                <span className="text-amber-800/80 dark:text-zinc-400 font-sans font-semibold">Score:</span>
-                <span className="text-sm font-black text-amber-950 dark:text-amber-200 font-mono">{clearedTiles}</span>
-                <span className="text-[10px] text-amber-700/70 dark:text-zinc-400 font-sans">cleared</span>
+                <span className="text-amber-800/80 dark:text-zinc-400 font-sans font-semibold">
+                  Score:
+                </span>
+                <span className="text-sm font-black text-amber-950 dark:text-amber-200 font-mono">
+                  {clearedTiles}
+                </span>
+                <span className="text-[10px] text-amber-700/70 dark:text-zinc-400 font-sans">
+                  cleared
+                </span>
               </div>
 
               {/* Right: How many left (Clearable tiles & combinations) */}
@@ -197,10 +202,14 @@ export const GamePage: React.FC = () => {
                 className="flex items-center gap-1.5 text-right font-mono cursor-help"
                 title={`${remainingTiles} tiles remaining on board • ${clearableTileCount} tiles matchable across ${clearableCombosCount} combinations`}
               >
-                <span className={`text-xs font-bold ${clearableTileCount === 0 ? 'text-rose-500 animate-pulse' : 'text-amber-950 dark:text-amber-100'}`}>
+                <span
+                  className={`text-xs font-bold ${clearableTileCount === 0 ? 'text-rose-500 animate-pulse' : 'text-amber-950 dark:text-amber-100'}`}
+                >
                   {clearableTileCount}
                 </span>
-                <span className="text-[10px] text-zinc-500 dark:text-zinc-400 font-sans">clearable</span>
+                <span className="text-[10px] text-zinc-500 dark:text-zinc-400 font-sans">
+                  clearable
+                </span>
                 <span className="text-[10px] font-semibold text-zinc-500 dark:text-zinc-400">
                   ({clearableCombosCount} {clearableCombosCount === 1 ? 'combo' : 'combos'})
                 </span>
@@ -214,8 +223,12 @@ export const GamePage: React.FC = () => {
                 className="flex items-center gap-1.5 cursor-help"
                 title={`Board Size: ${cols} columns × ${rows} rows (${totalTiles} total tiles)`}
               >
-                <span className="text-amber-800/80 dark:text-zinc-400 font-sans font-semibold">Size:</span>
-                <span className="text-sm font-black text-amber-950 dark:text-amber-200 font-mono">{cols}×{rows}</span>
+                <span className="text-amber-800/80 dark:text-zinc-400 font-sans font-semibold">
+                  Size:
+                </span>
+                <span className="text-sm font-black text-amber-950 dark:text-amber-200 font-mono">
+                  {cols}×{rows}
+                </span>
                 <span className="text-xs font-bold text-amber-900/80 dark:text-zinc-300 font-mono">
                   ({totalTiles} tiles)
                 </span>
@@ -227,7 +240,9 @@ export const GamePage: React.FC = () => {
                 title={`Statistical Difficulty: ${statDifficulty.label} (Z-Score: ${zScore > 0 ? '+' : ''}${zScore.toFixed(2)}, Avg: ${averageTile.toFixed(2)}) • Generated Board Sum: ${totalSum} • Expected Uniform Sum: ${expectedSum}`}
               >
                 <span className={`inline-block w-1.5 h-1.5 rounded-full ${statDifficulty.dot}`} />
-                <span className={`text-[10px] font-bold uppercase tracking-wider font-sans ${statDifficulty.color}`}>
+                <span
+                  className={`text-[10px] font-bold uppercase tracking-wider font-sans ${statDifficulty.color}`}
+                >
                   {statDifficulty.label}
                 </span>
                 <span className="text-zinc-400 dark:text-zinc-600">•</span>
@@ -244,12 +259,10 @@ export const GamePage: React.FC = () => {
 
         {/* Center TimerBar, HintBar & ComboBar */}
         <div className="flex flex-col items-center gap-1.5 flex-1 min-w-[200px]">
-          <div className={`transition-all duration-500 ${isPhase1Over ? 'opacity-50 grayscale' : ''}`}>
-            <TimerBar
-              countdown={countdown}
-              maxCountdown={maxCountdown}
-              isPaused={isPaused}
-            />
+          <div
+            className={`transition-all duration-500 ${isPhase1Over ? 'opacity-50 grayscale' : ''}`}
+          >
+            <TimerBar countdown={countdown} maxCountdown={maxCountdown} isPaused={isPaused} />
           </div>
           <HintBar />
           <ComboBar />
@@ -348,10 +361,7 @@ export const GamePage: React.FC = () => {
       )}
 
       {/* Full-Height Viewport Docked Side Panel */}
-      <SidePanel
-        isOpen={showSidePanel}
-        onClose={() => setShowSidePanel(false)}
-      />
+      <SidePanel isOpen={showSidePanel} onClose={() => setShowSidePanel(false)} />
 
       {/* Player Settings Modal */}
       <PlayerSettingsModal onOpenDevTools={() => setShowSidePanel(true)} />

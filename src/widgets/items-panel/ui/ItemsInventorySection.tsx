@@ -36,7 +36,9 @@ export const ItemsInventorySection: React.FC = () => {
           <div className="flex flex-col gap-1.5 p-2 rounded-lg bg-zinc-900/60 border border-zinc-700/60">
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold text-zinc-200">🎲 Random</span>
-              <span className="text-xs font-mono font-bold text-amber-400">{counts.randomNumber}</span>
+              <span className="text-xs font-mono font-bold text-amber-400">
+                {counts.randomNumber}
+              </span>
             </div>
             <div className="flex items-center gap-1">
               <button
@@ -68,7 +70,9 @@ export const ItemsInventorySection: React.FC = () => {
           <div className="flex flex-col gap-1.5 p-2 rounded-lg bg-zinc-900/60 border border-zinc-700/60">
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold text-zinc-200">🎰 Choose</span>
-              <span className="text-xs font-mono font-bold text-amber-400">{counts.randomChoose}</span>
+              <span className="text-xs font-mono font-bold text-amber-400">
+                {counts.randomChoose}
+              </span>
             </div>
             <div className="flex items-center gap-1">
               <button

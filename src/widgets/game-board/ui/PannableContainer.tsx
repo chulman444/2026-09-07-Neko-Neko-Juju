@@ -108,11 +108,7 @@ export const PannableContainer: React.FC<PannableContainerProps> = ({
     };
   }, [panLimitX, panLimitY, setPanOffset]);
 
-  const cursorClass = isPanning
-    ? 'cursor-grabbing'
-    : isPanMode
-    ? 'cursor-grab'
-    : '';
+  const cursorClass = isPanning ? 'cursor-grabbing' : isPanMode ? 'cursor-grab' : '';
 
   return (
     <div

@@ -278,7 +278,6 @@ export const useItemStore = create<ItemState>((set, get) => ({
     });
   },
 
-
   rollRandomNumber: (isFree = false) => {
     const state = get();
     if (!isFree && state.counts.randomNumber <= 0) {

@@ -15,7 +15,7 @@ export const useComboSystem = (initialConfig?: Partial<ComboConfig>) => {
 
   const [config, setConfig] = useState<ComboConfig>({
     drainExponent: 1.5,
-    fixedMinimalDrain: 15, 
+    fixedMinimalDrain: 15,
     multiplier: 2,
     tier1Refill: 1,
     tier2Refill: 3,
@@ -29,10 +29,14 @@ export const useComboSystem = (initialConfig?: Partial<ComboConfig>) => {
 
   // Keep latest state in refs for RAF loop without triggering effect re-binds
   const configRef = useRef(config);
-  useEffect(() => { configRef.current = config; }, [config]);
-  
+  useEffect(() => {
+    configRef.current = config;
+  }, [config]);
+
   const comboCountRef = useRef(comboCount);
-  useEffect(() => { comboCountRef.current = comboCount; }, [comboCount]);
+  useEffect(() => {
+    comboCountRef.current = comboCount;
+  }, [comboCount]);
 
   useEffect(() => {
     lastTimeRef.current = performance.now();
@@ -40,16 +44,17 @@ export const useComboSystem = (initialConfig?: Partial<ComboConfig>) => {
     const loop = (now: number) => {
       if (lastTimeRef.current !== null && !isPausedRef.current && comboCountRef.current > 0) {
         const deltaSeconds = (now - lastTimeRef.current) / 1000;
-        
+
         setComboPct((prevPct) => {
           if (prevPct <= 0) return 0;
-          
+
           const { fixedMinimalDrain, multiplier, drainExponent } = configRef.current;
           // Drain rate = fixed + mult * (combo^exponent)
-          const drainRate = fixedMinimalDrain + multiplier * Math.pow(comboCountRef.current, drainExponent);
-          
-          const nextPct = prevPct - (drainRate * deltaSeconds);
-          
+          const drainRate =
+            fixedMinimalDrain + multiplier * Math.pow(comboCountRef.current, drainExponent);
+
+          const nextPct = prevPct - drainRate * deltaSeconds;
+
           if (nextPct <= 0) {
             // Combo dropped!
             setComboCount(0);

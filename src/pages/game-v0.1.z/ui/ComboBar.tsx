@@ -20,10 +20,7 @@ export const ComboBar: React.FC<ComboBarProps> = ({ comboCount, comboPct }) => {
 
   return (
     <div className="flex items-center gap-2 h-6 animate-in fade-in zoom-in duration-200">
-      <span
-        className="font-black text-[15px] drop-shadow-sm"
-        style={{ color: activeColor }}
-      >
+      <span className="font-black text-[15px] drop-shadow-sm" style={{ color: activeColor }}>
         COMBO x{comboCount}
       </span>
       <div className="relative w-28 h-2.5 bg-zinc-800/80 rounded-full overflow-hidden border border-zinc-700/50 shadow-inner">

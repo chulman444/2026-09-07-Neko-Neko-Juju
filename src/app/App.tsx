@@ -32,9 +32,15 @@ const AppRoutes: React.FC = () => {
     default:
       return (
         <div className="min-h-screen flex flex-col items-center justify-center gap-4 p-6 text-center">
-          <h1 className="text-3xl font-extrabold text-amber-950 dark:text-zinc-100">404 - Page Not Found</h1>
+          <h1 className="text-3xl font-extrabold text-amber-950 dark:text-zinc-100">
+            404 - Page Not Found
+          </h1>
           <p className="text-sm text-zinc-500 max-w-sm">
-            The path <code className="font-mono bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded text-amber-700 dark:text-amber-300">{path}</code> does not match any registered game route.
+            The path{' '}
+            <code className="font-mono bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded text-amber-700 dark:text-amber-300">
+              {path}
+            </code>{' '}
+            does not match any registered game route.
           </p>
           <div className="flex gap-3 mt-2">
             <Link

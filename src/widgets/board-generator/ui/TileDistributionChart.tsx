@@ -19,7 +19,10 @@ export const TileDistributionChart: React.FC = () => {
           const pct = boardMetrics.totalTiles > 0 ? (count / boardMetrics.totalTiles) * 100 : 0;
           const barHeight = Math.min(100, Math.max(8, Math.round((pct / 25) * 100)));
           return (
-            <div key={digit} className="flex flex-col items-center h-full justify-end group relative">
+            <div
+              key={digit}
+              className="flex flex-col items-center h-full justify-end group relative"
+            >
               <div
                 className={`w-full rounded-t transition-all duration-300 ${
                   digit <= 3

@@ -122,12 +122,7 @@ describe('solverEngine - cascadeClearTiles & buildBlockerLookup', () => {
     // Clear (0, 1):
     // 1. Combo 2 requires (0, 1), so Combo 2 must become inactive.
     // 2. Combo 1 is blocked by (0, 1), so (0, 1) should be removed from Combo 1 blockers!
-    const remaining = cascadeClearTiles(
-      [{ row: 0, col: 1 }],
-      testCombos,
-      undefined,
-      lookup
-    );
+    const remaining = cascadeClearTiles([{ row: 0, col: 1 }], testCombos, undefined, lookup);
 
     // Combo 2 should be filtered out because it is inactive
     expect(remaining).toHaveLength(1);

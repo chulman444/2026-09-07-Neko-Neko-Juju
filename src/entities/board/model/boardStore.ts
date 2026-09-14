@@ -28,8 +28,7 @@ export interface BoardState {
   rotateBoardMatrix: () => void;
   setPanOffset: (
     offset:
-      | { x: number; y: number }
-      | ((prev: { x: number; y: number }) => { x: number; y: number })
+      { x: number; y: number } | ((prev: { x: number; y: number }) => { x: number; y: number })
   ) => void;
   resetPanOffset: () => void;
   setIsPanMode: (isPanMode: boolean | ((prev: boolean) => boolean)) => void;

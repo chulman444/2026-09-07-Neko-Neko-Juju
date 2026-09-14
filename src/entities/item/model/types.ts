@@ -67,4 +67,3 @@ export interface ItemState {
   regenerateItemSeed: () => void;
   getActiveNumber: () => number | null;
 }
-

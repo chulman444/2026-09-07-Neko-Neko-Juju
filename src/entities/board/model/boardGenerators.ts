@@ -71,7 +71,11 @@ export function generateRandomNumberSum10sSeeded(total: number, prng: () => numb
   return numbers;
 }
 
-export function sampleNormal(mean: number, stdDev: number, rng: () => number = Math.random): number {
+export function sampleNormal(
+  mean: number,
+  stdDev: number,
+  rng: () => number = Math.random
+): number {
   const u1 = Math.max(1e-7, rng());
   const u2 = rng();
   const z0 = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
@@ -193,4 +197,3 @@ export function calculateBoardMetrics(matrix: number[][]): BoardMetrics {
     counts,
   };
 }
-

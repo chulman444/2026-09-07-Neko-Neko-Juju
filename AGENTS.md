@@ -25,6 +25,8 @@
 - **Build App**: `npm run build` (runs `tsc -b && vite build`)
 - **Build Storybook**: `npm run build-storybook`
 - **Lint**: `npm run lint`
+- **Format**: `npm run format` (runs `prettier --write "src/**/*.{ts,tsx,css,json}"`)
+- **Format Check**: `npm run format:check` (runs `prettier --check "src/**/*.{ts,tsx,css,json}"`)
 - **Windows Quirks**: Always use `npm.cmd` if running into PowerShell script execution policy (`PSSecurityException`) issues.
 - **Isolated Git Commits**: Never chain `git commit` with other commands using `;` or `&&` (e.g. `git add ...; git commit ...`). Always run `git add` and `git commit` as separate, independent terminal commands so the user can review and approve the commit message.
 
@@ -108,8 +110,10 @@ Code can only import from layers strictly below it. Never import upwards or hori
 
 ## 6. Verification & Definition of Done
 Before completing any task:
-1. Verify TypeScript compiles and builds cleanly: `npm.cmd run build`.
-2. Check for lint or type errors and resolve them immediately: `npm.cmd run lint`.
-3. If story files or Storybook configs were modified, verify Storybook builds cleanly: `npm.cmd run build-storybook`.
-4. Ensure no FSD layer boundary violations or deep slice imports are introduced.
-5. **Prompt for Git Commit**: Once verification passes, always present a suggested commit message and ask the user for confirmation to commit before proceeding to any new or unrelated work.
+1. Format all modified source files with Prettier: `npm.cmd run format`.
+2. Run automated test suite: `npx.cmd vitest run`.
+3. Verify TypeScript compiles and builds cleanly: `npm.cmd run build`.
+4. Check for lint or type errors and resolve them immediately: `npm.cmd run lint`.
+5. If story files or Storybook configs were modified, verify Storybook builds cleanly: `npm.cmd run build-storybook`.
+6. Ensure no FSD layer boundary violations or deep slice imports are introduced.
+7. **Prompt for Git Commit**: Once verification passes, always present a suggested commit message and ask the user for confirmation to commit before proceeding to any new or unrelated work.

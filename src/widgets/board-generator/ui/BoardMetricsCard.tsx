@@ -14,9 +14,7 @@ export const BoardMetricsCard: React.FC = () => {
         <span className="text-[10px] text-zinc-400 uppercase font-sans">Board Sum</span>
         <span className="text-xs font-bold text-amber-300">
           {boardMetrics.totalSum}{' '}
-          <span className="text-[9px] text-zinc-500 font-normal">
-            (exp: {cols * rows * 5})
-          </span>
+          <span className="text-[9px] text-zinc-500 font-normal">(exp: {cols * rows * 5})</span>
         </span>
       </div>
       <div className="flex flex-col">

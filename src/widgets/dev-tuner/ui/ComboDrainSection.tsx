@@ -18,7 +18,9 @@ export const ComboDrainSection: React.FC = () => {
         <label className="flex flex-col gap-1">
           <div className="flex justify-between text-xs">
             <span className="text-zinc-300">Drain Exponent</span>
-            <span className="font-mono font-bold text-amber-400">{comboConfig.drainExponent.toFixed(2)}</span>
+            <span className="font-mono font-bold text-amber-400">
+              {comboConfig.drainExponent.toFixed(2)}
+            </span>
           </div>
           <input
             type="range"
@@ -34,7 +36,9 @@ export const ComboDrainSection: React.FC = () => {
         <label className="flex flex-col gap-1">
           <div className="flex justify-between text-xs">
             <span className="text-zinc-300">Drain Multiplier</span>
-            <span className="font-mono font-bold text-amber-400">{comboConfig.multiplier.toFixed(1)}</span>
+            <span className="font-mono font-bold text-amber-400">
+              {comboConfig.multiplier.toFixed(1)}
+            </span>
           </div>
           <input
             type="range"
@@ -50,7 +54,9 @@ export const ComboDrainSection: React.FC = () => {
         <label className="flex flex-col gap-1">
           <div className="flex justify-between text-xs">
             <span className="text-zinc-300">Fixed Min Drain (%/s)</span>
-            <span className="font-mono font-bold text-amber-400">{comboConfig.fixedMinimalDrain}</span>
+            <span className="font-mono font-bold text-amber-400">
+              {comboConfig.fixedMinimalDrain}
+            </span>
           </div>
           <input
             type="range"

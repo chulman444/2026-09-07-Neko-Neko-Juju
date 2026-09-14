@@ -12,11 +12,36 @@ export function setupAll29Families(): FamilyDef[] {
   if (cachedFamilies.length > 0) return cachedFamilies;
 
   const rawPartitions = [
-    [9, 1], [8, 2], [7, 3], [6, 4], [5, 5],
-    [8, 1, 1], [7, 2, 1], [6, 3, 1], [6, 2, 2], [5, 4, 1], [5, 3, 2], [4, 4, 2], [4, 3, 3],
-    [7, 1, 1, 1], [6, 2, 1, 1], [5, 3, 1, 1], [5, 2, 2, 1], [4, 4, 1, 1], [4, 3, 2, 1], [4, 2, 2, 2], [3, 3, 3, 1], [3, 3, 2, 2],
-    [6, 1, 1, 1, 1], [5, 2, 1, 1, 1], [4, 3, 1, 1, 1], [4, 2, 2, 1, 1], [3, 3, 2, 1, 1], [3, 2, 2, 2, 1],
-    [2, 2, 2, 2, 2], [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    [9, 1],
+    [8, 2],
+    [7, 3],
+    [6, 4],
+    [5, 5],
+    [8, 1, 1],
+    [7, 2, 1],
+    [6, 3, 1],
+    [6, 2, 2],
+    [5, 4, 1],
+    [5, 3, 2],
+    [4, 4, 2],
+    [4, 3, 3],
+    [7, 1, 1, 1],
+    [6, 2, 1, 1],
+    [5, 3, 1, 1],
+    [5, 2, 2, 1],
+    [4, 4, 1, 1],
+    [4, 3, 2, 1],
+    [4, 2, 2, 2],
+    [3, 3, 3, 1],
+    [3, 3, 2, 2],
+    [6, 1, 1, 1, 1],
+    [5, 2, 1, 1, 1],
+    [4, 3, 1, 1, 1],
+    [4, 2, 2, 1, 1],
+    [3, 3, 2, 1, 1],
+    [3, 2, 2, 2, 1],
+    [2, 2, 2, 2, 2],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
   ];
 
   const familyMap: Record<string, FamilyDef> = {};
@@ -56,13 +81,7 @@ export function calculateSAT(grid: number[][], rows: number, cols: number): numb
   return sat;
 }
 
-export function querySAT(
-  r1: number,
-  c1: number,
-  r2: number,
-  c2: number,
-  sat: number[][]
-): number {
+export function querySAT(r1: number, c1: number, r2: number, c2: number, sat: number[][]): number {
   const total = sat[r2]?.[c2] ?? 0;
   const top = r1 > 0 ? (sat[r1 - 1]?.[c2] ?? 0) : 0;
   const left = c1 > 0 ? (sat[r2]?.[c1 - 1] ?? 0) : 0;
@@ -132,7 +151,8 @@ function evaluateSignatures(
   board: number[][],
   masterCombinations: SolverCombination[]
 ) {
-  let bestMatch: { requiredTiles: SolverTileCoord[]; blockerTiles: SolverTileCoord[] } | null = null;
+  let bestMatch: { requiredTiles: SolverTileCoord[]; blockerTiles: SolverTileCoord[] } | null =
+    null;
 
   for (const sig of family.signatures) {
     const match = tryMatchSignature(tiles, anchorA, anchorB, sig, board);
@@ -216,11 +236,34 @@ function runPassA(
 
       if (b.col >= a.col) {
         if (querySAT(a.row, a.col, b.row, b.col, satFamily) >= 10) {
-          scanBoxAndVerify(a.row, a.col, b.row, b.col, family, 'Rectangle/Line', a, b, board, masterCombinations);
+          scanBoxAndVerify(
+            a.row,
+            a.col,
+            b.row,
+            b.col,
+            family,
+            'Rectangle/Line',
+            a,
+            b,
+            board,
+            masterCombinations
+          );
         }
 
         if (b.row > a.row && b.col > a.col && b.row - a.row === b.col - a.col) {
-          scanDiagonalAndVerify(a.row, a.col, b.row, b.col, family, 1, 'Diagonal Down-Right', a, b, board, masterCombinations);
+          scanDiagonalAndVerify(
+            a.row,
+            a.col,
+            b.row,
+            b.col,
+            family,
+            1,
+            'Diagonal Down-Right',
+            a,
+            b,
+            board,
+            masterCombinations
+          );
         }
       }
     }
@@ -278,7 +321,18 @@ function runPassB(
           const rMax = bFlip.row;
           const cMin = Math.min(aOrigCol, bOrigCol);
           const cMax = Math.max(aOrigCol, bOrigCol);
-          scanBoxAndVerify(rMin, cMin, rMax, cMax, family, 'Ghost Rectangle', aOrig, bOrig, board, masterCombinations);
+          scanBoxAndVerify(
+            rMin,
+            cMin,
+            rMax,
+            cMax,
+            family,
+            'Ghost Rectangle',
+            aOrig,
+            bOrig,
+            board,
+            masterCombinations
+          );
         }
       }
     }
@@ -348,7 +402,15 @@ export function runSolverEngine(board: number[][]): {
     const satFamilyFlipped = calculateSAT(famGridFlipped, rows, cols);
 
     runPassA(familyPoints, satFamilyOrig, family, board, masterCombinations);
-    runPassB(familyPoints, activeGridOrig, satFamilyFlipped, family, cols, board, masterCombinations);
+    runPassB(
+      familyPoints,
+      activeGridOrig,
+      satFamilyFlipped,
+      family,
+      cols,
+      board,
+      masterCombinations
+    );
   });
 
   // Solo Omnitile matches (value = 10)

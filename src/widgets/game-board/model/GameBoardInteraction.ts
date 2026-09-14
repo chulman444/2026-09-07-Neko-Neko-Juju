@@ -1,8 +1,5 @@
 import { type TileCoord, OMNITILE_VALUE } from '@/entities/board';
-import {
-  calculateDetailedBoxSelection,
-  calculateDiagonalSelection,
-} from '@/features/select-tiles';
+import { calculateDetailedBoxSelection, calculateDiagonalSelection } from '@/features/select-tiles';
 import { getGridPitch, getCanvasMousePos, getTileFromCanvasPos } from '../lib/coordinates';
 import type { InteractionSnapshot, SelectMode, BoardVisualConfig } from './types';
 
@@ -20,7 +17,12 @@ export interface BoardContextAccess {
   };
   getVisualConfig: () => BoardVisualConfig;
   onClear: (tiles: TileCoord[], sum: number) => void;
-  onSelectionChange?: (tiles: TileCoord[], sum: number, isValid: boolean, meta?: SelectionMeta) => void;
+  onSelectionChange?: (
+    tiles: TileCoord[],
+    sum: number,
+    isValid: boolean,
+    meta?: SelectionMeta
+  ) => void;
   onTileClick?: (tile: TileCoord) => boolean | void;
 }
 

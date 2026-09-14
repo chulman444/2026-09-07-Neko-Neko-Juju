@@ -71,7 +71,8 @@ export const ItemSeedSection: React.FC = () => {
         )}
 
         <p className="text-[10px] text-zinc-500 m-0">
-          Separate seeds ensure item rolls do not interfere with deterministic board layout generation.
+          Separate seeds ensure item rolls do not interfere with deterministic board layout
+          generation.
         </p>
       </div>
     </div>

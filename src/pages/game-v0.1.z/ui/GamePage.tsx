@@ -59,10 +59,10 @@ export const GamePage: React.FC = () => {
       // Base score
       const points = tiles.length * 10;
       setScore((prev) => prev + points);
-      
+
       // Update combo system and get the bonus time for the main timer
       const comboBonusTime = registerMatch();
-      
+
       // Award time: base reward per tile + combo bonus
       addTime(tiles.length * baseSecondsPerTile + comboBonusTime);
 
@@ -125,11 +125,7 @@ export const GamePage: React.FC = () => {
 
         {/* Center TimerBar & ComboBar */}
         <div className="flex flex-col items-center gap-1.5 flex-1 min-w-[200px]">
-          <TimerBar
-            countdown={countdown}
-            maxCountdown={maxCountdown}
-            isPaused={isPaused}
-          />
+          <TimerBar countdown={countdown} maxCountdown={maxCountdown} isPaused={isPaused} />
           <ComboBar comboCount={comboCount} comboPct={comboPct} />
         </div>
 

@@ -11,8 +11,9 @@ export const TimerBar: React.FC<TimerBarProps> = ({
   maxCountdown,
   isPaused = false,
 }) => {
-  const widthPct = maxCountdown > 0 ? Math.max(0, Math.min(100, (countdown / maxCountdown) * 100)) : 0;
-  
+  const widthPct =
+    maxCountdown > 0 ? Math.max(0, Math.min(100, (countdown / maxCountdown) * 100)) : 0;
+
   let activeColor = '#2ca87c'; // Green
   if (widthPct <= 20) {
     activeColor = '#e74c3c'; // Red
@@ -22,11 +23,7 @@ export const TimerBar: React.FC<TimerBarProps> = ({
 
   return (
     <div className="flex items-center gap-2 bg-white border-[2.5px] border-[#4a3422] rounded-xl px-3 py-1.5 cursor-default select-none shadow-[0_2px_0px_#edd4b2]">
-      {isPaused && (
-        <span className="text-[0.85rem] font-bold text-[#e74c3c]">
-          ⏸️
-        </span>
-      )}
+      {isPaused && <span className="text-[0.85rem] font-bold text-[#e74c3c]">⏸️</span>}
 
       <div className="relative w-[180px] h-4 border-2 border-[#4a3422] rounded-md overflow-hidden bg-zinc-200">
         <div

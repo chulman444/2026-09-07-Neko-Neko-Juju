@@ -18,7 +18,9 @@ export const SidePanel: React.FC<SidePanelProps> = ({
   onClose,
   defaultTab = 'generator',
 }) => {
-  const [activeTab, setActiveTab] = useState<'generator' | 'tuner' | 'solver' | 'items'>(defaultTab);
+  const [activeTab, setActiveTab] = useState<'generator' | 'tuner' | 'solver' | 'items'>(
+    defaultTab
+  );
   const setHighlightedTiles = useGameSessionStore((state) => state.setHighlightedTiles);
   const registerMatch = useGameSessionStore((state) => state.registerMatch);
   const removeClearedTiles = useGameSessionStore((state) => state.removeClearedTiles);

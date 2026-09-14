@@ -41,7 +41,8 @@ export const SelectionSumHUD: React.FC<SelectionSumHUDProps> = ({
   const boxActiveColor = isValidBoxSum ? validColor : selectionColor;
 
   const isValidDiagSum =
-    ((isSquareSelection && diagonalSum === 10) || (activeSelectionType === 'diagonal' && selectedSum === 10)) &&
+    ((isSquareSelection && diagonalSum === 10) ||
+      (activeSelectionType === 'diagonal' && selectedSum === 10)) &&
     hasSelection;
   const diagActiveColor = isValidDiagSum ? validColor : selectionColor;
 
@@ -69,7 +70,10 @@ export const SelectionSumHUD: React.FC<SelectionSumHUDProps> = ({
               title={`Diagonal Sum: ${selectedSum} ${isValidDiagSum ? '(Valid Match-10!)' : ''}`}
             >
               <span className="inline-flex items-center text-[15px] -translate-y-px">╱</span>
-              <span id="diag-sum-display" className="inline-flex items-center -translate-y-px font-mono">
+              <span
+                id="diag-sum-display"
+                className="inline-flex items-center -translate-y-px font-mono"
+              >
                 {selectedSum}
               </span>
             </div>
@@ -86,7 +90,10 @@ export const SelectionSumHUD: React.FC<SelectionSumHUDProps> = ({
                 }}
                 title={`Selected Sum: ${selectedSum} ${isValidBoxSum ? '(Valid Match-10!)' : ''}`}
               >
-                <span id="sum-display" className="inline-flex items-center -translate-y-px font-mono">
+                <span
+                  id="sum-display"
+                  className="inline-flex items-center -translate-y-px font-mono"
+                >
                   {selectedSum}
                 </span>
               </div>
@@ -104,7 +111,10 @@ export const SelectionSumHUD: React.FC<SelectionSumHUDProps> = ({
                   title={`Square Diagonal Sum: ${diagonalSum} ${isValidDiagSum ? '(Valid Match-10!)' : ''}`}
                 >
                   <span className="inline-flex items-center text-[15px] -translate-y-px">╱</span>
-                  <span id="diag-sum-display" className="inline-flex items-center -translate-y-px font-mono">
+                  <span
+                    id="diag-sum-display"
+                    className="inline-flex items-center -translate-y-px font-mono"
+                  >
                     {diagonalSum}
                   </span>
                 </div>

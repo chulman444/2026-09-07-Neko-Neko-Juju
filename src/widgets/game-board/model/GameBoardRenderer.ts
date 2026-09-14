@@ -58,19 +58,20 @@ export class GameBoardRenderer {
     if (this.canvas.height !== targetHeight) this.canvas.height = targetHeight;
 
     const { activeAction, boxTiles, isSquare, diagonalSelected, boxSum, diagSum } = interaction;
-    this.isValidBoxSum =
-      activeAction === 'box' && boxSum === this.targetSum && boxTiles.length > 0;
+    this.isValidBoxSum = activeAction === 'box' && boxSum === this.targetSum && boxTiles.length > 0;
     this.isValidDiagSum =
       (activeAction === 'box' &&
         visualConfig.groupingMode === 'auto-square' &&
         isSquare &&
         diagSum === this.targetSum) ||
-      (activeAction === 'diagonal' &&
-        diagSum === this.targetSum &&
-        diagonalSelected.length > 0);
+      (activeAction === 'diagonal' && diagSum === this.targetSum && diagonalSelected.length > 0);
 
-    this.boxActiveColor = this.isValidBoxSum ? visualConfig.validColor : visualConfig.selectionColor;
-    this.diagActiveColor = this.isValidDiagSum ? visualConfig.validColor : visualConfig.selectionColor;
+    this.boxActiveColor = this.isValidBoxSum
+      ? visualConfig.validColor
+      : visualConfig.selectionColor;
+    this.diagActiveColor = this.isValidDiagSum
+      ? visualConfig.validColor
+      : visualConfig.selectionColor;
 
     // Visual passes
     this.drawBackground();

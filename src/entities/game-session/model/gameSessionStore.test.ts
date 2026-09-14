@@ -383,7 +383,10 @@ describe('gameSessionStore - Hint Highlight Invalidation', () => {
   });
 
   it('sets, clears, and resets real-time selection state correctly', () => {
-    const tiles = [{ row: 0, col: 0 }, { row: 0, col: 1 }];
+    const tiles = [
+      { row: 0, col: 0 },
+      { row: 0, col: 1 },
+    ];
     useGameSessionStore.getState().setSelection({
       selectedTiles: tiles,
       selectedSum: 8,
@@ -421,4 +424,3 @@ describe('gameSessionStore - Hint Highlight Invalidation', () => {
     expect(state.activeSelectionType).toBeNull();
   });
 });
-

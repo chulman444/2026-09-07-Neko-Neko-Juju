@@ -33,7 +33,11 @@ export const BoardSizeSection: React.FC = () => {
           Board Size
         </h4>
         <span className="text-[10px] font-mono text-zinc-400">
-          Current: <span className="text-amber-400 font-bold">{cols} × {rows}</span> ({cols * rows} tiles)
+          Current:{' '}
+          <span className="text-amber-400 font-bold">
+            {cols} × {rows}
+          </span>{' '}
+          ({cols * rows} tiles)
         </span>
       </div>
 
@@ -203,7 +207,10 @@ export const BoardSizeSection: React.FC = () => {
             <span>Generate Board</span>
           </button>
 
-          <label className="flex items-center gap-1.5 cursor-pointer select-none shrink-0" title="Also roll a new random seed when generating">
+          <label
+            className="flex items-center gap-1.5 cursor-pointer select-none shrink-0"
+            title="Also roll a new random seed when generating"
+          >
             <input
               type="checkbox"
               checked={rollSeedOnGenerate}
@@ -237,7 +244,8 @@ export const BoardSizeSection: React.FC = () => {
             <div className="flex flex-col">
               <span className="text-zinc-300 font-medium">Initial Timer Cap (s)</span>
               <span className="text-[10px] text-zinc-400 font-mono">
-                Auto: round({cols}×{rows}×{timerMultiplier.toFixed(2)}) = {Math.round(cols * rows * timerMultiplier)}s
+                Auto: round({cols}×{rows}×{timerMultiplier.toFixed(2)}) ={' '}
+                {Math.round(cols * rows * timerMultiplier)}s
               </span>
             </div>
             <div className="flex items-center gap-1.5">

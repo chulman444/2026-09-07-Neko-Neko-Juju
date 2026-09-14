@@ -228,11 +228,7 @@ export const SolverPanelWidget: React.FC<SolverPanelWidgetProps> = ({
     );
   };
 
-  const renderSection = (
-    type: SolverListType,
-    title: string,
-    dataSet: SolverCombination[]
-  ) => {
+  const renderSection = (type: SolverListType, title: string, dataSet: SolverCombination[]) => {
     const totalItems = dataSet.length;
     const size = pageSizes[type];
     const currPage = Math.min(Math.max(1, pages[type]), Math.max(1, Math.ceil(totalItems / size)));
@@ -273,9 +269,7 @@ export const SolverPanelWidget: React.FC<SolverPanelWidgetProps> = ({
                     [{match.family}] {match.shape}
                   </div>
                   <div className="text-[11px] text-zinc-400 mt-1 leading-tight">
-                    <div>
-                      Tiles: {match.required.map((t) => `(${t.row},${t.col})`).join(' ')}
-                    </div>
+                    <div>Tiles: {match.required.map((t) => `(${t.row},${t.col})`).join(' ')}</div>
                     <div
                       className={`mt-0.5 font-medium ${
                         isClearable ? 'text-emerald-400' : 'text-rose-400'
@@ -328,9 +322,7 @@ export const SolverPanelWidget: React.FC<SolverPanelWidgetProps> = ({
       {/* Panel Header */}
       <div className="flex items-center justify-between pb-3 mb-2 border-b border-zinc-800">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-bold text-amber-400">
-            🔍 Look-Ahead Match Solver
-          </span>
+          <span className="text-sm font-bold text-amber-400">🔍 Look-Ahead Match Solver</span>
           <span className="text-[10px] font-mono px-2 py-0.5 bg-emerald-950 text-emerald-300 border border-emerald-800/80 rounded-full">
             {clearableMatches.length} available
           </span>

@@ -38,9 +38,5 @@ export const RouterProvider: React.FC<RouterProviderProps> = ({ children }) => {
     });
   }, []);
 
-  return (
-    <RouterContext.Provider value={{ path, navigate }}>
-      {children}
-    </RouterContext.Provider>
-  );
+  return <RouterContext.Provider value={{ path, navigate }}>{children}</RouterContext.Provider>;
 };

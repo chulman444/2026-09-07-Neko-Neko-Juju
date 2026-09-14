@@ -24,11 +24,12 @@ export const HintBar: React.FC<HintBarProps> = (props) => {
 
   // If game is still on initial standby before the first depletion, the bar stays full at 100%.
   // Once started, it displays the active or paused countdown percentage.
-  const widthPct = !hasStarted && !isPhase1Over
-    ? 100
-    : hintInterval > 0
-      ? Math.max(0, Math.min(100, (hintCountdown / hintInterval) * 100))
-      : 0;
+  const widthPct =
+    !hasStarted && !isPhase1Over
+      ? 100
+      : hintInterval > 0
+        ? Math.max(0, Math.min(100, (hintCountdown / hintInterval) * 100))
+        : 0;
 
   // Badge only renders for x3 and x2 (hintsRemaining > 1).
   // For the final hint (hintsRemaining === 1) or when over, no badge is rendered.

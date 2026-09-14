@@ -16,7 +16,9 @@ export function useBoardGeneratorActions() {
     setMaxCountdown(calculatedTimer);
 
     resetSession();
-    useSolverStore.getState().recalculate(useBoardStore.getState().matrix, useBoardStore.getState().seed);
+    useSolverStore
+      .getState()
+      .recalculate(useBoardStore.getState().matrix, useBoardStore.getState().seed);
   };
 
   const generateBoard = () => {
@@ -27,7 +29,8 @@ export function useBoardGeneratorActions() {
     // The tier range bounds the longest side of the board
     const longestSide = Math.floor(Math.random() * (high - low + 1)) + low;
 
-    const { ratioMean, ratioSpread } = sessionState.tierAspectConfigs[sessionState.selectedSizeTier];
+    const { ratioMean, ratioSpread } =
+      sessionState.tierAspectConfigs[sessionState.selectedSizeTier];
     // Sample aspect ratio from normal distribution (bell curve)
     const sampledRatio = Math.max(0.3, Math.min(3.0, sampleNormal(ratioMean, ratioSpread)));
 
@@ -49,7 +52,8 @@ export function useBoardGeneratorActions() {
     nextRows = Math.min(20, Math.max(3, nextRows));
 
     // Roll difficulty tilt within selected difficulty tier range
-    const [minTilt, maxTilt] = sessionState.difficultyTiltRanges[sessionState.selectedDifficultyTier];
+    const [minTilt, maxTilt] =
+      sessionState.difficultyTiltRanges[sessionState.selectedDifficultyTier];
     const lowTilt = Math.min(minTilt, maxTilt);
     const highTilt = Math.max(minTilt, maxTilt);
     const rolledTilt = Math.round((lowTilt + Math.random() * (highTilt - lowTilt)) * 10) / 10;
@@ -65,14 +69,17 @@ export function useBoardGeneratorActions() {
 
   const applyDifficultyOnly = () => {
     const sessionState = useGameSessionStore.getState();
-    const [minTilt, maxTilt] = sessionState.difficultyTiltRanges[sessionState.selectedDifficultyTier];
+    const [minTilt, maxTilt] =
+      sessionState.difficultyTiltRanges[sessionState.selectedDifficultyTier];
     const lowTilt = Math.min(minTilt, maxTilt);
     const highTilt = Math.max(minTilt, maxTilt);
     const rolledTilt = Math.round((lowTilt + Math.random() * (highTilt - lowTilt)) * 10) / 10;
     const weights = generateLinearTileWeights(rolledTilt, sessionState.difficultyNoiseSpread);
     useBoardStore.getState().setTileWeights(weights, rolledTilt);
     sessionState.resetSession();
-    useSolverStore.getState().recalculate(useBoardStore.getState().matrix, useBoardStore.getState().seed);
+    useSolverStore
+      .getState()
+      .recalculate(useBoardStore.getState().matrix, useBoardStore.getState().seed);
   };
 
   const revertTimerCap = () => {
@@ -91,7 +98,9 @@ export function useBoardGeneratorActions() {
   const rollNewSeed = () => {
     useBoardStore.getState().generateNewBoard();
     useGameSessionStore.getState().resetSession();
-    useSolverStore.getState().recalculate(useBoardStore.getState().matrix, useBoardStore.getState().seed);
+    useSolverStore
+      .getState()
+      .recalculate(useBoardStore.getState().matrix, useBoardStore.getState().seed);
   };
 
   return {
