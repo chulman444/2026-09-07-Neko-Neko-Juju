@@ -3,6 +3,19 @@ import { generateSeed, seededRandomGenerator } from '@/shared/lib/prng';
 import { DEFAULT_CONFIG } from '@/shared/config';
 import { createBoardMatrix } from './boardGenerators';
 import type { TileCoord, ClearingAnimation } from './types';
+import {
+  rotateCW,
+  rotateCCW,
+  transpose,
+  antiTranspose,
+  invertTransform,
+  nextOrientationCW,
+  nextOrientationCCW,
+  nextOrientationTranspose,
+  nextOrientationAntiTranspose,
+  DEFAULT_ORIENTATION_OFFSET,
+  type OrientationOffset,
+} from '../lib/matrixTransforms';
 
 export interface BoardState {
   cols: number;
@@ -19,13 +32,17 @@ export interface BoardState {
   matrix: number[][];
   panOffset: { x: number; y: number };
   isPanMode: boolean;
-  isBoardRotated: boolean;
+  orientationOffset: OrientationOffset;
   clearingAnimations: ClearingAnimation[];
   tileWeights?: number[];
   activeTilt?: number;
 
   // Actions
-  rotateBoardMatrix: () => void;
+  applyRotationCW: () => void;
+  applyRotationCCW: () => void;
+  applyTranspose: () => void;
+  applyAntiTranspose: () => void;
+  revertOrientation: () => void;
   setPanOffset: (
     offset:
       { x: number; y: number } | ((prev: { x: number; y: number }) => { x: number; y: number })
@@ -76,32 +93,88 @@ export const useBoardStore = create<BoardState>((set, get) => ({
   matrix: initialGeneratedMatrix.map((r) => [...r]),
   panOffset: { x: 0, y: 0 },
   isPanMode: false,
-  isBoardRotated: false,
+  orientationOffset: DEFAULT_ORIENTATION_OFFSET,
   clearingAnimations: [],
   tileWeights: undefined,
   activeTilt: 0,
 
-  rotateBoardMatrix: () => {
-    const { matrix, initialMatrix, rows, cols, isBoardRotated } = get();
+  applyRotationCW: () => {
+    const { matrix, initialMatrix, orientationOffset } = get();
     if (!matrix.length) return;
-
-    const nextRows = cols;
-    const nextCols = rows;
-    const rotateGrid = (grid: number[][]) =>
-      isBoardRotated
-        ? Array.from({ length: nextRows }, (_, r) =>
-            Array.from({ length: nextCols }, (_, c) => grid[rows - 1 - c]?.[r] ?? 0)
-          )
-        : Array.from({ length: nextRows }, (_, r) =>
-            Array.from({ length: nextCols }, (_, c) => grid[c]?.[cols - 1 - r] ?? 0)
-          );
-
+    const newMatrix = rotateCW(matrix);
+    const newInitialMatrix = rotateCW(initialMatrix);
     set({
-      rows: nextRows,
-      cols: nextCols,
-      matrix: rotateGrid(matrix),
-      initialMatrix: rotateGrid(initialMatrix),
-      isBoardRotated: !isBoardRotated,
+      rows: newMatrix.length,
+      cols: newMatrix[0]?.length ?? 0,
+      matrix: newMatrix,
+      initialMatrix: newInitialMatrix,
+      orientationOffset: nextOrientationCW(orientationOffset),
+      clearingAnimations: [],
+      panOffset: { x: 0, y: 0 },
+    });
+  },
+
+  applyRotationCCW: () => {
+    const { matrix, initialMatrix, orientationOffset } = get();
+    if (!matrix.length) return;
+    const newMatrix = rotateCCW(matrix);
+    const newInitialMatrix = rotateCCW(initialMatrix);
+    set({
+      rows: newMatrix.length,
+      cols: newMatrix[0]?.length ?? 0,
+      matrix: newMatrix,
+      initialMatrix: newInitialMatrix,
+      orientationOffset: nextOrientationCCW(orientationOffset),
+      clearingAnimations: [],
+      panOffset: { x: 0, y: 0 },
+    });
+  },
+
+  applyTranspose: () => {
+    const { matrix, initialMatrix, orientationOffset } = get();
+    if (!matrix.length) return;
+    const newMatrix = transpose(matrix);
+    const newInitialMatrix = transpose(initialMatrix);
+    set({
+      rows: newMatrix.length,
+      cols: newMatrix[0]?.length ?? 0,
+      matrix: newMatrix,
+      initialMatrix: newInitialMatrix,
+      orientationOffset: nextOrientationTranspose(orientationOffset),
+      clearingAnimations: [],
+      panOffset: { x: 0, y: 0 },
+    });
+  },
+
+  applyAntiTranspose: () => {
+    const { matrix, initialMatrix, orientationOffset } = get();
+    if (!matrix.length) return;
+    const newMatrix = antiTranspose(matrix);
+    const newInitialMatrix = antiTranspose(initialMatrix);
+    set({
+      rows: newMatrix.length,
+      cols: newMatrix[0]?.length ?? 0,
+      matrix: newMatrix,
+      initialMatrix: newInitialMatrix,
+      orientationOffset: nextOrientationAntiTranspose(orientationOffset),
+      clearingAnimations: [],
+      panOffset: { x: 0, y: 0 },
+    });
+  },
+
+  revertOrientation: () => {
+    const { matrix, initialMatrix, orientationOffset } = get();
+    if (!matrix.length) return;
+    if (orientationOffset.rot === 0 && !orientationOffset.flip) return;
+
+    const newMatrix = invertTransform(matrix, orientationOffset);
+    const newInitialMatrix = invertTransform(initialMatrix, orientationOffset);
+    set({
+      rows: newMatrix.length,
+      cols: newMatrix[0]?.length ?? 0,
+      matrix: newMatrix,
+      initialMatrix: newInitialMatrix,
+      orientationOffset: DEFAULT_ORIENTATION_OFFSET,
       clearingAnimations: [],
       panOffset: { x: 0, y: 0 },
     });
@@ -130,7 +203,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
     set({
       cols,
       rows,
-      isBoardRotated: false,
+      orientationOffset: DEFAULT_ORIENTATION_OFFSET,
       prng,
       initialMatrix,
       matrix: initialMatrix.map((r) => [...r]),
@@ -146,7 +219,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
     set({
       tileWeights,
       activeTilt: activeTilt !== undefined ? activeTilt : get().activeTilt,
-      isBoardRotated: false,
+      orientationOffset: DEFAULT_ORIENTATION_OFFSET,
       prng,
       initialMatrix,
       matrix: initialMatrix.map((r) => [...r]),
@@ -177,7 +250,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
       : [seed, ...seedHistory].slice(0, 50);
     set({
       seed,
-      isBoardRotated: false,
+      orientationOffset: DEFAULT_ORIENTATION_OFFSET,
       prng,
       initialMatrix,
       matrix: initialMatrix.map((r) => [...r]),
@@ -196,7 +269,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
       : [newSeed, ...seedHistory].slice(0, 50);
     set({
       seed: newSeed,
-      isBoardRotated: false,
+      orientationOffset: DEFAULT_ORIENTATION_OFFSET,
       prng,
       initialMatrix,
       matrix: initialMatrix.map((r) => [...r]),
@@ -214,6 +287,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
     createBoardMatrix(cols, rows, minNum, maxNum, prng, tileWeights);
     set({
       prng,
+      orientationOffset: DEFAULT_ORIENTATION_OFFSET,
       matrix: initialMatrix.map((r) => [...r]),
       clearingAnimations: [],
       panOffset: { x: 0, y: 0 },
@@ -229,7 +303,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
       matrix: matrix.map((r) => [...r]),
       rows,
       cols,
-      isBoardRotated: false,
+      orientationOffset: DEFAULT_ORIENTATION_OFFSET,
     });
   },
 

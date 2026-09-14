@@ -123,7 +123,7 @@ describe('boardStore - setDimensions', () => {
     expect(useBoardStore.getState().isPanMode).toBe(false);
   });
 
-  it('manages rotateBoardMatrix, swapping dimensions and rotating matrix values correctly', () => {
+  it('manages applyRotationCW, applyRotationCCW, applyTranspose, and applyAntiTranspose', () => {
     // Initial state: 3 cols x 2 rows
     const testMatrix = [
       [1, 2, 3],
@@ -132,44 +132,132 @@ describe('boardStore - setDimensions', () => {
     useBoardStore.getState().setMatrix(testMatrix);
     expect(useBoardStore.getState().cols).toBe(3);
     expect(useBoardStore.getState().rows).toBe(2);
-    expect(useBoardStore.getState().isBoardRotated).toBe(false);
+    expect(useBoardStore.getState().orientationOffset).toEqual({ rot: 0, flip: false });
 
     // Rotate 90 deg CW
-    useBoardStore.getState().rotateBoardMatrix();
-    const rotatedState = useBoardStore.getState();
-    expect(rotatedState.cols).toBe(2);
-    expect(rotatedState.rows).toBe(3);
-    expect(rotatedState.isBoardRotated).toBe(true);
-    expect(rotatedState.matrix).toEqual([
-      [3, 6],
-      [2, 5],
-      [1, 4],
-    ]);
-    expect(rotatedState.initialMatrix).toEqual([
-      [3, 6],
-      [2, 5],
-      [1, 4],
+    useBoardStore.getState().applyRotationCW();
+    let state = useBoardStore.getState();
+    expect(state.cols).toBe(2);
+    expect(state.rows).toBe(3);
+    expect(state.orientationOffset).toEqual({ rot: 1, flip: false });
+    expect(state.matrix).toEqual([
+      [4, 1],
+      [5, 2],
+      [6, 3],
     ]);
 
-    // Rotate back CCW
-    useBoardStore.getState().rotateBoardMatrix();
+    // Rotate 90 deg CCW (should restore)
+    useBoardStore.getState().applyRotationCCW();
+    state = useBoardStore.getState();
+    expect(state.cols).toBe(3);
+    expect(state.rows).toBe(2);
+    expect(state.orientationOffset).toEqual({ rot: 0, flip: false });
+    expect(state.matrix).toEqual(testMatrix);
+
+    // Transpose (locks top-left and bottom-right)
+    useBoardStore.getState().applyTranspose();
+    state = useBoardStore.getState();
+    expect(state.cols).toBe(2);
+    expect(state.rows).toBe(3);
+    expect(state.orientationOffset).toEqual({ rot: 0, flip: true });
+    expect(state.matrix).toEqual([
+      [1, 4],
+      [2, 5],
+      [3, 6],
+    ]);
+
+    // Revert orientation
+    useBoardStore.getState().revertOrientation();
+    state = useBoardStore.getState();
+    expect(state.cols).toBe(3);
+    expect(state.rows).toBe(2);
+    expect(state.orientationOffset).toEqual({ rot: 0, flip: false });
+    expect(state.matrix).toEqual(testMatrix);
+
+    // Anti-transpose (locks top-right and bottom-left)
+    useBoardStore.getState().applyAntiTranspose();
+    state = useBoardStore.getState();
+    expect(state.cols).toBe(2);
+    expect(state.rows).toBe(3);
+    expect(state.orientationOffset).toEqual({ rot: 2, flip: true });
+    expect(state.matrix).toEqual([
+      [6, 3],
+      [5, 2],
+      [4, 1],
+    ]);
+
+    // Revert orientation
+    useBoardStore.getState().revertOrientation();
+    state = useBoardStore.getState();
+    expect(state.cols).toBe(3);
+    expect(state.rows).toBe(2);
+    expect(state.orientationOffset).toEqual({ rot: 0, flip: false });
+    expect(state.matrix).toEqual(testMatrix);
+  });
+
+  it('revertOrientation perfectly restores dimensions and layout without restoring cleared tiles', () => {
+    // Asymmetrical board: 4 cols x 3 rows
+    const testMatrix = [
+      [1, 2, 3, 4],
+      [5, 6, 7, 8],
+      [9, 10, 11, 12],
+    ];
+    useBoardStore.getState().setMatrix(testMatrix);
+
+    // Clear tile at (col: 0, row: 0) which is value 1
+    useBoardStore.getState().clearTiles([{ col: 0, row: 0 }]);
+    expect(useBoardStore.getState().matrix[0]![0]).toBe(0);
+
+    // Apply multiple transformations: CW, Transpose, CW, AntiTranspose
+    useBoardStore.getState().applyRotationCW();
+    useBoardStore.getState().applyTranspose();
+    useBoardStore.getState().applyRotationCW();
+    useBoardStore.getState().applyAntiTranspose();
+
+    expect(useBoardStore.getState().orientationOffset).not.toEqual({ rot: 0, flip: false });
+
+    // Revert orientation
+    useBoardStore.getState().revertOrientation();
+
     const restoredState = useBoardStore.getState();
-    expect(restoredState.cols).toBe(3);
-    expect(restoredState.rows).toBe(2);
-    expect(restoredState.isBoardRotated).toBe(false);
-    expect(restoredState.matrix).toEqual(testMatrix);
-    expect(restoredState.initialMatrix).toEqual(testMatrix);
+    expect(restoredState.cols).toBe(4);
+    expect(restoredState.rows).toBe(3);
+    expect(restoredState.orientationOffset).toEqual({ rot: 0, flip: false });
 
-    // Resets isBoardRotated to false on setDimensions
-    useBoardStore.getState().rotateBoardMatrix();
-    expect(useBoardStore.getState().isBoardRotated).toBe(true);
+    // Cleared tile must remain 0 and NOT be restored!
+    expect(restoredState.matrix[0]![0]).toBe(0);
+    expect(restoredState.matrix).toEqual([
+      [0, 2, 3, 4],
+      [5, 6, 7, 8],
+      [9, 10, 11, 12],
+    ]);
+  });
+
+  it('resets orientationOffset on setDimensions, generateNewBoard, and restartCurrentBoard', () => {
+    useBoardStore.getState().setDimensions(4, 4);
+
+    // Rotate CW
+    useBoardStore.getState().applyRotationCW();
+    expect(useBoardStore.getState().orientationOffset).toEqual({ rot: 1, flip: false });
+
+    // Reset on setDimensions
     useBoardStore.getState().setDimensions(5, 5);
-    expect(useBoardStore.getState().isBoardRotated).toBe(false);
+    expect(useBoardStore.getState().orientationOffset).toEqual({ rot: 0, flip: false });
 
-    // Resets isBoardRotated to false on generateNewBoard
-    useBoardStore.getState().rotateBoardMatrix();
-    expect(useBoardStore.getState().isBoardRotated).toBe(true);
+    // Rotate CW
+    useBoardStore.getState().applyRotationCW();
+    expect(useBoardStore.getState().orientationOffset).toEqual({ rot: 1, flip: false });
+
+    // Reset on generateNewBoard
     useBoardStore.getState().generateNewBoard();
-    expect(useBoardStore.getState().isBoardRotated).toBe(false);
+    expect(useBoardStore.getState().orientationOffset).toEqual({ rot: 0, flip: false });
+
+    // Rotate CW
+    useBoardStore.getState().applyRotationCW();
+    expect(useBoardStore.getState().orientationOffset).toEqual({ rot: 1, flip: false });
+
+    // Reset on restartCurrentBoard
+    useBoardStore.getState().restartCurrentBoard();
+    expect(useBoardStore.getState().orientationOffset).toEqual({ rot: 0, flip: false });
   });
 });

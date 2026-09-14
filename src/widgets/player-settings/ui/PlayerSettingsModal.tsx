@@ -23,11 +23,16 @@ export const PlayerSettingsModal: React.FC<PlayerSettingsModalProps> = ({
   const panSensitivity = usePlayerStore((state) => state.panSensitivity);
   const setPanSensitivity = usePlayerStore((state) => state.setPanSensitivity);
 
-  // Board Store Matrix Rotation
+  // Board Store Matrix Transformations
   const cols = useBoardStore((state) => state.cols);
   const rows = useBoardStore((state) => state.rows);
-  const isBoardRotated = useBoardStore((state) => state.isBoardRotated);
-  const rotateBoardMatrix = useBoardStore((state) => state.rotateBoardMatrix);
+  const orientationOffset = useBoardStore((state) => state.orientationOffset);
+  const applyRotationCW = useBoardStore((state) => state.applyRotationCW);
+  const applyRotationCCW = useBoardStore((state) => state.applyRotationCCW);
+  const applyTranspose = useBoardStore((state) => state.applyTranspose);
+  const applyAntiTranspose = useBoardStore((state) => state.applyAntiTranspose);
+  const revertOrientation = useBoardStore((state) => state.revertOrientation);
+  const isOriginalOrientation = orientationOffset.rot === 0 && !orientationOffset.flip;
 
   const handleClose = useCallback(() => {
     setIsSettingsOpen(false);
@@ -214,30 +219,73 @@ export const PlayerSettingsModal: React.FC<PlayerSettingsModalProps> = ({
 
           {/* Board Orientation */}
           <div className="flex flex-col gap-2.5 bg-amber-50/50 dark:bg-zinc-800/60 p-3.5 rounded-xl border border-amber-900/10 dark:border-zinc-700/70">
-            <h3 className="text-xs font-bold text-amber-900 dark:text-amber-400 uppercase tracking-wider">
-              Board Orientation
-            </h3>
-
-            <button
-              type="button"
-              onClick={rotateBoardMatrix}
-              className="w-full px-3 py-2 text-xs font-bold rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-900 dark:text-amber-300 border border-amber-500/30 transition cursor-pointer flex items-center justify-center gap-2"
-            >
-              <span>🔄 Rotate Board Orientation (Rows ↔ Cols)</span>
-            </button>
-
-            <div className="flex items-center justify-between pt-1 border-t border-amber-900/10 dark:border-zinc-700/50 text-xs">
-              <span className="text-zinc-500 dark:text-zinc-400">Current Grid Layout</span>
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-bold text-amber-900 dark:text-amber-400 uppercase tracking-wider">
+                Board Orientation
+              </h3>
               <span
                 className={`text-[10px] px-2 py-0.5 rounded font-mono font-bold uppercase ${
-                  isBoardRotated
+                  !isOriginalOrientation
                     ? 'bg-amber-500/20 text-amber-700 dark:text-amber-400'
                     : 'bg-zinc-200 dark:bg-zinc-700/60 text-zinc-700 dark:text-zinc-300'
                 }`}
               >
-                {isBoardRotated ? 'Rotated' : 'Standard'} ({cols} × {rows})
+                {!isOriginalOrientation ? 'Transformed' : 'Standard'} ({cols} × {rows})
               </span>
             </div>
+
+            <div className="grid grid-cols-2 gap-1.5">
+              <button
+                type="button"
+                onClick={applyRotationCW}
+                className="px-2.5 py-2 text-[11px] sm:text-xs font-bold rounded-lg bg-amber-500/15 hover:bg-amber-500/25 active:bg-amber-500/30 text-amber-900 dark:text-amber-300 border border-amber-500/30 transition cursor-pointer flex items-center justify-center gap-1.5"
+                title="Rotate 90° Clockwise"
+              >
+                <span>⟳</span>
+                <span>Rotate Clockwise</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={applyRotationCCW}
+                className="px-2.5 py-2 text-[11px] sm:text-xs font-bold rounded-lg bg-amber-500/15 hover:bg-amber-500/25 active:bg-amber-500/30 text-amber-900 dark:text-amber-300 border border-amber-500/30 transition cursor-pointer flex items-center justify-center gap-1.5"
+                title="Rotate 90° Counter-Clockwise"
+              >
+                <span>⟲</span>
+                <span>Rotate Counter-Clockwise</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={applyTranspose}
+                className="px-2 py-2 text-[10px] sm:text-[11px] font-bold rounded-lg bg-amber-500/15 hover:bg-amber-500/25 active:bg-amber-500/30 text-amber-900 dark:text-amber-300 border border-amber-500/30 transition cursor-pointer flex items-center justify-center gap-1"
+                title="Lock Top-Left & Bottom-Right (Main Diagonal Transpose)"
+              >
+                <span>⤡</span>
+                <span className="leading-tight text-center">Lock Top-Left / Bottom-Right</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={applyAntiTranspose}
+                className="px-2 py-2 text-[10px] sm:text-[11px] font-bold rounded-lg bg-amber-500/15 hover:bg-amber-500/25 active:bg-amber-500/30 text-amber-900 dark:text-amber-300 border border-amber-500/30 transition cursor-pointer flex items-center justify-center gap-1"
+                title="Lock Top-Right & Bottom-Left (Anti-Diagonal Transpose)"
+              >
+                <span>⤢</span>
+                <span className="leading-tight text-center">Lock Top-Right / Bottom-Left</span>
+              </button>
+            </div>
+
+            <button
+              type="button"
+              onClick={revertOrientation}
+              disabled={isOriginalOrientation}
+              className="w-full px-3 py-2 text-xs font-bold rounded-lg bg-zinc-200/80 hover:bg-zinc-300/80 dark:bg-zinc-700/60 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 border border-zinc-300 dark:border-zinc-600 transition cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
+              title="Revert board matrix back to original orientation"
+            >
+              <span>↺</span>
+              <span>Revert to Original Orientation</span>
+            </button>
           </div>
         </div>
       </div>
