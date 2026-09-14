@@ -82,4 +82,20 @@ describe('playerStore', () => {
     usePlayerStore.getState().setIsSettingsOpen(false);
     expect(usePlayerStore.getState().isSettingsOpen).toBe(false);
   });
+
+  it('manages dimBackdrop state and toggling correctly', () => {
+    expect(usePlayerStore.getState().dimBackdrop).toBe(true);
+
+    usePlayerStore.getState().toggleDimBackdrop();
+    expect(usePlayerStore.getState().dimBackdrop).toBe(false);
+
+    usePlayerStore.getState().toggleDimBackdrop();
+    expect(usePlayerStore.getState().dimBackdrop).toBe(true);
+
+    usePlayerStore.getState().setDimBackdrop(false);
+    expect(usePlayerStore.getState().dimBackdrop).toBe(false);
+
+    usePlayerStore.getState().setDimBackdrop(true);
+    expect(usePlayerStore.getState().dimBackdrop).toBe(true);
+  });
 });

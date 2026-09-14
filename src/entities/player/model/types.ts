@@ -5,6 +5,7 @@ export interface PlayerState {
   checkerColors: [string, string];
   inversePan: boolean;
   panSensitivity: number;
+  dimBackdrop: boolean;
   isSettingsOpen: boolean;
 
   // Actions
@@ -13,6 +14,8 @@ export interface PlayerState {
   setInversePan: (inversePan: boolean) => void;
   toggleInversePan: () => void;
   setPanSensitivity: (panSensitivity: number) => void;
+  setDimBackdrop: (dimBackdrop: boolean) => void;
+  toggleDimBackdrop: () => void;
   setIsSettingsOpen: (isOpen: boolean) => void;
   toggleSettings: () => void;
 }

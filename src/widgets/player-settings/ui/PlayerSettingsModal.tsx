@@ -22,6 +22,8 @@ export const PlayerSettingsModal: React.FC<PlayerSettingsModalProps> = ({
   const setInversePan = usePlayerStore((state) => state.setInversePan);
   const panSensitivity = usePlayerStore((state) => state.panSensitivity);
   const setPanSensitivity = usePlayerStore((state) => state.setPanSensitivity);
+  const dimBackdrop = usePlayerStore((state) => state.dimBackdrop);
+  const setDimBackdrop = usePlayerStore((state) => state.setDimBackdrop);
 
   // Board Store Matrix Transformations
   const cols = useBoardStore((state) => state.cols);
@@ -75,7 +77,9 @@ export const PlayerSettingsModal: React.FC<PlayerSettingsModalProps> = ({
       role="dialog"
       aria-modal="true"
       aria-labelledby="player-settings-title"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-150"
+      className={`fixed inset-0 z-50 flex items-center justify-center p-4 transition-colors duration-150 animate-in fade-in ${
+        dimBackdrop ? 'bg-black/50 backdrop-blur-xs' : 'bg-transparent'
+      }`}
       onClick={(e) => {
         if (e.target === e.currentTarget) handleClose();
       }}
@@ -286,6 +290,30 @@ export const PlayerSettingsModal: React.FC<PlayerSettingsModalProps> = ({
               <span>↺</span>
               <span>Revert to Original Orientation</span>
             </button>
+          </div>
+
+          {/* Modal & Board Appearance */}
+          <div className="flex flex-col gap-2.5 bg-amber-50/50 dark:bg-zinc-800/60 p-3.5 rounded-xl border border-amber-900/10 dark:border-zinc-700/70">
+            <h3 className="text-xs font-bold text-amber-900 dark:text-amber-400 uppercase tracking-wider">
+              Modal & Board Appearance
+            </h3>
+
+            <label className="flex items-center justify-between cursor-pointer">
+              <span className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">
+                Dim & Blur Background Board
+              </span>
+              <input
+                type="checkbox"
+                checked={dimBackdrop}
+                onChange={(e) => setDimBackdrop(e.target.checked)}
+                className="w-4 h-4 accent-amber-500 rounded cursor-pointer"
+              />
+            </label>
+            <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-tight">
+              {dimBackdrop
+                ? 'Darkens and blurs the main board while this dialogue is open.'
+                : 'Main board remains bright and unblurred behind this dialogue.'}
+            </p>
           </div>
         </div>
       </div>
