@@ -6,6 +6,7 @@
 - **Plan As Single Source of Truth**: When requirements or user feedback change the direction of a task, immediately rewrite and update `implementation_plan.md` in that exact same turn before asking for confirmation or proceeding to execution. Never leave an outdated plan in place while discussing changes in chat.
 - **Proactive Git Commit Prompts**: As soon as a discrete feature, fix, or refactoring step passes verification (`lint`, `test`, `build`), the agent MUST proactively prompt the user to commit with a concise suggested commit message before moving on to new feature requests, discussions, or further code changes.
 - **Uncommitted Work Guard**: Before pivoting or starting work on any new user request, the agent must check `git status`. If uncommitted changes exist from prior completed work, the agent must explicitly flag them and suggest committing them first so changes do not get tangled or forgotten.
+- **Persist Implementation Plans (Planner Agents Only)**: When acting as a planner agent creating or updating an `implementation_plan.md` artifact, you MUST proactively prompt the user whether to persist a copy of the plan to the project's tracking directory (currently `_references/ai_plans/`). This serves as a hand-off document for coder agents. If approved, write the plan using the `YYYY-MM-DD-HHmm_taskname.md` filename format. Coder agents should not persist their local execution plans here unless explicitly asked.
 
 ---
 
