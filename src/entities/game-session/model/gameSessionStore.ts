@@ -42,6 +42,8 @@ export interface ComboConfig {
   tier1Refill: number; // Seconds added to main timer for Combos 1-4
   tier2Refill: number; // Seconds added to main timer for Combos 5-7
   tier3Refill: number; // Seconds added to main timer for Combos 8+
+  isTierRefillEnabled: boolean;
+  pauseTimerOnCombo: boolean;
 }
 
 export const DEFAULT_COMBO_CONFIG: ComboConfig = {
@@ -51,6 +53,8 @@ export const DEFAULT_COMBO_CONFIG: ComboConfig = {
   tier1Refill: 1,
   tier2Refill: 3,
   tier3Refill: 5,
+  isTierRefillEnabled: true,
+  pauseTimerOnCombo: false,
 };
 
 export type BoardSizeTier = 'small' | 'medium' | 'large' | 'any';
@@ -377,12 +381,14 @@ export const useGameSessionStore = create<GameSessionState>((set, get) => ({
 
     // Calculate refill time based on new combo count
     let comboRefillTime = 0;
-    if (newComboCount <= 4) {
-      comboRefillTime = state.comboConfig.tier1Refill;
-    } else if (newComboCount <= 7) {
-      comboRefillTime = state.comboConfig.tier2Refill;
-    } else {
-      comboRefillTime = state.comboConfig.tier3Refill;
+    if (state.comboConfig.isTierRefillEnabled) {
+      if (newComboCount <= 4) {
+        comboRefillTime = state.comboConfig.tier1Refill;
+      } else if (newComboCount <= 7) {
+        comboRefillTime = state.comboConfig.tier2Refill;
+      } else {
+        comboRefillTime = state.comboConfig.tier3Refill;
+      }
     }
 
     // Award base points: spanTileCount if provided (selection length/area score), otherwise clearedTileCount
@@ -481,46 +487,52 @@ export const useGameSessionStore = create<GameSessionState>((set, get) => ({
     }
 
     // 1. Survival Timer Countdown (if not depleted)
+    const isTimerPausedByCombo = state.comboConfig.pauseTimerOnCombo && state.comboCount > 0;
+
     if (!state.isDepleted) {
-      nextCountdown = Math.max(0, state.countdown - deltaSeconds);
+      if (!isTimerPausedByCombo) {
+        nextCountdown = Math.max(0, state.countdown - deltaSeconds);
 
-      // Exact transition frame: Main Timer hits 0!
-      if (nextCountdown <= 0) {
-        nextCountdown = 0;
-        nextIsDepleted = true;
+        // Exact transition frame: Main Timer hits 0!
+        if (nextCountdown <= 0) {
+          nextCountdown = 0;
+          nextIsDepleted = true;
 
-        // Atomically trigger Hint #1 if hints are available
-        if (!nextIsPhase1Over && nextHintsRemaining > 0 && !nextHintPhaseStarted) {
-          nextHintPhaseStarted = true;
-          nextHintsRemaining = nextHintsRemaining - 1;
-          nextHintCountdown = state.freeHintInterval;
-          get().triggerHint();
+          // Atomically trigger Hint #1 if hints are available
+          if (!nextIsPhase1Over && nextHintsRemaining > 0 && !nextHintPhaseStarted) {
+            nextHintPhaseStarted = true;
+            nextHintsRemaining = nextHintsRemaining - 1;
+            nextHintCountdown = state.freeHintInterval;
+            get().triggerHint();
 
-          if (nextHintsRemaining <= 0) {
-            nextIsPhase1Over = true;
-            nextHintCountdown = 0;
+            if (nextHintsRemaining <= 0) {
+              nextIsPhase1Over = true;
+              nextHintCountdown = 0;
+            }
           }
         }
       }
     } else if (!nextIsPhase1Over && nextHintPhaseStarted && nextHintsRemaining > 0) {
       // 2. Hint Countdown (Hint #2, Hint #3, etc.)
-      nextHintCountdown = state.hintCountdown - deltaSeconds;
+      if (!isTimerPausedByCombo) {
+        nextHintCountdown = state.hintCountdown - deltaSeconds;
 
-      if (nextHintCountdown <= 0) {
-        const triggered = get().triggerHint();
-        if (triggered) {
-          nextHintsRemaining = nextHintsRemaining - 1;
+        if (nextHintCountdown <= 0) {
+          const triggered = get().triggerHint();
+          if (triggered) {
+            nextHintsRemaining = nextHintsRemaining - 1;
 
-          // Phase 1 is strictly over ONLY when the final free triggered hint is consumed!
-          if (nextHintsRemaining <= 0) {
-            nextIsPhase1Over = true;
-            nextHintCountdown = 0;
+            // Phase 1 is strictly over ONLY when the final free triggered hint is consumed!
+            if (nextHintsRemaining <= 0) {
+              nextIsPhase1Over = true;
+              nextHintCountdown = 0;
+            } else {
+              nextHintCountdown = state.freeHintInterval;
+            }
           } else {
-            nextHintCountdown = state.freeHintInterval;
+            // If hint couldn't be triggered, hold at 0
+            nextHintCountdown = 0;
           }
-        } else {
-          // If hint couldn't be triggered, hold at 0
-          nextHintCountdown = 0;
         }
       }
     }

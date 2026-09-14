@@ -2,6 +2,7 @@ import React from 'react';
 import { HintsConfigSection } from './HintsConfigSection';
 import { ComboDrainSection } from './ComboDrainSection';
 import { ComboRefillSection } from './ComboRefillSection';
+import { ComboPauseSection } from './ComboPauseSection';
 import { SimulationSection } from './SimulationSection';
 import { HintAlgorithmSection } from './HintAlgorithmSection';
 
@@ -15,6 +16,7 @@ export const DevTunerWidget: React.FC<DevTunerWidgetProps> = ({ className = '' }
       <HintsConfigSection />
       <ComboDrainSection />
       <ComboRefillSection />
+      <ComboPauseSection />
       <SimulationSection />
       <HintAlgorithmSection />
     </div>

@@ -423,4 +423,69 @@ describe('gameSessionStore - Hint Highlight Invalidation', () => {
     expect(state.selectedSum).toBe(0);
     expect(state.activeSelectionType).toBeNull();
   });
+
+  describe('pauseTimerOnCombo', () => {
+    it('pauses the survival timer during active combo when enabled', () => {
+      const boardWithMatch = [
+        [5, 5, 0],
+        [0, 0, 0],
+      ];
+      useBoardStore.getState().setMatrix(boardWithMatch);
+      useSolverStore.getState().recalculate(boardWithMatch);
+
+      const store = useGameSessionStore.getState();
+      store.setComboConfig({
+        ...store.comboConfig,
+        pauseTimerOnCombo: true,
+      });
+      useGameSessionStore.setState({ comboCount: 2, comboPct: 100, countdown: 5 });
+
+      // Tick 1 second: survival timer countdown should remain 5 because combo is active
+      useGameSessionStore.getState().tick(1.0);
+      expect(useGameSessionStore.getState().countdown).toBe(5);
+
+      // Once combo count drops to 0, countdown resumes
+      useGameSessionStore.setState({ comboCount: 0 });
+      useGameSessionStore.getState().tick(1.0);
+      expect(useGameSessionStore.getState().countdown).toBe(4);
+    });
+
+    it('pauses the free hint countdown timer during active combo when enabled', () => {
+      const boardWithMatch = [
+        [5, 5, 0],
+        [0, 0, 0],
+      ];
+      useBoardStore.getState().setMatrix(boardWithMatch);
+      useSolverStore.getState().recalculate(boardWithMatch);
+
+      const store = useGameSessionStore.getState();
+      store.setMaxFreeHints(3);
+      store.setFreeHintInterval(4);
+      store.setComboConfig({
+        ...store.comboConfig,
+        pauseTimerOnCombo: true,
+      });
+
+      // Deplete main survival timer to start hint phase
+      store.tick(store.maxCountdown + 1);
+      expect(useGameSessionStore.getState().isDepleted).toBe(true);
+      expect(useGameSessionStore.getState().hintPhaseStarted).toBe(true);
+      expect(useGameSessionStore.getState().hintsRemaining).toBe(2);
+
+      const initialHintCountdown = useGameSessionStore.getState().hintCountdown;
+      expect(initialHintCountdown).toBe(4);
+
+      // Set active combo
+      useGameSessionStore.setState({ comboCount: 1, comboPct: 100 });
+
+      // Tick 1s: hint countdown should remain paused
+      useGameSessionStore.getState().tick(1.0);
+      expect(useGameSessionStore.getState().hintCountdown).toBe(initialHintCountdown);
+
+      // End combo
+      useGameSessionStore.setState({ comboCount: 0 });
+      useGameSessionStore.getState().tick(1.0);
+      expect(useGameSessionStore.getState().hintCountdown).toBe(initialHintCountdown - 1.0);
+    });
+  });
 });
