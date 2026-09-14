@@ -1,13 +1,15 @@
 # Agent Guidelines (`AGENTS.md`)
 
+## Roles & Handoff (Planner vs Coder)
+- **Planner Agents (Absolute Rule)**: If the user explicitly asks you to "plan" a task, you are acting strictly as a Planner Agent. You MUST NOT execute code, modify files, or offer to execute the plan yourself. You must only create the `implementation_plan.md` artifact and proactively prompt the user whether to persist a copy of the plan to the project's tracking directory (`_references/ai_plans/`) using the `YYYY-MM-DD-HHmm_taskname.md` format. This serves as the hand-off document for a Coder Agent.
+- **Coder Agents (Absolute Rule)**: When the user provides an existing persisted plan (e.g., `Code. _references/ai_plans/...`), you are a Coder Agent. Treat this as explicit approval to execute. Inspect the relevant code and run tests to establish a baseline, then execute the plan. You do NOT need to write a redundant `implementation_plan.md` artifact unless the task deviates significantly from the provided plan.
+
 ## Interaction & Workflow Rules
 - **No unsolicited edits**: Always diagnose, explain, or propose solutions first.
 - **Strict Permission**: NEVER create, modify, or delete files, or execute modifying shell commands, without the user's explicit confirmation (e.g., "go ahead", "apply this fix").
 - **Plan As Single Source of Truth**: When requirements or user feedback change the direction of a task, immediately rewrite and update `implementation_plan.md` in that exact same turn before asking for confirmation or proceeding to execution. Never leave an outdated plan in place while discussing changes in chat.
 - **Proactive Git Commit Prompts**: As soon as a discrete feature, fix, or refactoring step passes verification (`lint`, `test`, `build`), the agent MUST proactively prompt the user to commit with a concise suggested commit message before moving on to new feature requests, discussions, or further code changes.
 - **Uncommitted Work Guard**: Before pivoting or starting work on any new user request, the agent must check `git status`. If uncommitted changes exist from prior completed work, the agent must explicitly flag them and suggest committing them first so changes do not get tangled or forgotten.
-- **Persist Implementation Plans (Planner Agents Only)**: When acting as a planner agent creating or updating an `implementation_plan.md` artifact, you MUST proactively prompt the user whether to persist a copy of the plan to the project's tracking directory (currently `_references/ai_plans/`). This serves as a hand-off document for coder agents. If approved, write the plan using the `YYYY-MM-DD-HHmm_taskname.md` filename format. Coder agents should not persist their local execution plans here unless explicitly asked.
-- **Direct Plan Execution (Coder Agents)**: When the user provides an existing persisted plan (e.g., `Code. _references/ai_plans/...`), treat this as explicit approval to execute. The coder agent must inspect the relevant code and run tests to establish a baseline, but does NOT need to write a redundant `implementation_plan.md` artifact unless the task deviates from the plan.
 
 ---
 
