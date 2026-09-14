@@ -1,5 +1,6 @@
 import { useRef, useState, useCallback } from 'react';
 import { useBoardStore } from '@/entities/board';
+import { usePlayerStore } from '@/entities/player';
 
 interface UseTrackballOptions {
   sensitivity?: number;
@@ -11,8 +12,8 @@ export function useTrackball(options: UseTrackballOptions = {}) {
   const cols = useBoardStore((state) => state.cols);
   const shapeSize = useBoardStore((state) => state.shapeSize);
   const panOffset = useBoardStore((state) => state.panOffset);
-  const inversePan = useBoardStore((state) => state.inversePan);
-  const panSensitivity = useBoardStore((state) => state.panSensitivity);
+  const inversePan = usePlayerStore((state) => state.inversePan);
+  const panSensitivity = usePlayerStore((state) => state.panSensitivity);
   const setPanOffset = useBoardStore((state) => state.setPanOffset);
   const resetPanOffset = useBoardStore((state) => state.resetPanOffset);
 

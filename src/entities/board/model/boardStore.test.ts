@@ -123,69 +123,54 @@ describe('boardStore - setDimensions', () => {
     expect(useBoardStore.getState().isPanMode).toBe(false);
   });
 
-  it('manages inversePan and panSensitivity correctly', () => {
-    // Initial defaults
-    expect(useBoardStore.getState().inversePan).toBe(true);
-    expect(useBoardStore.getState().panSensitivity).toBe(1.5);
+  it('manages rotateBoardMatrix, swapping dimensions and rotating matrix values correctly', () => {
+    // Initial state: 3 cols x 2 rows
+    const testMatrix = [
+      [1, 2, 3],
+      [4, 5, 6],
+    ];
+    useBoardStore.getState().setMatrix(testMatrix);
+    expect(useBoardStore.getState().cols).toBe(3);
+    expect(useBoardStore.getState().rows).toBe(2);
+    expect(useBoardStore.getState().isBoardRotated).toBe(false);
 
-    // Toggle inversePan
-    useBoardStore.getState().toggleInversePan();
-    expect(useBoardStore.getState().inversePan).toBe(false);
+    // Rotate 90 deg CW
+    useBoardStore.getState().rotateBoardMatrix();
+    const rotatedState = useBoardStore.getState();
+    expect(rotatedState.cols).toBe(2);
+    expect(rotatedState.rows).toBe(3);
+    expect(rotatedState.isBoardRotated).toBe(true);
+    expect(rotatedState.matrix).toEqual([
+      [3, 6],
+      [2, 5],
+      [1, 4],
+    ]);
+    expect(rotatedState.initialMatrix).toEqual([
+      [3, 6],
+      [2, 5],
+      [1, 4],
+    ]);
 
-    useBoardStore.getState().toggleInversePan();
-    expect(useBoardStore.getState().inversePan).toBe(true);
+    // Rotate back CCW
+    useBoardStore.getState().rotateBoardMatrix();
+    const restoredState = useBoardStore.getState();
+    expect(restoredState.cols).toBe(3);
+    expect(restoredState.rows).toBe(2);
+    expect(restoredState.isBoardRotated).toBe(false);
+    expect(restoredState.matrix).toEqual(testMatrix);
+    expect(restoredState.initialMatrix).toEqual(testMatrix);
 
-    // Set inversePan directly
-    useBoardStore.getState().setInversePan(false);
-    expect(useBoardStore.getState().inversePan).toBe(false);
+    // Resets isBoardRotated to false on setDimensions
+    useBoardStore.getState().rotateBoardMatrix();
+    expect(useBoardStore.getState().isBoardRotated).toBe(true);
+    useBoardStore.getState().setDimensions(5, 5);
+    expect(useBoardStore.getState().isBoardRotated).toBe(false);
 
-    // Set panSensitivity within valid range
-    useBoardStore.getState().setPanSensitivity(2.5);
-    expect(useBoardStore.getState().panSensitivity).toBe(2.5);
-
-    // Clamps below minimum 0.2
-    useBoardStore.getState().setPanSensitivity(0.05);
-    expect(useBoardStore.getState().panSensitivity).toBe(0.2);
-
-    // Clamps above maximum 6.0
-    useBoardStore.getState().setPanSensitivity(10.0);
-    expect(useBoardStore.getState().panSensitivity).toBe(6.0);
-  });
-
-  it('manages checkerboardMode and checkerColors with diagonal parity preservation', () => {
-    // Initial defaults
-    expect(useBoardStore.getState().checkerboardMode).toBe('2-color');
-    expect(useBoardStore.getState().checkerColors.length).toBe(2);
-
-    // Updates checkerboardMode
-    useBoardStore.getState().setCheckerboardMode('off');
-    expect(useBoardStore.getState().checkerboardMode).toBe('off');
-
-    useBoardStore.getState().setCheckerboardMode('2-color');
-    expect(useBoardStore.getState().checkerboardMode).toBe('2-color');
-
-    // Updates custom checkerColors
-    const customColors: [string, string] = ['#111111', '#222222'];
-    useBoardStore.getState().setCheckerColors(customColors);
-    expect(useBoardStore.getState().checkerColors).toEqual(customColors);
-
-    // Diagonal Parity Invariance Verification:
-    // Any step along a diagonal (dx = dy or dx = -dy) must preserve (c + r) % 2
-    const startC = 2;
-    const startR = 3;
-    const startParity = (startC + startR) % 2;
-
-    // True diagonal: dx = 6, dy = 6
-    const diag6x6Parity = (startC + 6 + startR + 6) % 2;
-    expect(diag6x6Parity).toBe(startParity);
-
-    // True anti-diagonal: dx = -4, dy = 4
-    const antiDiagParity = (startC - 4 + startR + 4) % 2;
-    expect(antiDiagParity).toBe(startParity);
-
-    // Off-diagonal confusing case: dx = 6, dy = 7
-    const offDiagParity = (startC + 6 + startR + 7) % 2;
-    expect(offDiagParity).not.toBe(startParity);
+    // Resets isBoardRotated to false on generateNewBoard
+    useBoardStore.getState().rotateBoardMatrix();
+    expect(useBoardStore.getState().isBoardRotated).toBe(true);
+    useBoardStore.getState().generateNewBoard();
+    expect(useBoardStore.getState().isBoardRotated).toBe(false);
   });
 });
 

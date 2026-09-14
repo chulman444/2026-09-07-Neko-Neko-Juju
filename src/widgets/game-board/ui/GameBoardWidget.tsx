@@ -1,5 +1,6 @@
 import React, { useRef, useEffect } from 'react';
-import { useBoardStore, type TileCoord, type CheckerboardMode } from '@/entities/board';
+import { useBoardStore, type TileCoord } from '@/entities/board';
+import { usePlayerStore, type CheckerboardMode } from '@/entities/player';
 import { useItemStore } from '@/entities/item';
 import { GameBoardEngine } from '../model/GameBoardEngine';
 import type { SelectionMeta } from '../model/GameBoardInteraction';
@@ -61,8 +62,8 @@ export const GameBoardWidget: React.FC<GameBoardWidgetProps> = ({
   const tileBorder = useBoardStore((state) => state.tileBorder);
   const storeCols = useBoardStore((state) => state.cols);
   const storeRows = useBoardStore((state) => state.rows);
-  const storeCheckerboardMode = useBoardStore((state) => state.checkerboardMode);
-  const storeCheckerColors = useBoardStore((state) => state.checkerColors);
+  const storeCheckerboardMode = usePlayerStore((state) => state.checkerboardMode);
+  const storeCheckerColors = usePlayerStore((state) => state.checkerColors);
 
   const checkerboardMode = checkerboardModeProp ?? storeCheckerboardMode;
   const checkerColors = checkerColorsProp ?? storeCheckerColors;

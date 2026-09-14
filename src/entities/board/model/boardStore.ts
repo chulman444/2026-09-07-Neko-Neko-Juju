@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { generateSeed, seededRandomGenerator } from '@/shared/lib/prng';
 import { DEFAULT_CONFIG } from '@/shared/config';
 import { createBoardMatrix } from './boardGenerators';
-import type { TileCoord, ClearingAnimation, CheckerboardMode } from './types';
+import type { TileCoord, ClearingAnimation } from './types';
 
 export interface BoardState {
   cols: number;
@@ -19,17 +19,13 @@ export interface BoardState {
   matrix: number[][];
   panOffset: { x: number; y: number };
   isPanMode: boolean;
-  inversePan: boolean;
-  panSensitivity: number;
+  isBoardRotated: boolean;
   clearingAnimations: ClearingAnimation[];
   tileWeights?: number[];
   activeTilt?: number;
-  checkerboardMode: CheckerboardMode;
-  checkerColors: [string, string];
 
   // Actions
-  setCheckerboardMode: (mode: CheckerboardMode) => void;
-  setCheckerColors: (colors: [string, string]) => void;
+  rotateBoardMatrix: () => void;
   setPanOffset: (
     offset:
       | { x: number; y: number }
@@ -38,9 +34,6 @@ export interface BoardState {
   resetPanOffset: () => void;
   setIsPanMode: (isPanMode: boolean | ((prev: boolean) => boolean)) => void;
   togglePanMode: () => void;
-  setInversePan: (inversePan: boolean) => void;
-  toggleInversePan: () => void;
-  setPanSensitivity: (panSensitivity: number) => void;
   setDimensions: (cols: number, rows: number) => void;
   setTileWeights: (weights?: number[], activeTilt?: number) => void;
   setShapeSize: (shapeSize: number) => void;
@@ -84,16 +77,36 @@ export const useBoardStore = create<BoardState>((set, get) => ({
   matrix: initialGeneratedMatrix.map((r) => [...r]),
   panOffset: { x: 0, y: 0 },
   isPanMode: false,
-  inversePan: true,
-  panSensitivity: 1.5,
+  isBoardRotated: false,
   clearingAnimations: [],
   tileWeights: undefined,
   activeTilt: 0,
-  checkerboardMode: DEFAULT_CONFIG.checkerboardMode ?? '2-color',
-  checkerColors: [DEFAULT_CONFIG.checker1, DEFAULT_CONFIG.checker2],
 
-  setCheckerboardMode: (checkerboardMode) => set({ checkerboardMode }),
-  setCheckerColors: (checkerColors) => set({ checkerColors }),
+  rotateBoardMatrix: () => {
+    const { matrix, initialMatrix, rows, cols, isBoardRotated } = get();
+    if (!matrix.length) return;
+
+    const nextRows = cols;
+    const nextCols = rows;
+    const rotateGrid = (grid: number[][]) =>
+      isBoardRotated
+        ? Array.from({ length: nextRows }, (_, r) =>
+            Array.from({ length: nextCols }, (_, c) => grid[rows - 1 - c]?.[r] ?? 0)
+          )
+        : Array.from({ length: nextRows }, (_, r) =>
+            Array.from({ length: nextCols }, (_, c) => grid[c]?.[cols - 1 - r] ?? 0)
+          );
+
+    set({
+      rows: nextRows,
+      cols: nextCols,
+      matrix: rotateGrid(matrix),
+      initialMatrix: rotateGrid(initialMatrix),
+      isBoardRotated: !isBoardRotated,
+      clearingAnimations: [],
+      panOffset: { x: 0, y: 0 },
+    });
+  },
 
   setPanOffset: (offset) => {
     set((state) => ({
@@ -111,13 +124,6 @@ export const useBoardStore = create<BoardState>((set, get) => ({
 
   togglePanMode: () => set((state) => ({ isPanMode: !state.isPanMode })),
 
-  setInversePan: (inversePan) => set({ inversePan }),
-
-  toggleInversePan: () => set((state) => ({ inversePan: !state.inversePan })),
-
-  setPanSensitivity: (panSensitivity) =>
-    set({ panSensitivity: Math.max(0.2, Math.min(6.0, panSensitivity)) }),
-
   setDimensions: (cols, rows) => {
     const { minNum, maxNum, seed, tileWeights } = get();
     const prng = seededRandomGenerator(seed);
@@ -125,6 +131,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
     set({
       cols,
       rows,
+      isBoardRotated: false,
       prng,
       initialMatrix,
       matrix: initialMatrix.map((r) => [...r]),
@@ -140,6 +147,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
     set({
       tileWeights,
       activeTilt: activeTilt !== undefined ? activeTilt : get().activeTilt,
+      isBoardRotated: false,
       prng,
       initialMatrix,
       matrix: initialMatrix.map((r) => [...r]),
@@ -170,6 +178,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
       : [seed, ...seedHistory].slice(0, 50);
     set({
       seed,
+      isBoardRotated: false,
       prng,
       initialMatrix,
       matrix: initialMatrix.map((r) => [...r]),
@@ -188,6 +197,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
       : [newSeed, ...seedHistory].slice(0, 50);
     set({
       seed: newSeed,
+      isBoardRotated: false,
       prng,
       initialMatrix,
       matrix: initialMatrix.map((r) => [...r]),
@@ -220,6 +230,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
       matrix: matrix.map((r) => [...r]),
       rows,
       cols,
+      isBoardRotated: false,
     });
   },
 

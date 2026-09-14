@@ -1,4 +1,5 @@
-import type { TileCoord, ClearingAnimation, CheckerboardMode } from '@/entities/board';
+import type { TileCoord, ClearingAnimation } from '@/entities/board';
+import type { CheckerboardMode } from '@/entities/player';
 
 export type SelectMode = 'drag' | 'tap';
 

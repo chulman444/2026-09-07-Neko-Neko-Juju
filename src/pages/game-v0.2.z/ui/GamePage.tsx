@@ -9,6 +9,7 @@ import { useGameSessionDriver } from '../model/useGameSessionDriver';
 import { ComboBar } from './ComboBar';
 import { HintBar } from './HintBar';
 import { SidePanel } from './SidePanel';
+import { SettingsHeaderButton, PlayerSettingsModal } from '@/widgets/player-settings';
 
 export const GamePage: React.FC = () => {
   const [showSidePanel, setShowSidePanel] = useState<boolean>(false);
@@ -111,6 +112,7 @@ export const GamePage: React.FC = () => {
 
         {/* Controls */}
         <div className="flex items-center gap-2">
+          <SettingsHeaderButton />
           <button
             type="button"
             onClick={() => setShowSidePanel((prev) => !prev)}
@@ -162,7 +164,7 @@ export const GamePage: React.FC = () => {
           title="Open Development Tools"
           aria-label="Open Dev Tools Side Panel"
         >
-          <span className="text-sm group-hover:scale-110 transition-transform">⚙️</span>
+          <span className="text-sm group-hover:scale-110 transition-transform">🛠️</span>
           <span className="text-[10px] font-bold text-zinc-300 [writing-mode:vertical-rl] tracking-wider uppercase">
             Tools
           </span>
@@ -174,6 +176,9 @@ export const GamePage: React.FC = () => {
         isOpen={showSidePanel}
         onClose={() => setShowSidePanel(false)}
       />
+
+      {/* Player Settings Modal */}
+      <PlayerSettingsModal onOpenDevTools={() => setShowSidePanel(true)} />
     </div>
   );
 };

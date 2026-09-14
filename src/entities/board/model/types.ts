@@ -16,5 +16,3 @@ export interface ClearingAnimation {
 
 export const OMNITILE_VALUE = 10;
 export const isOmniTile = (val: number): boolean => val === OMNITILE_VALUE;
-
-export type CheckerboardMode = 'off' | '2-color';
