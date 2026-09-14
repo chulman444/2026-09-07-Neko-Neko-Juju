@@ -24,14 +24,15 @@
 ## 2. Common Commands & Environment Notes
 - **Dev Server**: `npx.cmd vite`
 - **Storybook**: `npx.cmd storybook dev -p 6006`
-- **Build App**: `npx.cmd tsc -b; npx.cmd vite build`
+- **Build App**: Run `npx.cmd tsc -b`, then `npx.cmd vite build`
 - **Build Storybook**: `npx.cmd storybook build`
 - **Lint**: `npx.cmd oxlint`
 - **Format**: `npx.cmd prettier --write "src/**/*.{ts,tsx,css,json}"`
 - **Format Check**: `npx.cmd prettier --check "src/**/*.{ts,tsx,css,json}"`
 - **Preview**: `npx.cmd vite preview`
 - **Windows Quirks**: Always use `.cmd` wrappers (e.g. `npx.cmd`) if running into PowerShell script execution policy (`PSSecurityException`) issues.
-- **Isolate Side-Effecting Commands**: Never chain commands that produce persistent side effects or mutate state (such as `git commit`, package installations, file deletions, or system changes) using `;` or `&&`. Any command with side effects must be run as an independent, standalone command so the user can review and approve the action and its parameters individually (e.g., `git add` and `git commit` must always be separate commands). Only safe, read-only inspection commands or non-destructive checks may be chained.
+- **No Command Chaining**: Never chain commands using `;`, `&&`, or sequential separators. Execute each command as an independent, standalone step. The user relies on Antigravity's terminal auto-allowlist, which auto-approves individual commands cleanly; chaining breaks allowlist pattern matching.
+- **Piped Commands (`|`)**: When pipelines are necessary (e.g. filtering or formatting output), CA must provide a brief 1-line explanation of what the command and pipeline do before running it.
 
 ---
 
@@ -115,7 +116,7 @@ Code can only import from layers strictly below it. Never import upwards or hori
 Before completing any task:
 1. Format all modified source files with Prettier: `npx.cmd prettier --write "src/**/*.{ts,tsx,css,json}"`.
 2. Run automated test suite: `npx.cmd vitest run`.
-3. Verify TypeScript compiles and builds cleanly: `npx.cmd tsc -b; npx.cmd vite build`.
+3. Verify TypeScript compiles and builds cleanly: run `npx.cmd tsc -b`, then `npx.cmd vite build`.
 4. Check for lint or type errors and resolve them immediately: `npx.cmd oxlint`.
 5. If story files or Storybook configs were modified, verify Storybook builds cleanly: `npx.cmd storybook build`.
 6. Ensure no FSD layer boundary violations or deep slice imports are introduced.
