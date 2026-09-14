@@ -46,7 +46,7 @@ export const SidePanel: React.FC<SidePanelProps> = ({
 
   return (
     <aside
-      className="fixed top-0 right-0 h-screen w-[380px] md:w-[420px] max-w-[92vw] z-50 bg-zinc-900/95 backdrop-blur-xl border-l border-zinc-700/80 shadow-2xl flex flex-col select-none transition-transform duration-300 ease-out"
+      className="fixed top-0 right-0 h-screen w-[380px] md:w-[420px] max-w-[92vw] z-50 bg-zinc-900/95 backdrop-blur-xl border-l border-zinc-700/80 shadow-2xl flex flex-col select-none transition-transform duration-300 ease-out overscroll-contain"
       aria-label="Development Tools Side Panel"
     >
       {/* Pinned Top Tab Bar Header */}
@@ -88,7 +88,7 @@ export const SidePanel: React.FC<SidePanelProps> = ({
       </header>
 
       {/* Orchestrated Tool Content Area */}
-      <div className="flex-1 overflow-y-auto p-4 text-zinc-200">
+      <div className="flex-1 overflow-y-auto overscroll-contain p-4 text-zinc-200">
         {activeTab === 'tuner' ? (
           <DevTuner
             comboConfig={comboConfig}

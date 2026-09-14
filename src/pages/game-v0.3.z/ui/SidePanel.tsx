@@ -41,14 +41,14 @@ export const SidePanel: React.FC<SidePanelProps> = ({
 
   return (
     <aside
-      className="fixed top-0 right-0 h-screen w-[380px] md:w-[420px] max-w-[92vw] z-50 bg-zinc-900/95 backdrop-blur-xl border-l border-zinc-700/80 shadow-2xl flex flex-col select-none transition-transform duration-300 ease-out"
+      className="fixed top-0 right-0 h-screen w-[380px] md:w-[420px] max-w-[92vw] z-50 bg-zinc-900/95 backdrop-blur-xl border-l border-zinc-700/80 shadow-2xl flex flex-col select-none transition-transform duration-300 ease-out overscroll-contain"
       aria-label="Development Tools Side Panel"
     >
       {/* Pinned Top Tab Bar Header */}
       <header className="flex items-center justify-between px-3 py-3 border-b border-zinc-700/80 bg-zinc-950/70 shrink-0 gap-2">
         <div
           onWheel={handleTabWheel}
-          className="flex items-center gap-1.5 p-1 bg-zinc-800/80 rounded-xl border border-zinc-700 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden flex-1 min-w-0"
+          className="flex items-center gap-1.5 p-1 bg-zinc-800/80 rounded-xl border border-zinc-700 overflow-x-auto overscroll-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden flex-1 min-w-0"
         >
           <button
             type="button"
@@ -108,7 +108,7 @@ export const SidePanel: React.FC<SidePanelProps> = ({
       </header>
 
       {/* Orchestrated Tool Content Area */}
-      <div className="flex-1 overflow-y-auto p-4 text-zinc-200">
+      <div className="flex-1 overflow-y-auto overscroll-contain p-4 text-zinc-200">
         {activeTab === 'generator' ? (
           <BoardGeneratorWidget />
         ) : activeTab === 'tuner' ? (

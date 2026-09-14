@@ -77,15 +77,20 @@ export const PlayerSettingsModal: React.FC<PlayerSettingsModalProps> = ({
       role="dialog"
       aria-modal="true"
       aria-labelledby="player-settings-title"
-      className={`fixed inset-0 z-50 flex items-center justify-center p-4 transition-colors duration-150 animate-in fade-in ${
+      className={`fixed inset-0 z-50 flex items-center justify-center p-4 transition-colors duration-150 animate-in fade-in overscroll-contain ${
         dimBackdrop ? 'bg-black/50 backdrop-blur-xs' : 'bg-transparent'
       }`}
       onClick={(e) => {
         if (e.target === e.currentTarget) handleClose();
       }}
+      onWheel={(e) => {
+        if (e.target === e.currentTarget) {
+          e.preventDefault();
+        }
+      }}
     >
       <div
-        className={`bg-white dark:bg-zinc-900 border border-amber-900/20 dark:border-zinc-700 shadow-2xl rounded-2xl w-full max-w-md p-5 text-zinc-800 dark:text-zinc-100 flex flex-col gap-4 select-none ${className}`.trim()}
+        className={`bg-white dark:bg-zinc-900 border border-amber-900/20 dark:border-zinc-700 shadow-2xl rounded-2xl w-full max-w-md p-5 text-zinc-800 dark:text-zinc-100 flex flex-col gap-4 select-none overscroll-contain ${className}`.trim()}
       >
         {/* Header */}
         <div className="flex items-center justify-between pb-3 border-b border-amber-900/10 dark:border-zinc-800">
@@ -121,7 +126,7 @@ export const PlayerSettingsModal: React.FC<PlayerSettingsModalProps> = ({
         </div>
 
         {/* Content Body */}
-        <div className="flex flex-col gap-4 max-h-[75vh] overflow-y-auto pr-1">
+        <div className="flex flex-col gap-4 max-h-[75vh] overflow-y-auto overscroll-contain pr-1">
           {/* Trackball & Pan Controls */}
           <div className="flex flex-col gap-2.5 bg-amber-50/50 dark:bg-zinc-800/60 p-3.5 rounded-xl border border-amber-900/10 dark:border-zinc-700/70">
             <h3 className="text-xs font-bold text-amber-900 dark:text-amber-400 uppercase tracking-wider">
