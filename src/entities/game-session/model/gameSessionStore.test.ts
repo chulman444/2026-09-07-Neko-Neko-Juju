@@ -1,5 +1,11 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { useGameSessionStore } from './gameSessionStore';
+import {
+  useGameSessionStore,
+  evaluateFormula,
+  getMatchingComboRule,
+  DEFAULT_COMBO_RULES,
+  type ComboRule,
+} from './gameSessionStore';
 import { useSolverStore } from '@/features/look-ahead-solver';
 import { useBoardStore } from '@/entities/board';
 
@@ -424,68 +430,191 @@ describe('gameSessionStore - Hint Highlight Invalidation', () => {
     expect(state.activeSelectionType).toBeNull();
   });
 
-  describe('pauseTimerOnCombo', () => {
-    it('pauses the survival timer during active combo when enabled', () => {
-      const boardWithMatch = [
-        [5, 5, 0],
-        [0, 0, 0],
-      ];
-      useBoardStore.getState().setMatrix(boardWithMatch);
-      useSolverStore.getState().recalculate(boardWithMatch);
-
-      const store = useGameSessionStore.getState();
-      store.setComboConfig({
-        ...store.comboConfig,
-        pauseTimerOnCombo: true,
-      });
-      useGameSessionStore.setState({ comboCount: 2, comboPct: 100, countdown: 5 });
-
-      // Tick 1 second: survival timer countdown should remain 5 because combo is active
-      useGameSessionStore.getState().tick(1.0);
-      expect(useGameSessionStore.getState().countdown).toBe(5);
-
-      // Once combo count drops to 0, countdown resumes
-      useGameSessionStore.setState({ comboCount: 0 });
-      useGameSessionStore.getState().tick(1.0);
-      expect(useGameSessionStore.getState().countdown).toBe(4);
+  describe('Combo Rules & Unified Progression System', () => {
+    it('has sensible default combo rules defined', () => {
+      expect(DEFAULT_COMBO_RULES.length).toBeGreaterThanOrEqual(3);
+      expect(DEFAULT_COMBO_RULES[0]?.upToCombo).toBe(4);
+      expect(DEFAULT_COMBO_RULES[DEFAULT_COMBO_RULES.length - 1]?.upToCombo).toBeNull();
     });
 
-    it('pauses the free hint countdown timer during active combo when enabled', () => {
-      const boardWithMatch = [
-        [5, 5, 0],
-        [0, 0, 0],
-      ];
-      useBoardStore.getState().setMatrix(boardWithMatch);
-      useSolverStore.getState().recalculate(boardWithMatch);
-
-      const store = useGameSessionStore.getState();
-      store.setMaxFreeHints(3);
-      store.setFreeHintInterval(4);
-      store.setComboConfig({
-        ...store.comboConfig,
-        pauseTimerOnCombo: true,
+    describe('evaluateFormula', () => {
+      it('evaluates raw numbers and numerical strings', () => {
+        expect(evaluateFormula(5, { x: 1 })).toBe(5);
+        expect(evaluateFormula('3.5', { x: 1 })).toBe(3.5);
       });
 
-      // Deplete main survival timer to start hint phase
-      store.tick(store.maxCountdown + 1);
-      expect(useGameSessionStore.getState().isDepleted).toBe(true);
-      expect(useGameSessionStore.getState().hintPhaseStarted).toBe(true);
-      expect(useGameSessionStore.getState().hintsRemaining).toBe(2);
+      it('evaluates dynamic equations with x and c', () => {
+        expect(evaluateFormula('x * 0.5', { x: 4 })).toBe(2);
+        expect(evaluateFormula('1 + x * 0.1', { x: 10 })).toBe(2);
+        expect(evaluateFormula('c', { x: 3, c: 4.5 })).toBe(4.5);
+        expect(evaluateFormula('c * 0.5', { x: 2, c: 6 })).toBe(3);
+      });
 
-      const initialHintCountdown = useGameSessionStore.getState().hintCountdown;
-      expect(initialHintCountdown).toBe(4);
+      it('evaluates standard math functions', () => {
+        expect(evaluateFormula('atan(x)', { x: 0 })).toBe(0);
+        expect(evaluateFormula('min(10, x * 3)', { x: 5 })).toBe(10);
+        expect(evaluateFormula('max(2, x)', { x: 1 })).toBe(2);
+        expect(evaluateFormula('sqrt(x)', { x: 16 })).toBe(4);
+      });
 
-      // Set active combo
-      useGameSessionStore.setState({ comboCount: 1, comboPct: 100 });
+      it('safely handles invalid syntax or empty input', () => {
+        expect(evaluateFormula('', { x: 1 }, 0)).toBe(0);
+        expect(evaluateFormula(null, { x: 1 }, 5)).toBe(5);
+        expect(evaluateFormula('x * +', { x: 1 }, 2)).toBe(2);
+        expect(evaluateFormula('console.log(1)', { x: 1 }, 0)).toBe(0);
+      });
+    });
 
-      // Tick 1s: hint countdown should remain paused
-      useGameSessionStore.getState().tick(1.0);
-      expect(useGameSessionStore.getState().hintCountdown).toBe(initialHintCountdown);
+    describe('getMatchingComboRule', () => {
+      const sampleRules: ComboRule[] = [
+        {
+          id: 'tier1',
+          upToCombo: 4,
+          addTimeValue: 1,
+          timerFlowMode: 'normal',
+          pauseDuration: 'c',
+          comboDuration: 5,
+          scoreMultiplier: 1,
+        },
+        {
+          id: 'tier2',
+          upToCombo: 7,
+          addTimeValue: 3,
+          timerFlowMode: 'normal',
+          pauseDuration: 'c',
+          comboDuration: 4,
+          scoreMultiplier: 1.5,
+        },
+        {
+          id: 'tier3',
+          upToCombo: null,
+          addTimeValue: 5,
+          timerFlowMode: 'pause',
+          pauseDuration: 'c',
+          comboDuration: 3,
+          scoreMultiplier: 2,
+        },
+      ];
 
-      // End combo
-      useGameSessionStore.setState({ comboCount: 0 });
-      useGameSessionStore.getState().tick(1.0);
-      expect(useGameSessionStore.getState().hintCountdown).toBe(initialHintCountdown - 1.0);
+      it('matches correct rule by combo thresholds', () => {
+        expect(getMatchingComboRule(sampleRules, 1).id).toBe('tier1');
+        expect(getMatchingComboRule(sampleRules, 4).id).toBe('tier1');
+        expect(getMatchingComboRule(sampleRules, 5).id).toBe('tier2');
+        expect(getMatchingComboRule(sampleRules, 7).id).toBe('tier2');
+        expect(getMatchingComboRule(sampleRules, 8).id).toBe('tier3');
+        expect(getMatchingComboRule(sampleRules, 25).id).toBe('tier3');
+      });
+
+      it('handles unordered rules correctly', () => {
+        const unordered = [sampleRules[2]!, sampleRules[0]!, sampleRules[1]!];
+        expect(getMatchingComboRule(unordered, 3).id).toBe('tier1');
+        expect(getMatchingComboRule(unordered, 6).id).toBe('tier2');
+        expect(getMatchingComboRule(unordered, 10).id).toBe('tier3');
+      });
+    });
+
+    describe('registerMatch with combo rules', () => {
+      it('awards score multiplier and added time from matched rule', () => {
+        const store = useGameSessionStore.getState();
+        store.setComboRules([
+          {
+            id: 'rule-test',
+            upToCombo: null,
+            addTimeValue: 'x * 2',
+            timerFlowMode: 'normal',
+            pauseDuration: 'c',
+            comboDuration: 5,
+            scoreMultiplier: '1.5',
+          },
+        ]);
+        useGameSessionStore.setState({ comboCount: 0, score: 0, countdown: 5, maxCountdown: 20 });
+
+        // Match 1: comboCount becomes 1, score = round(2 * 1.5) = 3, addTime = 1 * 2 = 2s
+        store.registerMatch(2);
+        const state = useGameSessionStore.getState();
+        expect(state.comboCount).toBe(1);
+        expect(state.score).toBe(3);
+        expect(state.countdown).toBe(7);
+      });
+    });
+
+    describe('timerFlowMode pause on combo', () => {
+      it('pauses the survival timer during active combo when timerFlowMode is pause', () => {
+        const boardWithMatch = [
+          [5, 5, 0],
+          [0, 0, 0],
+        ];
+        useBoardStore.getState().setMatrix(boardWithMatch);
+        useSolverStore.getState().recalculate(boardWithMatch);
+
+        const store = useGameSessionStore.getState();
+        store.setComboRules([
+          {
+            id: 'pause-rule',
+            upToCombo: null,
+            addTimeValue: 0,
+            timerFlowMode: 'pause',
+            pauseDuration: 'c',
+            comboDuration: 5,
+            scoreMultiplier: 1,
+          },
+        ]);
+        useGameSessionStore.setState({ comboCount: 2, comboPct: 100, countdown: 5 });
+
+        // Tick 1 second: survival timer countdown should remain 5 because combo is active with pause
+        useGameSessionStore.getState().tick(1.0);
+        expect(useGameSessionStore.getState().countdown).toBe(5);
+
+        // Once combo count drops to 0, countdown resumes
+        useGameSessionStore.setState({ comboCount: 0 });
+        useGameSessionStore.getState().tick(1.0);
+        expect(useGameSessionStore.getState().countdown).toBe(4);
+      });
+
+      it('pauses the free hint countdown timer during active combo when timerFlowMode is pause', () => {
+        const boardWithMatch = [
+          [5, 5, 0],
+          [0, 0, 0],
+        ];
+        useBoardStore.getState().setMatrix(boardWithMatch);
+        useSolverStore.getState().recalculate(boardWithMatch);
+
+        const store = useGameSessionStore.getState();
+        store.setMaxFreeHints(3);
+        store.setFreeHintInterval(4);
+        store.setComboRules([
+          {
+            id: 'pause-rule',
+            upToCombo: null,
+            addTimeValue: 0,
+            timerFlowMode: 'pause',
+            pauseDuration: 'c',
+            comboDuration: 5,
+            scoreMultiplier: 1,
+          },
+        ]);
+
+        // Deplete main survival timer to start hint phase
+        store.tick(store.maxCountdown + 1);
+        expect(useGameSessionStore.getState().isDepleted).toBe(true);
+        expect(useGameSessionStore.getState().hintPhaseStarted).toBe(true);
+        expect(useGameSessionStore.getState().hintsRemaining).toBe(2);
+
+        const initialHintCountdown = useGameSessionStore.getState().hintCountdown;
+        expect(initialHintCountdown).toBe(4);
+
+        // Set active combo
+        useGameSessionStore.setState({ comboCount: 1, comboPct: 100 });
+
+        // Tick 1s: hint countdown should remain paused
+        useGameSessionStore.getState().tick(1.0);
+        expect(useGameSessionStore.getState().hintCountdown).toBe(initialHintCountdown);
+
+        // End combo
+        useGameSessionStore.setState({ comboCount: 0 });
+        useGameSessionStore.getState().tick(1.0);
+        expect(useGameSessionStore.getState().hintCountdown).toBe(initialHintCountdown - 1.0);
+      });
     });
   });
 });

@@ -35,27 +35,115 @@ function getClearableHints(): SolverCombination[] {
   return findClearableCombinationsOnly(matrix);
 }
 
-export interface ComboConfig {
-  drainExponent: number;
-  fixedMinimalDrain: number; // Percent per second
-  multiplier: number;
-  tier1Refill: number; // Seconds added to main timer for Combos 1-4
-  tier2Refill: number; // Seconds added to main timer for Combos 5-7
-  tier3Refill: number; // Seconds added to main timer for Combos 8+
-  isTierRefillEnabled: boolean;
-  pauseTimerOnCombo: boolean;
+export interface ComboRule {
+  id: string;
+  upToCombo: number | null; // null means unbounded (e.g., 8+)
+  addTimeValue: string | number; // e.g., '2' or 'x * 0.5'
+  timerFlowMode: 'normal' | 'pause';
+  pauseDuration: string | number; // Evaluates 'x' and 'c'. Default: 'c'
+  comboDuration: string | number; // in seconds, e.g. '4'
+  scoreMultiplier: string | number; // e.g., '1.5' or '1 + x*0.1'
 }
 
-export const DEFAULT_COMBO_CONFIG: ComboConfig = {
-  drainExponent: 1.5,
-  fixedMinimalDrain: 15,
-  multiplier: 2,
-  tier1Refill: 1,
-  tier2Refill: 3,
-  tier3Refill: 5,
-  isTierRefillEnabled: true,
-  pauseTimerOnCombo: false,
-};
+export const DEFAULT_COMBO_RULES: ComboRule[] = [
+  {
+    id: 'combo-rule-1',
+    upToCombo: 4,
+    addTimeValue: '1',
+    timerFlowMode: 'normal',
+    pauseDuration: 'c',
+    comboDuration: '5',
+    scoreMultiplier: '1',
+  },
+  {
+    id: 'combo-rule-2',
+    upToCombo: 7,
+    addTimeValue: '3',
+    timerFlowMode: 'normal',
+    pauseDuration: 'c',
+    comboDuration: '4',
+    scoreMultiplier: '1.5',
+  },
+  {
+    id: 'combo-rule-3',
+    upToCombo: null,
+    addTimeValue: '5',
+    timerFlowMode: 'normal',
+    pauseDuration: 'c',
+    comboDuration: '3',
+    scoreMultiplier: '2',
+  },
+];
+
+export function evaluateFormula(
+  formula: string | number | undefined | null,
+  variables: { x: number; c?: number },
+  fallback = 0
+): number {
+  if (formula === undefined || formula === null) return fallback;
+  if (typeof formula === 'number') {
+    return Number.isFinite(formula) ? formula : fallback;
+  }
+  const trimmed = String(formula).trim();
+  if (!trimmed) return fallback;
+
+  const directNum = Number(trimmed);
+  if (!Number.isNaN(directNum)) {
+    return directNum;
+  }
+
+  // Sanitize: allow numbers, arithmetic operators, parentheses, commas, whitespace, identifier characters
+  if (!/^[0-9+\-*/%^().,\s_a-zA-Z]+$/.test(trimmed)) {
+    return fallback;
+  }
+
+  const blockedWords =
+    /\b(constructor|prototype|__proto__|window|document|global|process|eval|function|import|export|let|var|const|return|throw|while|for|if|else|switch|case|break|continue|new|class|this|void|typeof|delete|in|instanceof|yield|await|async)\b/i;
+  if (blockedWords.test(trimmed)) {
+    return fallback;
+  }
+
+  const expr = trimmed.replace(/\^/g, '**');
+
+  try {
+    const x = Number.isFinite(variables.x) ? variables.x : 0;
+    const c = Number.isFinite(variables.c ?? 0) ? (variables.c ?? 0) : 0;
+
+    const fn = new Function(
+      'x',
+      'c',
+      'Math',
+      `
+      const { sin, cos, tan, atan, asin, acos, sqrt, pow, abs, min, max, floor, ceil, round, log, exp, PI, E } = Math;
+      return (${expr});
+      `
+    );
+    const result = fn(x, c, Math);
+    if (typeof result === 'number' && Number.isFinite(result)) {
+      return result;
+    }
+    return fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+export function getMatchingComboRule(rules: ComboRule[], combo: number): ComboRule {
+  if (!rules || rules.length === 0) {
+    return DEFAULT_COMBO_RULES[0]!;
+  }
+  const sorted = [...rules].sort((a, b) => {
+    const aVal = a.upToCombo ?? Infinity;
+    const bVal = b.upToCombo ?? Infinity;
+    return aVal - bVal;
+  });
+  for (const rule of sorted) {
+    if (rule.upToCombo === null || combo <= rule.upToCombo) {
+      return rule;
+    }
+  }
+  return sorted[sorted.length - 1]!;
+}
 
 export type BoardSizeTier = 'small' | 'medium' | 'large' | 'any';
 
@@ -135,7 +223,8 @@ export interface GameSessionState {
   // Combo System
   comboCount: number;
   comboPct: number;
-  comboConfig: ComboConfig;
+  comboPauseRemaining: number;
+  comboRules: ComboRule[];
 
   // Real-Time Selection State
   selectedTiles: TileCoord[];
@@ -170,7 +259,7 @@ export interface GameSessionState {
   setFreeHintInterval: (val: number) => void;
   setBaseSecondsPerTile: (val: number) => void;
   setRetryAllowed: (val: boolean) => void;
-  setComboConfig: (config: ComboConfig) => void;
+  setComboRules: (rules: ComboRule[]) => void;
   setTimerMultiplier: (val: number) => void;
   setBoardSizeRange: (tier: BoardSizeTier, index: 0 | 1, val: number) => void;
   setSelectedSizeTier: (tier: BoardSizeTier) => void;
@@ -229,7 +318,8 @@ export const useGameSessionStore = create<GameSessionState>((set, get) => ({
   // Combo System Initial State
   comboCount: 0,
   comboPct: 0,
-  comboConfig: { ...DEFAULT_COMBO_CONFIG },
+  comboPauseRemaining: 0,
+  comboRules: [...DEFAULT_COMBO_RULES],
 
   // Real-Time Selection Initial State
   selectedTiles: [],
@@ -378,27 +468,48 @@ export const useGameSessionStore = create<GameSessionState>((set, get) => ({
   registerMatch: (clearedTileCount: number, spanTileCount?: number) => {
     const state = get();
     const newComboCount = state.comboCount + 1;
+    const rule = getMatchingComboRule(state.comboRules, newComboCount);
 
-    // Calculate refill time based on new combo count
-    let comboRefillTime = 0;
-    if (state.comboConfig.isTierRefillEnabled) {
-      if (newComboCount <= 4) {
-        comboRefillTime = state.comboConfig.tier1Refill;
-      } else if (newComboCount <= 7) {
-        comboRefillTime = state.comboConfig.tier2Refill;
-      } else {
-        comboRefillTime = state.comboConfig.tier3Refill;
-      }
+    // 1. Evaluate comboDuration (c)
+    const evaluatedComboDuration = Math.max(
+      0.1,
+      evaluateFormula(rule.comboDuration, { x: newComboCount, c: 0 }, 4)
+    );
+
+    // 2. Evaluate addTimeValue
+    const evaluatedAddTime = Math.max(
+      0,
+      evaluateFormula(rule.addTimeValue, { x: newComboCount, c: evaluatedComboDuration }, 0)
+    );
+
+    // 3. Evaluate scoreMultiplier
+    const evaluatedMultiplier = Math.max(
+      0,
+      evaluateFormula(rule.scoreMultiplier, { x: newComboCount, c: evaluatedComboDuration }, 1)
+    );
+
+    // 4. Timer flow state
+    let nextComboPauseRemaining = 0;
+    if (rule.timerFlowMode === 'pause') {
+      nextComboPauseRemaining = Math.max(
+        0,
+        evaluateFormula(
+          rule.pauseDuration,
+          { x: newComboCount, c: evaluatedComboDuration },
+          evaluatedComboDuration
+        )
+      );
     }
 
-    // Award base points: spanTileCount if provided (selection length/area score), otherwise clearedTileCount
-    const points = spanTileCount ?? clearedTileCount;
+    // Award base points with evaluated score multiplier
+    const basePoints = spanTileCount ?? clearedTileCount;
+    const points = Math.round(basePoints * evaluatedMultiplier);
 
-    // In Phase 1, award time based strictly on actual cleared tiles
+    // In Phase 1, award time based strictly on actual cleared tiles + evaluated addTime
     let nextCountdown = state.countdown;
     let nextDepleted = state.isDepleted;
     if (!state.isPhase1Over) {
-      const addedTime = clearedTileCount * state.baseSecondsPerTile + comboRefillTime;
+      const addedTime = clearedTileCount * state.baseSecondsPerTile + evaluatedAddTime;
       nextCountdown = Math.min(state.countdown + addedTime, state.maxCountdown);
       if (nextCountdown > 0) {
         nextDepleted = false;
@@ -410,6 +521,7 @@ export const useGameSessionStore = create<GameSessionState>((set, get) => ({
       clearedTiles: state.clearedTiles + clearedTileCount,
       comboCount: newComboCount,
       comboPct: 100,
+      comboPauseRemaining: nextComboPauseRemaining,
       countdown: nextCountdown,
       isDepleted: nextDepleted,
     });
@@ -469,6 +581,7 @@ export const useGameSessionStore = create<GameSessionState>((set, get) => ({
     let nextIsPhase1Over = state.isPhase1Over;
     let nextComboCount = state.comboCount;
     let nextComboPct = state.comboPct;
+    let nextComboPauseRemaining = state.comboPauseRemaining;
 
     const clearableHints = getClearableHints();
     const hasClearableHints = clearableHints.length > 0;
@@ -486,9 +599,18 @@ export const useGameSessionStore = create<GameSessionState>((set, get) => ({
       set({ noHintsAvailableMsg: null });
     }
 
-    // 1. Survival Timer Countdown (if not depleted)
-    const isTimerPausedByCombo = state.comboConfig.pauseTimerOnCombo && state.comboCount > 0;
+    const currentRule =
+      state.comboCount > 0 ? getMatchingComboRule(state.comboRules, state.comboCount) : null;
+    const isTimerPausedByCombo =
+      state.comboCount > 0 &&
+      (nextComboPauseRemaining > 0 ||
+        (currentRule?.timerFlowMode === 'pause' && currentRule.pauseDuration === 'c'));
 
+    if (nextComboPauseRemaining > 0) {
+      nextComboPauseRemaining = Math.max(0, nextComboPauseRemaining - deltaSeconds);
+    }
+
+    // 1. Survival Timer Countdown (if not depleted)
     if (!state.isDepleted) {
       if (!isTimerPausedByCombo) {
         nextCountdown = Math.max(0, state.countdown - deltaSeconds);
@@ -539,13 +661,18 @@ export const useGameSessionStore = create<GameSessionState>((set, get) => ({
 
     // 3. Combo Drain (runs whenever comboCount > 0)
     if (state.comboCount > 0) {
-      const { fixedMinimalDrain, multiplier, drainExponent } = state.comboConfig;
-      const drainRate = fixedMinimalDrain + multiplier * Math.pow(state.comboCount, drainExponent);
+      const rule = currentRule ?? getMatchingComboRule(state.comboRules, state.comboCount);
+      const evaluatedDuration = Math.max(
+        0.1,
+        evaluateFormula(rule.comboDuration, { x: state.comboCount, c: 0 }, 4)
+      );
+      const drainRate = 100 / evaluatedDuration;
       nextComboPct = state.comboPct - drainRate * deltaSeconds;
 
       if (nextComboPct <= 0) {
         nextComboCount = 0;
         nextComboPct = 0;
+        nextComboPauseRemaining = 0;
       }
     }
 
@@ -558,6 +685,7 @@ export const useGameSessionStore = create<GameSessionState>((set, get) => ({
       isPhase1Over: nextIsPhase1Over,
       comboCount: nextComboCount,
       comboPct: nextComboPct,
+      comboPauseRemaining: nextComboPauseRemaining,
     });
   },
 
@@ -601,8 +729,8 @@ export const useGameSessionStore = create<GameSessionState>((set, get) => ({
     set({ retryAllowed: val });
   },
 
-  setComboConfig: (config) => {
-    set({ comboConfig: config });
+  setComboRules: (rules) => {
+    set({ comboRules: rules });
   },
 
   setTimerMultiplier: (val) => {
@@ -692,6 +820,7 @@ export const useGameSessionStore = create<GameSessionState>((set, get) => ({
       isPhase1Over: false,
       comboCount: 0,
       comboPct: 0,
+      comboPauseRemaining: 0,
       selectedTiles: [],
       selectedSum: 0,
       diagonalSum: 0,
