@@ -58,10 +58,10 @@ export const ComboProgressionSection: React.FC = () => {
             <thead>
               <tr className="border-b border-zinc-700/80 text-zinc-400 text-[10px] uppercase font-semibold">
                 <th className="py-1.5 px-2 whitespace-nowrap">Range (≤ x)</th>
-                <th className="py-1.5 px-2 whitespace-nowrap">Add Time (s)</th>
                 <th className="py-1.5 px-2 whitespace-nowrap text-center">Timer Flow</th>
-                <th className="py-1.5 px-2 whitespace-nowrap">Pause Dur (s)</th>
                 <th className="py-1.5 px-2 whitespace-nowrap">Combo Dur (s)</th>
+                <th className="py-1.5 px-2 whitespace-nowrap">Pause Dur (s)</th>
+                <th className="py-1.5 px-2 whitespace-nowrap">Add Time (s)</th>
                 <th className="py-1.5 px-2 whitespace-nowrap">Score Mult</th>
                 <th className="py-1.5 px-2 text-center whitespace-nowrap">Action</th>
               </tr>
@@ -95,20 +95,6 @@ export const ComboProgressionSection: React.FC = () => {
                       </div>
                     </td>
 
-                    {/* Add Time Value */}
-                    <td className="py-2 px-2 whitespace-nowrap">
-                      <input
-                        type="text"
-                        value={rule.addTimeValue}
-                        onChange={(e) =>
-                          handleUpdateRule(rule.id, { addTimeValue: e.target.value })
-                        }
-                        placeholder="e.g. 2 or x*0.5"
-                        className="w-20 bg-zinc-850 border border-zinc-700 rounded px-2 py-1 text-right font-mono text-white text-xs focus:border-amber-500 focus:outline-none"
-                        title="Time added to main countdown. Supports numbers or formulas with 'x' and 'c'."
-                      />
-                    </td>
-
                     {/* Timer Flow Mode (Radio: Normal | Pause) */}
                     <td className="py-2 px-2 whitespace-nowrap">
                       <div className="flex items-center justify-center gap-2">
@@ -137,6 +123,20 @@ export const ComboProgressionSection: React.FC = () => {
                       </div>
                     </td>
 
+                    {/* Combo Duration */}
+                    <td className="py-2 px-2 whitespace-nowrap">
+                      <input
+                        type="text"
+                        value={rule.comboDuration}
+                        onChange={(e) =>
+                          handleUpdateRule(rule.id, { comboDuration: e.target.value })
+                        }
+                        placeholder="e.g. 4"
+                        className="w-16 bg-zinc-850 border border-zinc-700 rounded px-2 py-1 text-right font-mono text-white text-xs focus:border-amber-500 focus:outline-none"
+                        title="Total duration in seconds for combo bar to deplete. Supports formulas with 'x'."
+                      />
+                    </td>
+
                     {/* Pause Duration */}
                     <td className="py-2 px-2 whitespace-nowrap">
                       <input
@@ -152,17 +152,17 @@ export const ComboProgressionSection: React.FC = () => {
                       />
                     </td>
 
-                    {/* Combo Duration */}
+                    {/* Add Time Value */}
                     <td className="py-2 px-2 whitespace-nowrap">
                       <input
                         type="text"
-                        value={rule.comboDuration}
+                        value={rule.addTimeValue}
                         onChange={(e) =>
-                          handleUpdateRule(rule.id, { comboDuration: e.target.value })
+                          handleUpdateRule(rule.id, { addTimeValue: e.target.value })
                         }
-                        placeholder="e.g. 4"
-                        className="w-16 bg-zinc-850 border border-zinc-700 rounded px-2 py-1 text-right font-mono text-white text-xs focus:border-amber-500 focus:outline-none"
-                        title="Total duration in seconds for combo bar to deplete. Supports formulas with 'x'."
+                        placeholder="e.g. 2 or x*0.5"
+                        className="w-20 bg-zinc-850 border border-zinc-700 rounded px-2 py-1 text-right font-mono text-white text-xs focus:border-amber-500 focus:outline-none"
+                        title="Time added to main countdown. Supports numbers or formulas with 'x' and 'c'."
                       />
                     </td>
 
