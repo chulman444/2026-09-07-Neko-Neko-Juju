@@ -28,3 +28,35 @@ const DrawerCanvasStory = () => {
 export const Default: Story = {
   render: () => <DrawerCanvasStory />,
 };
+
+const ActiveLayerStory = () => {
+  useEffect(() => {
+    useBoardMakerStore.getState().generateBlankBoard(8, 6);
+    useBoardMakerStore.getState().addTileAt(0, 0, 5);
+    useBoardMakerStore.getState().addTileAt(1, 1, 3);
+    useBoardMakerStore.getState().addTileAt(1, 1, 7);
+    useBoardMakerStore.getState().setActiveLayer(1);
+  }, []);
+
+  return <DrawerCanvas />;
+};
+
+export const ActiveLayerMode: Story = {
+  render: () => <ActiveLayerStory />,
+};
+
+const InspectingStory = () => {
+  useEffect(() => {
+    useBoardMakerStore.getState().generateBlankBoard(8, 6);
+    useBoardMakerStore.getState().addTileAt(1, 1, 3);
+    useBoardMakerStore.getState().addTileAt(1, 1, 7);
+    useBoardMakerStore.getState().addTileAt(1, 1, 9);
+    useBoardMakerStore.getState().setInspectedStack({ col: 1, row: 1 });
+  }, []);
+
+  return <DrawerCanvas />;
+};
+
+export const InspectingStack: Story = {
+  render: () => <InspectingStory />,
+};

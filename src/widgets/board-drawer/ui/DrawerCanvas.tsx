@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { useBoardMakerStore } from '@/entities/board-maker';
+import { useBoardMakerStore, getFullStackAt, type Brush } from '@/entities/board-maker';
 import { BM_COLOR_PALETTE } from '@/shared/config';
 
 const HEATMAP_COLORS: Record<number, string> = {
@@ -11,24 +11,30 @@ const HEATMAP_COLORS: Record<number, string> = {
 };
 
 export const DrawerCanvas: React.FC = () => {
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   const cols = useBoardMakerStore((state) => state.cols);
   const rows = useBoardMakerStore((state) => state.rows);
   const matrix = useBoardMakerStore((state) => state.matrix);
   const stacks = useBoardMakerStore((state) => state.stacks);
+  const activeLayer = useBoardMakerStore((state) => state.activeLayer);
+  const inspectedStack = useBoardMakerStore((state) => state.inspectedStack);
   const heatmapMode = useBoardMakerStore((state) => state.heatmapMode);
 
-  const addTileAt = useBoardMakerStore((state) => state.addTileAt);
-  const removeTileAt = useBoardMakerStore((state) => state.removeTileAt);
-  const setTileValue = useBoardMakerStore((state) => state.setTileValue);
-  const cycleTileValue = useBoardMakerStore((state) => state.cycleTileValue);
+  const setTileAtLayer = useBoardMakerStore((state) => state.setTileAtLayer);
+  const setSelectedBrush = useBoardMakerStore((state) => state.setSelectedBrush);
+  const setInspectedStack = useBoardMakerStore((state) => state.setInspectedStack);
 
   const tileSize = 36;
   const isDrawingRef = useRef(false);
-  const drawingActionRef = useRef<'add' | 'remove'>('add');
+  const drawingBrushRef = useRef<Brush>(1);
   const lastInteractedKeyRef = useRef<string | null>(null);
   const currentHoveredCoordRef = useRef<{ col: number; row: number } | null>(null);
+
+  // Pan state for middle mouse button
+  const isPanningRef = useRef(false);
+  const panStartRef = useRef({ x: 0, y: 0, scrollLeft: 0, scrollTop: 0 });
 
   const dimensionsRef = useRef({ cols, rows });
   useEffect(() => {
@@ -49,67 +55,154 @@ export const DrawerCanvas: React.FC = () => {
 
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
-        const val = matrix[r]?.[c] ?? 0;
-        const stack = stacks[`${c},${r}`];
-        const stackLen = stack?.length ?? 0;
-        const totalDepth = val > 0 ? stackLen + 1 : 0;
-
         const cellX = c * tileSize;
         const cellY = r * tileSize;
 
-        // Background color determination
-        if (val === 0) {
-          ctx.fillStyle = '#ffffff';
-        } else if (heatmapMode) {
-          ctx.fillStyle = HEATMAP_COLORS[Math.min(totalDepth, 5)] || '#8b5cf6';
+        if (activeLayer === 'surface') {
+          // --- Surface Mode Rendering ---
+          const val = matrix[r]?.[c] ?? 0;
+          const stack = stacks[`${c},${r}`];
+          const stackLen = stack?.length ?? 0;
+          const totalDepth = val > 0 ? stackLen + 1 : 0;
+
+          if (val === 0) {
+            ctx.fillStyle = '#ffffff';
+          } else if (heatmapMode) {
+            ctx.fillStyle = HEATMAP_COLORS[Math.min(totalDepth, 5)] || '#8b5cf6';
+          } else {
+            ctx.fillStyle = BM_COLOR_PALETTE[val] || '#3b82f6';
+          }
+
+          ctx.fillRect(cellX, cellY, tileSize, tileSize);
+
+          // Tile border
+          ctx.strokeStyle = '#e7cfa8';
+          ctx.lineWidth = 1;
+          ctx.strokeRect(cellX, cellY, tileSize, tileSize);
+
+          // Draw tile number
+          if (val > 0) {
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 14px monospace';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(val.toString(), cellX + tileSize / 2, cellY + tileSize / 2);
+          }
+
+          // Draw stack depth badge if stacked
+          if (totalDepth > 1) {
+            const badgeText = `x${totalDepth}`;
+            const badgeW = badgeText.length >= 3 ? 18 : 15;
+            const badgeH = 12;
+            const badgeX = cellX + tileSize - badgeW - 1;
+            const badgeY = cellY + 1;
+
+            ctx.save();
+            ctx.fillStyle = '#7c2d12'; // deep rust/amber
+            ctx.beginPath();
+            ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#fef3c7';
+            ctx.font = 'bold 8px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(badgeText, badgeX + badgeW / 2, badgeY + badgeH / 2);
+            ctx.restore();
+          }
         } else {
-          ctx.fillStyle = BM_COLOR_PALETTE[val] || '#3b82f6';
+          // --- Active Layer Mode Rendering ---
+          const z = activeLayer;
+          const fullStack = getFullStackAt(matrix, stacks, c, r);
+          const hasSupport = z === 0 || fullStack.length >= z;
+          const valAtZ = fullStack[z] ?? 0;
+
+          if (!hasSupport) {
+            // Disabled / Non-drawable pattern
+            ctx.fillStyle = '#27272a';
+            ctx.fillRect(cellX, cellY, tileSize, tileSize);
+
+            // Diagonal hatch lines
+            ctx.strokeStyle = '#3f3f46';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(cellX, cellY + tileSize);
+            ctx.lineTo(cellX + tileSize, cellY);
+            ctx.stroke();
+
+            ctx.strokeStyle = '#3f3f46';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(cellX, cellY, tileSize, tileSize);
+          } else {
+            // Supported cell
+            if (valAtZ === 0) {
+              ctx.fillStyle = '#ffffff';
+              ctx.fillRect(cellX, cellY, tileSize, tileSize);
+
+              if (z > 0) {
+                // Subtle dot indicating supported platform ready for new tile
+                ctx.fillStyle = '#9ca3af';
+                ctx.beginPath();
+                ctx.arc(cellX + tileSize / 2, cellY + tileSize / 2, 2.5, 0, Math.PI * 2);
+                ctx.fill();
+              }
+            } else {
+              ctx.fillStyle = BM_COLOR_PALETTE[valAtZ] || '#3b82f6';
+              ctx.fillRect(cellX, cellY, tileSize, tileSize);
+
+              // Draw tile number
+              ctx.fillStyle = '#ffffff';
+              ctx.font = 'bold 14px monospace';
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+              ctx.fillText(valAtZ.toString(), cellX + tileSize / 2, cellY + tileSize / 2);
+
+              // Badge if tiles exist above layer Z
+              if (fullStack.length > z + 1) {
+                const aboveCount = fullStack.length - (z + 1);
+                const badgeText = `+${aboveCount}`;
+                const badgeW = 15;
+                const badgeH = 12;
+                const badgeX = cellX + tileSize - badgeW - 1;
+                const badgeY = cellY + 1;
+
+                ctx.save();
+                ctx.fillStyle = '#1e3a8a'; // dark blue
+                ctx.beginPath();
+                ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 2);
+                ctx.fill();
+
+                ctx.fillStyle = '#dbeafe';
+                ctx.font = 'bold 8px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(badgeText, badgeX + badgeW / 2, badgeY + badgeH / 2);
+                ctx.restore();
+              }
+            }
+
+            ctx.strokeStyle = '#e7cfa8';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(cellX, cellY, tileSize, tileSize);
+          }
         }
 
-        ctx.fillRect(cellX, cellY, tileSize, tileSize);
-
-        // Tile border
-        ctx.strokeStyle = '#e7cfa8';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(cellX, cellY, tileSize, tileSize);
-
-        // Draw tile number
-        if (val > 0) {
-          ctx.fillStyle = '#ffffff';
-          ctx.font = 'bold 14px monospace';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText(val.toString(), cellX + tileSize / 2, cellY + tileSize / 2);
-        }
-
-        // Draw stack depth badge if stacked
-        if (totalDepth > 1) {
-          const badgeText = `x${totalDepth}`;
-          const badgeW = badgeText.length >= 3 ? 18 : 15;
-          const badgeH = 12;
-          const badgeX = cellX + tileSize - badgeW - 1;
-          const badgeY = cellY + 1;
-
+        // Highlight currently inspected coordinate if matched
+        if (inspectedStack && inspectedStack.col === c && inspectedStack.row === r) {
           ctx.save();
-          ctx.fillStyle = '#7c2d12'; // deep rust/amber
-          ctx.beginPath();
-          ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 2);
-          ctx.fill();
-
-          ctx.fillStyle = '#fef3c7';
-          ctx.font = 'bold 8px sans-serif';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText(badgeText, badgeX + badgeW / 2, badgeY + badgeH / 2);
+          ctx.strokeStyle = '#0284c7'; // vibrant sky-600
+          ctx.lineWidth = 2.5;
+          ctx.strokeRect(cellX + 1, cellY + 1, tileSize - 2, tileSize - 2);
           ctx.restore();
         }
       }
     }
-  }, [cols, rows, matrix, stacks, heatmapMode, tileSize]);
+  }, [cols, rows, matrix, stacks, activeLayer, inspectedStack, heatmapMode, tileSize]);
 
   // Handle Mouse / Wheel / Keyboard Events
   useEffect(() => {
     const canvas = canvasRef.current;
+    const container = containerRef.current;
     if (!canvas) return;
 
     const getCoord = (e: MouseEvent) => {
@@ -126,22 +219,53 @@ export const DrawerCanvas: React.FC = () => {
     };
 
     const handleMouseDown = (e: MouseEvent) => {
+      // Middle Click (button 1): Drag to pan container
+      if (e.button === 1) {
+        e.preventDefault();
+        isPanningRef.current = true;
+        if (container) {
+          panStartRef.current = {
+            x: e.clientX,
+            y: e.clientY,
+            scrollLeft: container.scrollLeft,
+            scrollTop: container.scrollTop,
+          };
+          container.style.cursor = 'grabbing';
+        }
+        return;
+      }
+
       const coord = getCoord(e);
       if (!coord) return;
 
+      // Ctrl + Left Click: Inspect stack
+      if (e.button === 0 && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        setInspectedStack({ col: coord.col, row: coord.row });
+        return;
+      }
+
       e.preventDefault();
+      const curState = useBoardMakerStore.getState();
+      const brushToUse: Brush = e.button === 2 ? 0 : curState.selectedBrush;
+
       isDrawingRef.current = true;
-      drawingActionRef.current = e.button === 2 ? 'remove' : 'add';
+      drawingBrushRef.current = brushToUse;
       lastInteractedKeyRef.current = `${coord.col},${coord.row}`;
 
-      if (drawingActionRef.current === 'add') {
-        addTileAt(coord.col, coord.row);
-      } else {
-        removeTileAt(coord.col, coord.row);
-      }
+      setTileAtLayer(coord.col, coord.row, curState.activeLayer, brushToUse);
     };
 
     const handleMouseMove = (e: MouseEvent) => {
+      // Handle Middle-click panning
+      if (isPanningRef.current && container) {
+        const dx = e.clientX - panStartRef.current.x;
+        const dy = e.clientY - panStartRef.current.y;
+        container.scrollLeft = panStartRef.current.scrollLeft - dx;
+        container.scrollTop = panStartRef.current.scrollTop - dy;
+        return;
+      }
+
       const coord = getCoord(e);
       currentHoveredCoordRef.current = coord;
 
@@ -150,40 +274,68 @@ export const DrawerCanvas: React.FC = () => {
       if (lastInteractedKeyRef.current === key) return;
 
       lastInteractedKeyRef.current = key;
-      if (drawingActionRef.current === 'add') {
-        addTileAt(coord.col, coord.row);
-      } else {
-        removeTileAt(coord.col, coord.row);
-      }
+      const curState = useBoardMakerStore.getState();
+      setTileAtLayer(coord.col, coord.row, curState.activeLayer, drawingBrushRef.current);
     };
 
-    const handleMouseUp = () => {
+    const handleMouseUp = (e: MouseEvent) => {
+      if (e.button === 1 && isPanningRef.current) {
+        isPanningRef.current = false;
+        if (container) {
+          container.style.cursor = '';
+        }
+      }
       isDrawingRef.current = false;
       lastInteractedKeyRef.current = null;
     };
 
     const handleMouseLeave = () => {
       currentHoveredCoordRef.current = null;
-      isDrawingRef.current = false;
-      lastInteractedKeyRef.current = null;
     };
 
     const handleContextMenu = (e: MouseEvent) => {
       e.preventDefault();
     };
 
+    // Scroll wheel: Cycle selectedBrush strictly through 1-9 (excluding 0, -, +)
     const handleWheel = (e: WheelEvent) => {
-      const coord = currentHoveredCoordRef.current;
-      if (coord) {
-        e.preventDefault();
-        cycleTileValue(coord.col, coord.row, e.deltaY < 0 ? 1 : -1);
+      e.preventDefault();
+      const curBrush = useBoardMakerStore.getState().selectedBrush;
+      let nextNum: number;
+      if (typeof curBrush !== 'number' || curBrush < 1 || curBrush > 9) {
+        nextNum = e.deltaY < 0 ? 1 : 9;
+      } else {
+        if (e.deltaY < 0) {
+          nextNum = curBrush === 9 ? 1 : curBrush + 1;
+        } else {
+          nextNum = curBrush === 1 ? 9 : curBrush - 1;
+        }
       }
+      setSelectedBrush(nextNum);
     };
 
+    // Keyboard shortcuts: 0-9, -, =, +
     const handleKeyDown = (e: KeyboardEvent) => {
-      const coord = currentHoveredCoordRef.current;
-      if (coord && e.key >= '0' && e.key <= '9') {
-        setTileValue(coord.col, coord.row, parseInt(e.key, 10));
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+
+      let brush: Brush | null = null;
+      if (e.key >= '0' && e.key <= '9') {
+        brush = parseInt(e.key, 10);
+      } else if (e.key === '-') {
+        brush = '-';
+      } else if (e.key === '=' || e.key === '+') {
+        brush = '+';
+      }
+
+      if (brush !== null) {
+        setSelectedBrush(brush);
+        const coord = currentHoveredCoordRef.current;
+        if (coord) {
+          const curState = useBoardMakerStore.getState();
+          setTileAtLayer(coord.col, coord.row, curState.activeLayer, brush);
+        }
       }
     };
 
@@ -193,6 +345,7 @@ export const DrawerCanvas: React.FC = () => {
     canvas.addEventListener('contextmenu', handleContextMenu);
     canvas.addEventListener('wheel', handleWheel, { passive: false });
     window.addEventListener('mouseup', handleMouseUp);
+    window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('keydown', handleKeyDown);
 
     return () => {
@@ -202,16 +355,20 @@ export const DrawerCanvas: React.FC = () => {
       canvas.removeEventListener('contextmenu', handleContextMenu);
       canvas.removeEventListener('wheel', handleWheel);
       window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [addTileAt, removeTileAt, setTileValue, cycleTileValue, tileSize]);
+  }, [setTileAtLayer, setSelectedBrush, setInspectedStack, tileSize]);
 
   return (
-    <div className="h-[420px] max-h-[420px] overflow-auto bg-amber-50/50 dark:bg-zinc-900 border border-amber-900/20 dark:border-zinc-700 rounded-xl p-3 flex justify-center items-center select-none shadow-inner">
+    <div
+      ref={containerRef}
+      className="h-[420px] max-h-[420px] overflow-auto bg-amber-50/50 dark:bg-zinc-900 border border-amber-900/20 dark:border-zinc-700 rounded-xl p-3 flex select-none shadow-inner"
+    >
       <canvas
         ref={canvasRef}
         id="bmGridCanvas"
-        className="cursor-crosshair block rounded shadow border border-amber-900/10"
+        className="m-auto cursor-crosshair block rounded shadow border border-amber-900/10"
       />
     </div>
   );
