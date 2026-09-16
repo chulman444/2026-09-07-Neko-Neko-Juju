@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useBoardMakerStore } from '@/entities/board-maker';
+import React, { useState, useRef, useEffect } from 'react';
+import { useBoardMakerStore, getTileCounts } from '@/entities/board-maker';
 import { useBoardStore } from '@/entities/board';
 import { DrawerCanvas, DataPipelineEditor } from '@/widgets/board-drawer';
 import { Link } from '@/shared/lib/router';
@@ -24,14 +24,17 @@ export const BoardMakerPage: React.FC = () => {
   const fillRandomSum10s = useBoardMakerStore((state) => state.fillRandomSum10s);
   const setSelectedBrush = useBoardMakerStore((state) => state.setSelectedBrush);
   const setActiveLayer = useBoardMakerStore((state) => state.setActiveLayer);
+  const stepActiveLayer = useBoardMakerStore((state) => state.stepActiveLayer);
   const setInspectedStack = useBoardMakerStore((state) => state.setInspectedStack);
   const clearStackAt = useBoardMakerStore((state) => state.clearStackAt);
   const removeTileAtDepth = useBoardMakerStore((state) => state.removeTileAtDepth);
   const insertTileAtDepth = useBoardMakerStore((state) => state.insertTileAtDepth);
+  const cycleTileValueAtDepth = useBoardMakerStore((state) => state.cycleTileValueAtDepth);
   const toggleHeatmapMode = useBoardMakerStore((state) => state.toggleHeatmapMode);
   const setBoard = useBoardMakerStore((state) => state.setBoard);
 
   const [notification, setNotification] = useState<string | null>(null);
+  const inspectorScrollRef = useRef<HTMLDivElement | null>(null);
 
   const showNotification = (msg: string) => {
     setNotification(msg);
@@ -57,12 +60,49 @@ export const BoardMakerPage: React.FC = () => {
   const maxExistingLayer = Object.values(bmStacks).reduce((max, s) => Math.max(max, s.length), 0);
   const layerOptionsCount = Math.max(4, maxExistingLayer + 2);
   const availableLayers = Array.from({ length: layerOptionsCount }, (_, i) => i);
+  const tileCounts = getTileCounts(bmCols, bmRows, bmMatrix, bmStacks);
 
   // Determine tile value to insert when clicking [+]
   const activeInsertValue =
     typeof selectedBrush === 'number' && selectedBrush >= 1 && selectedBrush <= 9
       ? selectedBrush
       : 1;
+
+  // Insert below base with auto-scroll compensation to keep [+] under cursor
+  const handleInsertBelowBase = () => {
+    if (!inspectedStack) return;
+    const container = inspectorScrollRef.current;
+    insertTileAtDepth(inspectedStack.col, inspectedStack.row, 0, activeInsertValue);
+    requestAnimationFrame(() => {
+      if (container) {
+        container.scrollTo({ left: container.scrollWidth, behavior: 'auto' });
+      }
+    });
+  };
+
+  // Global keyboard shortcuts for layers: Home (Base), End (Surface), [ (down), ] (up)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+      if (e.key === 'Home') {
+        e.preventDefault();
+        setActiveLayer(0);
+      } else if (e.key === 'End') {
+        e.preventDefault();
+        setActiveLayer('surface');
+      } else if (e.key === '[') {
+        e.preventDefault();
+        stepActiveLayer(-1, maxExistingLayer + 1);
+      } else if (e.key === ']') {
+        e.preventDefault();
+        stepActiveLayer(1, maxExistingLayer + 1);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [maxExistingLayer, setActiveLayer, stepActiveLayer]);
 
   return (
     <div className="w-full flex-1 min-h-screen bg-amber-50/40 dark:bg-zinc-950 p-4 md:p-6 flex flex-col items-center">
@@ -193,52 +233,93 @@ export const BoardMakerPage: React.FC = () => {
           </button>
 
           {/* Layer Selector */}
-          <div className="flex flex-col gap-1.5 p-2.5 rounded-xl bg-white dark:bg-zinc-900 border border-amber-900/10 dark:border-zinc-700">
+          <div
+            onWheel={(e) => {
+              e.preventDefault();
+              stepActiveLayer(e.deltaY < 0 ? 1 : -1, maxExistingLayer + 1);
+            }}
+            className="flex flex-col gap-1.5 p-2.5 rounded-xl bg-white dark:bg-zinc-900 border border-amber-900/10 dark:border-zinc-700"
+          >
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold text-zinc-500 flex items-center gap-1">
-                <span>📚 Mode / Layer:</span>
+                <span>📚 Layer Selector:</span>
                 <span className="font-bold text-amber-950 dark:text-zinc-200">
                   {activeLayer === 'surface'
                     ? 'Surface (Top of stacks)'
                     : `Active Layer ${activeLayer}`}
                 </span>
               </span>
-              <span className="text-[10px] text-zinc-400">
-                {activeLayer === 'surface'
-                  ? 'Numbers push new tiles'
-                  : 'Numbers override at this layer'}
-              </span>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => setActiveLayer(0)}
+                  className="text-[10px] font-bold px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 transition cursor-pointer"
+                  title="Jump to Base Layer 0 (Key: Home)"
+                >
+                  [Base]
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveLayer('surface')}
+                  className="text-[10px] font-bold px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 transition cursor-pointer"
+                  title="Jump to Surface (Key: End)"
+                >
+                  [Top]
+                </button>
+              </div>
             </div>
 
             <div className="flex flex-wrap items-center gap-1.5">
               <button
                 type="button"
                 onClick={() => setActiveLayer('surface')}
-                className={`px-3 py-1 text-xs font-bold rounded-lg transition cursor-pointer flex items-center gap-1 ${
+                className={`px-2.5 py-1 text-xs font-bold rounded-lg transition cursor-pointer flex items-center gap-1.5 ${
                   activeLayer === 'surface'
                     ? 'bg-emerald-600 text-white shadow ring-2 ring-emerald-400'
                     : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700'
                 }`}
               >
                 <span>⛰️ Surface</span>
+                <span
+                  className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                    activeLayer === 'surface'
+                      ? 'bg-emerald-800/60 text-emerald-100'
+                      : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-500 dark:text-zinc-400'
+                  }`}
+                >
+                  {tileCounts.surface}
+                </span>
               </button>
 
               <div className="h-4 w-px bg-zinc-300 dark:bg-zinc-700 mx-0.5" />
 
-              {availableLayers.map((layerNum) => (
-                <button
-                  key={layerNum}
-                  type="button"
-                  onClick={() => setActiveLayer(layerNum)}
-                  className={`px-2.5 py-1 text-xs font-bold rounded-lg transition cursor-pointer ${
-                    activeLayer === layerNum
-                      ? 'bg-amber-600 text-white shadow ring-2 ring-amber-400'
-                      : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700'
-                  }`}
-                >
-                  {layerNum === 0 ? 'L0 (Base)' : `L${layerNum}`}
-                </button>
-              ))}
+              {availableLayers.map((layerNum) => {
+                const count = tileCounts.layers[layerNum] ?? 0;
+                const isSelected = activeLayer === layerNum;
+                return (
+                  <button
+                    key={layerNum}
+                    type="button"
+                    onClick={() => setActiveLayer(layerNum)}
+                    className={`px-2 py-1 text-xs font-bold rounded-lg transition cursor-pointer flex items-center gap-1 ${
+                      isSelected
+                        ? 'bg-amber-600 text-white shadow ring-2 ring-amber-400'
+                        : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700'
+                    }`}
+                  >
+                    <span>{layerNum === 0 ? 'L0 (Base)' : `L${layerNum}`}</span>
+                    <span
+                      className={`text-[10px] px-1 py-0.2 rounded-full font-mono ${
+                        isSelected
+                          ? 'bg-amber-800/60 text-amber-100'
+                          : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-500 dark:text-zinc-400'
+                      }`}
+                    >
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -375,7 +456,10 @@ export const BoardMakerPage: React.FC = () => {
               </div>
 
               {/* Horizontal Tiles Row: Surface -> Bottom */}
-              <div className="flex items-center gap-1.5 overflow-x-auto py-1.5 px-1 bg-white/70 dark:bg-zinc-950/50 rounded-lg border border-amber-900/10 dark:border-zinc-800">
+              <div
+                ref={inspectorScrollRef}
+                className="flex items-center gap-1.5 overflow-x-auto py-1.5 px-1 bg-white/70 dark:bg-zinc-950/50 rounded-lg border border-amber-900/10 dark:border-zinc-800"
+              >
                 {inspectedStack.stack.length === 0 ? (
                   <div className="flex items-center gap-3 py-2 px-3 text-xs text-zinc-500">
                     <span>Cell is currently empty.</span>
@@ -427,11 +511,22 @@ export const BoardMakerPage: React.FC = () => {
                         <React.Fragment key={z}>
                           {/* Tile Card */}
                           <div
-                            className={`relative flex flex-col items-center justify-between p-1.5 rounded-lg w-16 h-20 border shrink-0 transition ${
+                            onWheel={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              cycleTileValueAtDepth(
+                                inspectedStack.col,
+                                inspectedStack.row,
+                                z,
+                                e.deltaY < 0 ? 1 : -1
+                              );
+                            }}
+                            className={`relative flex flex-col items-center justify-between p-1.5 rounded-lg w-16 h-20 border shrink-0 transition cursor-ns-resize ${
                               isActive
                                 ? 'ring-2 ring-sky-500 border-sky-400 shadow-md bg-sky-50/70 dark:bg-sky-950/40'
                                 : 'border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800'
                             }`}
+                            title="Scroll wheel to cycle value (1-9)"
                           >
                             {/* Layer tag & Delete button */}
                             <div className="w-full flex items-center justify-between text-[10px]">
@@ -485,16 +580,23 @@ export const BoardMakerPage: React.FC = () => {
                           {/* Insert button between tiles or at base */}
                           <button
                             type="button"
-                            onClick={() =>
-                              insertTileAtDepth(
-                                inspectedStack.col,
-                                inspectedStack.row,
-                                z,
-                                activeInsertValue
-                              )
+                            onClick={
+                              isBase
+                                ? handleInsertBelowBase
+                                : () =>
+                                    insertTileAtDepth(
+                                      inspectedStack.col,
+                                      inspectedStack.row,
+                                      z,
+                                      activeInsertValue
+                                    )
                             }
                             className="w-5 h-8 rounded border border-dashed border-emerald-500 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-xs font-bold flex items-center justify-center transition cursor-pointer shrink-0"
-                            title={`Insert tile (${activeInsertValue}) below Layer ${z}`}
+                            title={
+                              isBase
+                                ? `Insert tile (${activeInsertValue}) below Base`
+                                : `Insert tile (${activeInsertValue}) below Layer ${z}`
+                            }
                           >
                             +
                           </button>

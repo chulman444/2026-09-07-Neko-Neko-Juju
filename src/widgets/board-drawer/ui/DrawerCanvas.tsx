@@ -116,14 +116,33 @@ export const DrawerCanvas: React.FC = () => {
           const fullStack = getFullStackAt(matrix, stacks, c, r);
           const hasSupport = z === 0 || fullStack.length >= z;
           const valAtZ = fullStack[z] ?? 0;
+          const topVal = matrix[r]?.[c] ?? 0;
 
           if (!hasSupport) {
-            // Disabled / Non-drawable pattern
-            ctx.fillStyle = '#27272a';
-            ctx.fillRect(cellX, cellY, tileSize, tileSize);
+            // If a tile exists elsewhere in this stack, draw it ghosted underneath
+            if (topVal > 0) {
+              ctx.save();
+              ctx.globalAlpha = 0.3;
+              ctx.fillStyle = BM_COLOR_PALETTE[topVal] || '#3b82f6';
+              ctx.fillRect(cellX, cellY, tileSize, tileSize);
+              ctx.fillStyle = '#ffffff';
+              ctx.font = 'bold 14px monospace';
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+              ctx.fillText(topVal.toString(), cellX + tileSize / 2, cellY + tileSize / 2);
+              ctx.restore();
 
-            // Diagonal hatch lines
-            ctx.strokeStyle = '#3f3f46';
+              // Translucent cannot-draw hatch overlay
+              ctx.fillStyle = 'rgba(24, 24, 27, 0.75)';
+              ctx.fillRect(cellX, cellY, tileSize, tileSize);
+            } else {
+              // Plain dark background for completely empty non-drawable cells
+              ctx.fillStyle = '#27272a';
+              ctx.fillRect(cellX, cellY, tileSize, tileSize);
+            }
+
+            // Diagonal hatch line
+            ctx.strokeStyle = '#52525b';
             ctx.lineWidth = 1.5;
             ctx.beginPath();
             ctx.moveTo(cellX, cellY + tileSize);
@@ -136,15 +155,30 @@ export const DrawerCanvas: React.FC = () => {
           } else {
             // Supported cell
             if (valAtZ === 0) {
-              ctx.fillStyle = '#ffffff';
-              ctx.fillRect(cellX, cellY, tileSize, tileSize);
+              // If supported empty slot at z > 0, show the top tile underneath ghosted
+              if (topVal > 0) {
+                ctx.save();
+                ctx.globalAlpha = 0.35;
+                ctx.fillStyle = BM_COLOR_PALETTE[topVal] || '#3b82f6';
+                ctx.fillRect(cellX, cellY, tileSize, tileSize);
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 14px monospace';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(topVal.toString(), cellX + tileSize / 2, cellY + tileSize / 2);
+                ctx.restore();
 
-              if (z > 0) {
-                // Subtle dot indicating supported platform ready for new tile
-                ctx.fillStyle = '#9ca3af';
+                // Platform border & dot indicating it can be drawn on
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+                ctx.fillRect(cellX, cellY, tileSize, tileSize);
+
+                ctx.fillStyle = '#0284c7';
                 ctx.beginPath();
-                ctx.arc(cellX + tileSize / 2, cellY + tileSize / 2, 2.5, 0, Math.PI * 2);
+                ctx.arc(cellX + tileSize / 2, cellY + tileSize / 2, 3, 0, Math.PI * 2);
                 ctx.fill();
+              } else {
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(cellX, cellY, tileSize, tileSize);
               }
             } else {
               ctx.fillStyle = BM_COLOR_PALETTE[valAtZ] || '#3b82f6';

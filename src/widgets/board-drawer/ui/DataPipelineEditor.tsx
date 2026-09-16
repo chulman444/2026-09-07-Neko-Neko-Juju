@@ -6,6 +6,7 @@ import {
   exportFormatJsonObject,
   exportFormatTextMatrix,
   parseAnyBoardData,
+  extractCellEntries,
 } from '@/features/import-export-board';
 
 export const DataPipelineEditor: React.FC = () => {
@@ -25,29 +26,23 @@ export const DataPipelineEditor: React.FC = () => {
     setTimeout(() => setStatusMessage(null), 3500);
   };
 
-  const getFlatNumbers = (): number[] => {
-    const flat: number[] = [];
-    for (let r = 0; r < bmRows; r++) {
-      for (let c = 0; c < bmCols; c++) {
-        flat.push(bmMatrix[r]?.[c] ?? 0);
-      }
-    }
-    return flat;
+  const getCellEntries = () => {
+    return extractCellEntries(bmCols, bmRows, bmMatrix, bmStacks);
   };
 
   const handleExport1DArray = () => {
-    setDataBox(exportFormat1DArray(getFlatNumbers()));
-    showStatus('Exported 1D Array to sandbox');
+    setDataBox(exportFormat1DArray(getCellEntries()));
+    showStatus('Exported 1D Array (with stacks) to sandbox');
   };
 
   const handleExportJsonObject = () => {
-    setDataBox(exportFormatJsonObject(bmCols, bmRows, getFlatNumbers(), bmStacks));
+    setDataBox(exportFormatJsonObject(bmCols, bmRows, getCellEntries()));
     showStatus('Exported JSON Object (with stacks) to sandbox');
   };
 
   const handleExportTextMatrix = () => {
-    setDataBox(exportFormatTextMatrix(bmCols, bmRows, getFlatNumbers(), spaceType, spaceWidth));
-    showStatus('Exported Text Matrix to sandbox');
+    setDataBox(exportFormatTextMatrix(bmCols, bmRows, getCellEntries(), spaceType, spaceWidth));
+    showStatus('Exported Text Matrix (with stacks) to sandbox');
   };
 
   const handleAutoDetectAndLoadToDrawer = () => {
@@ -79,14 +74,8 @@ export const DataPipelineEditor: React.FC = () => {
     const gameMatrix = useBoardStore.getState().matrix;
     const gameStacks = useBoardStore.getState().stacks;
 
-    const flat: number[] = [];
-    for (let r = 0; r < gameRows; r++) {
-      for (let c = 0; c < gameCols; c++) {
-        flat.push(gameMatrix[r]?.[c] ?? 0);
-      }
-    }
-
-    const out = exportFormatJsonObject(gameCols, gameRows, flat, gameStacks);
+    const entries = extractCellEntries(gameCols, gameRows, gameMatrix, gameStacks);
+    const out = exportFormatJsonObject(gameCols, gameRows, entries);
     setDataBox(out);
     showStatus(`Loaded active Game Board (${gameCols}x${gameRows}) into Sandbox!`);
   };

@@ -31,15 +31,42 @@ describe('import-export-board - serialization', () => {
     expect(parsed.stacks).toEqual(stacks);
   });
 
-  it('exports and parses text matrix with custom space width', () => {
-    const board = [1, 2, 3, 4];
-    const textStr = exportFormatTextMatrix(2, 2, board, 'space', 2);
-    expect(textStr).toBe('1  2\n3  4');
+  it('exports and parses 1D array with mixed stack arrays', () => {
+    const board = [1, [2, 4, 8], 3, 0];
+    const jsonStr = exportFormat1DArray(board);
+    expect(jsonStr).toBe('[1,[2,4,8],3,0]');
+
+    const parsed = parseAnyBoardData(jsonStr, 2, 2);
+    expect(parsed.cols).toBe(2);
+    expect(parsed.rows).toBe(2);
+    expect(parsed.numbers).toEqual([1, 8, 3, 0]);
+    expect(parsed.stacks).toEqual({ '1,0': [2, 4] });
+  });
+
+  it('exports and parses JSON object with mixed stack arrays in numbers', () => {
+    const entries = [1, [2, 5], 3, [4, 6, 9]];
+    const jsonStr = exportFormatJsonObject(2, 2, entries);
+    const parsed = parseAnyBoardData(jsonStr);
+
+    expect(parsed.cols).toBe(2);
+    expect(parsed.rows).toBe(2);
+    expect(parsed.numbers).toEqual([1, 5, 3, 9]);
+    expect(parsed.stacks).toEqual({
+      '1,0': [2],
+      '1,1': [4, 6],
+    });
+  });
+
+  it('exports and parses text matrix with bracketed stack tokens', () => {
+    const entries = [1, [2, 4], 3, 0];
+    const textStr = exportFormatTextMatrix(2, 2, entries, 'space', 2);
+    expect(textStr).toBe('1  [2,4]\n3  0');
 
     const parsed = parseAnyBoardData(textStr);
     expect(parsed.cols).toBe(2);
     expect(parsed.rows).toBe(2);
-    expect(parsed.numbers).toEqual([1, 2, 3, 4]);
+    expect(parsed.numbers).toEqual([1, 4, 3, 0]);
+    expect(parsed.stacks).toEqual({ '1,0': [2] });
   });
 
   it('throws on empty string', () => {

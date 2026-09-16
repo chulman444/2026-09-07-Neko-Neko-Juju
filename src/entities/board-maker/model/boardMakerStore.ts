@@ -39,6 +39,8 @@ export interface BoardMakerState {
   clearStackAt: (col: number, row: number) => void;
   removeTileAtDepth: (col: number, row: number, z: number) => void;
   insertTileAtDepth: (col: number, row: number, z: number, val: number) => void;
+  cycleTileValueAtDepth: (col: number, row: number, z: number, delta: number) => void;
+  stepActiveLayer: (delta: number, maxLayer?: number) => void;
 
   addTileAt: (col: number, row: number, val?: number) => void;
   removeTileAt: (col: number, row: number) => void;
@@ -57,6 +59,30 @@ export interface BoardMakerState {
 
   setBoard: (matrix: number[][], stacks?: Record<string, number[]>) => void;
 }
+
+export const getTileCounts = (
+  cols: number,
+  rows: number,
+  matrix: number[][],
+  stacks: Record<string, number[]>
+): { surface: number; layers: Record<number, number> } => {
+  let surface = 0;
+  const layers: Record<number, number> = {};
+
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const fullStack = getFullStackAt(matrix, stacks, c, r);
+      if (fullStack.length > 0) {
+        surface++;
+        for (let z = 0; z < fullStack.length; z++) {
+          layers[z] = (layers[z] ?? 0) + 1;
+        }
+      }
+    }
+  }
+
+  return { surface, layers };
+};
 
 const createBlankMatrix = (cols: number, rows: number): number[][] => {
   return Array.from({ length: rows }, () => new Array(cols).fill(0));
@@ -287,6 +313,56 @@ export const useBoardMakerStore = create<BoardMakerState>((set, get) => ({
         : inspectedStack;
 
     set({ matrix: newMatrix, stacks: newStacks, inspectedStack: updatedInspected });
+  },
+
+  cycleTileValueAtDepth: (col, row, z, delta) => {
+    const { matrix, stacks, cols, rows, inspectedStack } = get();
+    if (col < 0 || col >= cols || row < 0 || row >= rows) return;
+
+    const fullStack = getFullStackAt(matrix, stacks, col, row);
+    if (z < 0 || z >= fullStack.length) return;
+
+    const cur = fullStack[z]!;
+    let next: number;
+    if (delta > 0) {
+      next = cur === 9 ? 1 : cur + 1;
+    } else {
+      next = cur === 1 ? 9 : cur - 1;
+    }
+    fullStack[z] = next;
+
+    const { matrix: newMatrix, stacks: newStacks } = saveFullStackAt(
+      matrix,
+      stacks,
+      col,
+      row,
+      fullStack
+    );
+
+    const updatedInspected =
+      inspectedStack && inspectedStack.col === col && inspectedStack.row === row
+        ? { col, row, stack: fullStack }
+        : inspectedStack;
+
+    set({ matrix: newMatrix, stacks: newStacks, inspectedStack: updatedInspected });
+  },
+
+  stepActiveLayer: (delta, maxLayer = 4) => {
+    const { activeLayer } = get();
+    if (activeLayer === 'surface') {
+      if (delta < 0) {
+        set({ activeLayer: maxLayer });
+      }
+    } else {
+      const next = activeLayer + delta;
+      if (next > maxLayer) {
+        set({ activeLayer: 'surface' });
+      } else if (next < 0) {
+        set({ activeLayer: 0 });
+      } else {
+        set({ activeLayer: next });
+      }
+    }
   },
 
   addTileAt: (col, row, val) => {

@@ -176,5 +176,53 @@ describe('boardMakerStore', () => {
         stack: [9],
       });
     });
+
+    it('cycles tile values at specific depth wrapping 1-9', () => {
+      useBoardMakerStore.getState().addTileAt(0, 0, 9);
+      useBoardMakerStore.getState().addTileAt(0, 0, 2);
+      // Stack is [9, 2]
+
+      // Increment base tile (z=0): 9 -> 1
+      useBoardMakerStore.getState().cycleTileValueAtDepth(0, 0, 0, 1);
+      expect(useBoardMakerStore.getState().stacks['0,0']).toEqual([1]);
+
+      // Decrement base tile (z=0): 1 -> 9
+      useBoardMakerStore.getState().cycleTileValueAtDepth(0, 0, 0, -1);
+      expect(useBoardMakerStore.getState().stacks['0,0']).toEqual([9]);
+
+      // Decrement top tile (z=1): 2 -> 1
+      useBoardMakerStore.getState().cycleTileValueAtDepth(0, 0, 1, -1);
+      expect(useBoardMakerStore.getState().matrix[0]![0]).toBe(1);
+    });
+
+    it('steps active layer with no cycling', () => {
+      useBoardMakerStore.getState().setActiveLayer(0);
+
+      // Stepping down at 0 clamps to 0 (no cycle)
+      useBoardMakerStore.getState().stepActiveLayer(-1, 3);
+      expect(useBoardMakerStore.getState().activeLayer).toBe(0);
+
+      // Step up
+      useBoardMakerStore.getState().stepActiveLayer(1, 3);
+      expect(useBoardMakerStore.getState().activeLayer).toBe(1);
+
+      useBoardMakerStore.getState().stepActiveLayer(1, 3);
+      expect(useBoardMakerStore.getState().activeLayer).toBe(2);
+
+      useBoardMakerStore.getState().stepActiveLayer(1, 3);
+      expect(useBoardMakerStore.getState().activeLayer).toBe(3);
+
+      // Exceeding maxLayer goes to 'surface'
+      useBoardMakerStore.getState().stepActiveLayer(1, 3);
+      expect(useBoardMakerStore.getState().activeLayer).toBe('surface');
+
+      // Stepping up at 'surface' stays at 'surface' (no cycle)
+      useBoardMakerStore.getState().stepActiveLayer(1, 3);
+      expect(useBoardMakerStore.getState().activeLayer).toBe('surface');
+
+      // Stepping down at 'surface' goes to maxLayer
+      useBoardMakerStore.getState().stepActiveLayer(-1, 3);
+      expect(useBoardMakerStore.getState().activeLayer).toBe(3);
+    });
   });
 });
