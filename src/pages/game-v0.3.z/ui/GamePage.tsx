@@ -3,6 +3,7 @@ import { TimerBar } from '@/shared/ui';
 import { GameBoardWidget, PannableContainer } from '@/widgets/game-board';
 import { useBoardStore, calculateBoardMetrics, type TileCoord } from '@/entities/board';
 import { useSolverStore } from '@/features/look-ahead-solver';
+import { DevHotkeys } from '@/features/dev-hotkeys';
 import { Link } from '@/shared/lib/router';
 import { useGameSessionStore } from '@/entities/game-session';
 import { useItemStore } from '@/entities/item';
@@ -102,6 +103,12 @@ export const GamePage: React.FC = () => {
     [isToggled, handleBoardTileClick]
   );
 
+  const handleTileMutated = useCallback(() => {
+    useSolverStore
+      .getState()
+      .recalculate(useBoardStore.getState().matrix, useBoardStore.getState().seed);
+  }, []);
+
   const handleSelectionChange = useCallback(
     (tiles: TileCoord[], sum: number, _isValid: boolean, meta?: SelectionMeta) => {
       useGameSessionStore.getState().setSelection({
@@ -163,6 +170,7 @@ export const GamePage: React.FC = () => {
 
   return (
     <div className="flex flex-col items-center w-full min-h-screen px-4 py-6 select-none relative">
+      <DevHotkeys onTileMutated={handleTileMutated} />
       {/* Game Header Bar */}
       <header className="flex flex-wrap items-start justify-between w-full max-w-[720px] gap-4 mb-6 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm border border-amber-900/10 dark:border-zinc-700 p-4 rounded-2xl shadow-sm">
         <div className="flex flex-col items-start gap-3">

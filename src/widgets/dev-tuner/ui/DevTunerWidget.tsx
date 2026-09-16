@@ -3,6 +3,7 @@ import { HintsConfigSection } from './HintsConfigSection';
 import { ComboProgressionSection } from './ComboProgressionSection';
 import { SimulationSection } from './SimulationSection';
 import { HintAlgorithmSection } from './HintAlgorithmSection';
+import { HotkeysConfigSection } from './HotkeysConfigSection';
 
 export interface DevTunerWidgetProps {
   className?: string;
@@ -15,6 +16,7 @@ export const DevTunerWidget: React.FC<DevTunerWidgetProps> = ({ className = '' }
       <ComboProgressionSection />
       <SimulationSection />
       <HintAlgorithmSection />
+      <HotkeysConfigSection />
     </div>
   );
 };
