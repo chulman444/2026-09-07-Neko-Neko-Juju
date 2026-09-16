@@ -13,6 +13,7 @@ export interface GameBoardEngineOptions {
   interactive?: boolean;
   targetSum?: number;
   matrix?: number[][];
+  stacks?: Record<string, number[]>;
   highlightedTiles?: TileCoord[];
   targetTile?: TileCoord | null;
   visualConfig?: Partial<BoardVisualConfig>;
@@ -38,6 +39,7 @@ export class GameBoardEngine {
   private interactive = true;
   private targetSum = 10;
   private matrixOverride?: number[][];
+  private stacksOverride?: Record<string, number[]>;
   private highlightedTiles: TileCoord[] = [];
   private targetTile: TileCoord | null = null;
   private onTilesCleared?: (tiles: TileCoord[], sum: number, actualCount?: number) => void;
@@ -56,6 +58,9 @@ export class GameBoardEngine {
     this.interactive = options.interactive ?? true;
     this.targetSum = options.targetSum ?? 10;
     this.matrixOverride = options.matrix ? options.matrix.map((row) => [...row]) : undefined;
+    this.stacksOverride = options.stacks
+      ? Object.fromEntries(Object.entries(options.stacks).map(([k, v]) => [k, [...v]]))
+      : undefined;
     this.highlightedTiles = options.highlightedTiles ?? [];
     this.targetTile = options.targetTile ?? null;
     this.onTilesCleared = options.onTilesCleared;
@@ -111,8 +116,17 @@ export class GameBoardEngine {
     Object.assign(this.visualConfig, config);
   }
 
-  public setMatrixOverride(matrix?: number[][]): void {
+  public setMatrixOverride(matrix?: number[][], stacks?: Record<string, number[]>): void {
     this.matrixOverride = matrix ? matrix.map((row) => [...row]) : undefined;
+    if (stacks !== undefined) {
+      this.stacksOverride = Object.fromEntries(Object.entries(stacks).map(([k, v]) => [k, [...v]]));
+    }
+  }
+
+  public setStacksOverride(stacks?: Record<string, number[]>): void {
+    this.stacksOverride = stacks
+      ? Object.fromEntries(Object.entries(stacks).map(([k, v]) => [k, [...v]]))
+      : undefined;
   }
 
   public setHighlightedTiles(tiles: TileCoord[]): void {
@@ -167,6 +181,7 @@ export class GameBoardEngine {
   private getBoardState(): BoardRenderState {
     const store = useBoardStore.getState();
     const matrix = this.matrixOverride ?? store.matrix;
+    const stacks = this.stacksOverride ?? store.stacks;
     const rows = matrix.length;
     const cols = rows > 0 ? (matrix[0]?.length ?? 0) : 0;
 
@@ -177,6 +192,7 @@ export class GameBoardEngine {
       tileBorder: store.tileBorder,
       textSize: store.textSize,
       matrix,
+      stacks,
       clearingAnimations: store.clearingAnimations,
     };
   }
@@ -213,7 +229,16 @@ export class GameBoardEngine {
       tiles.forEach(({ col, row }) => {
         const rowArr = this.matrixOverride?.[row];
         if (rowArr && (rowArr[col] ?? 0) > 0) {
-          rowArr[col] = 0;
+          const stackKey = `${col},${row}`;
+          const stack = this.stacksOverride?.[stackKey];
+          if (stack && stack.length > 0) {
+            rowArr[col] = stack.pop()!;
+            if (stack.length === 0) {
+              delete this.stacksOverride![stackKey];
+            }
+          } else {
+            rowArr[col] = 0;
+          }
         }
       });
     }

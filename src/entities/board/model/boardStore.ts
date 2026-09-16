@@ -30,6 +30,8 @@ export interface BoardState {
   prng: () => number;
   initialMatrix: number[][];
   matrix: number[][];
+  initialStacks: Record<string, number[]>;
+  stacks: Record<string, number[]>;
   panOffset: { x: number; y: number };
   isPanMode: boolean;
   orientationOffset: OrientationOffset;
@@ -60,7 +62,8 @@ export interface BoardState {
   setSeed: (seed: string) => void;
   generateNewBoard: (forcedSeed?: string) => void;
   restartCurrentBoard: () => void;
-  setMatrix: (matrix: number[][]) => void;
+  setMatrix: (matrix: number[][], stacks?: Record<string, number[]>) => void;
+  setStacks: (stacks: Record<string, number[]>) => void;
   clearTiles: (tiles: TileCoord[]) => number;
   setTileValue: (col: number, row: number, val: number) => void;
   shakeBoard: () => number[][];
@@ -91,6 +94,8 @@ export const useBoardStore = create<BoardState>((set, get) => ({
   prng: initialPrng,
   initialMatrix: initialGeneratedMatrix,
   matrix: initialGeneratedMatrix.map((r) => [...r]),
+  initialStacks: {},
+  stacks: {},
   panOffset: { x: 0, y: 0 },
   isPanMode: false,
   orientationOffset: DEFAULT_ORIENTATION_OFFSET,
@@ -99,15 +104,28 @@ export const useBoardStore = create<BoardState>((set, get) => ({
   activeTilt: 0,
 
   applyRotationCW: () => {
-    const { matrix, initialMatrix, orientationOffset } = get();
+    const { matrix, initialMatrix, stacks, initialStacks, rows, orientationOffset } = get();
     if (!matrix.length) return;
     const newMatrix = rotateCW(matrix);
     const newInitialMatrix = rotateCW(initialMatrix);
+    const transform = (c: number, r: number) => ({ c: rows - 1 - r, r: c });
+    const rotate = (st: Record<string, number[]>) => {
+      const res: Record<string, number[]> = {};
+      for (const [key, val] of Object.entries(st)) {
+        const [c, r] = key.split(',').map(Number);
+        const t = transform(c, r);
+        res[`${t.c},${t.r}`] = [...val];
+      }
+      return res;
+    };
+
     set({
       rows: newMatrix.length,
       cols: newMatrix[0]?.length ?? 0,
       matrix: newMatrix,
       initialMatrix: newInitialMatrix,
+      stacks: rotate(stacks),
+      initialStacks: rotate(initialStacks),
       orientationOffset: nextOrientationCW(orientationOffset),
       clearingAnimations: [],
       panOffset: { x: 0, y: 0 },
@@ -115,15 +133,28 @@ export const useBoardStore = create<BoardState>((set, get) => ({
   },
 
   applyRotationCCW: () => {
-    const { matrix, initialMatrix, orientationOffset } = get();
+    const { matrix, initialMatrix, stacks, initialStacks, cols, orientationOffset } = get();
     if (!matrix.length) return;
     const newMatrix = rotateCCW(matrix);
     const newInitialMatrix = rotateCCW(initialMatrix);
+    const transform = (c: number, r: number) => ({ c: r, r: cols - 1 - c });
+    const rotate = (st: Record<string, number[]>) => {
+      const res: Record<string, number[]> = {};
+      for (const [key, val] of Object.entries(st)) {
+        const [c, r] = key.split(',').map(Number);
+        const t = transform(c, r);
+        res[`${t.c},${t.r}`] = [...val];
+      }
+      return res;
+    };
+
     set({
       rows: newMatrix.length,
       cols: newMatrix[0]?.length ?? 0,
       matrix: newMatrix,
       initialMatrix: newInitialMatrix,
+      stacks: rotate(stacks),
+      initialStacks: rotate(initialStacks),
       orientationOffset: nextOrientationCCW(orientationOffset),
       clearingAnimations: [],
       panOffset: { x: 0, y: 0 },
@@ -131,15 +162,26 @@ export const useBoardStore = create<BoardState>((set, get) => ({
   },
 
   applyTranspose: () => {
-    const { matrix, initialMatrix, orientationOffset } = get();
+    const { matrix, initialMatrix, stacks, initialStacks, orientationOffset } = get();
     if (!matrix.length) return;
     const newMatrix = transpose(matrix);
     const newInitialMatrix = transpose(initialMatrix);
+    const rotate = (st: Record<string, number[]>) => {
+      const res: Record<string, number[]> = {};
+      for (const [key, val] of Object.entries(st)) {
+        const [c, r] = key.split(',').map(Number);
+        res[`${r},${c}`] = [...val];
+      }
+      return res;
+    };
+
     set({
       rows: newMatrix.length,
       cols: newMatrix[0]?.length ?? 0,
       matrix: newMatrix,
       initialMatrix: newInitialMatrix,
+      stacks: rotate(stacks),
+      initialStacks: rotate(initialStacks),
       orientationOffset: nextOrientationTranspose(orientationOffset),
       clearingAnimations: [],
       panOffset: { x: 0, y: 0 },
@@ -147,15 +189,28 @@ export const useBoardStore = create<BoardState>((set, get) => ({
   },
 
   applyAntiTranspose: () => {
-    const { matrix, initialMatrix, orientationOffset } = get();
+    const { matrix, initialMatrix, stacks, initialStacks, rows, cols, orientationOffset } = get();
     if (!matrix.length) return;
     const newMatrix = antiTranspose(matrix);
     const newInitialMatrix = antiTranspose(initialMatrix);
+    const transform = (c: number, r: number) => ({ c: rows - 1 - r, r: cols - 1 - c });
+    const rotate = (st: Record<string, number[]>) => {
+      const res: Record<string, number[]> = {};
+      for (const [key, val] of Object.entries(st)) {
+        const [c, r] = key.split(',').map(Number);
+        const t = transform(c, r);
+        res[`${t.c},${t.r}`] = [...val];
+      }
+      return res;
+    };
+
     set({
       rows: newMatrix.length,
       cols: newMatrix[0]?.length ?? 0,
       matrix: newMatrix,
       initialMatrix: newInitialMatrix,
+      stacks: rotate(stacks),
+      initialStacks: rotate(initialStacks),
       orientationOffset: nextOrientationAntiTranspose(orientationOffset),
       clearingAnimations: [],
       panOffset: { x: 0, y: 0 },
@@ -163,7 +218,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
   },
 
   revertOrientation: () => {
-    const { matrix, initialMatrix, orientationOffset } = get();
+    const { matrix, initialMatrix, initialStacks, orientationOffset } = get();
     if (!matrix.length) return;
     if (orientationOffset.rot === 0 && !orientationOffset.flip) return;
 
@@ -174,6 +229,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
       cols: newMatrix[0]?.length ?? 0,
       matrix: newMatrix,
       initialMatrix: newInitialMatrix,
+      stacks: Object.fromEntries(Object.entries(initialStacks).map(([k, v]) => [k, [...v]])),
       orientationOffset: DEFAULT_ORIENTATION_OFFSET,
       clearingAnimations: [],
       panOffset: { x: 0, y: 0 },
@@ -207,6 +263,8 @@ export const useBoardStore = create<BoardState>((set, get) => ({
       prng,
       initialMatrix,
       matrix: initialMatrix.map((r) => [...r]),
+      stacks: {},
+      initialStacks: {},
       clearingAnimations: [],
       panOffset: { x: 0, y: 0 },
     });
@@ -223,6 +281,8 @@ export const useBoardStore = create<BoardState>((set, get) => ({
       prng,
       initialMatrix,
       matrix: initialMatrix.map((r) => [...r]),
+      stacks: {},
+      initialStacks: {},
       clearingAnimations: [],
     });
   },
@@ -254,6 +314,8 @@ export const useBoardStore = create<BoardState>((set, get) => ({
       prng,
       initialMatrix,
       matrix: initialMatrix.map((r) => [...r]),
+      stacks: {},
+      initialStacks: {},
       seedHistory: updatedHistory,
       clearingAnimations: [],
     });
@@ -273,6 +335,8 @@ export const useBoardStore = create<BoardState>((set, get) => ({
       prng,
       initialMatrix,
       matrix: initialMatrix.map((r) => [...r]),
+      stacks: {},
+      initialStacks: {},
       seedHistory: updatedHistory,
       clearingAnimations: [],
       panOffset: { x: 0, y: 0 },
@@ -281,7 +345,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
   },
 
   restartCurrentBoard: () => {
-    const { initialMatrix, cols, rows, minNum, maxNum, seed, tileWeights } = get();
+    const { initialMatrix, initialStacks, cols, rows, minNum, maxNum, seed, tileWeights } = get();
     const prng = seededRandomGenerator(seed);
     // Advance PRNG through initial board creation to restore stream position
     createBoardMatrix(cols, rows, minNum, maxNum, prng, tileWeights);
@@ -289,38 +353,65 @@ export const useBoardStore = create<BoardState>((set, get) => ({
       prng,
       orientationOffset: DEFAULT_ORIENTATION_OFFSET,
       matrix: initialMatrix.map((r) => [...r]),
+      stacks: Object.fromEntries(Object.entries(initialStacks ?? {}).map(([k, v]) => [k, [...v]])),
       clearingAnimations: [],
       panOffset: { x: 0, y: 0 },
       isPanMode: false,
     });
   },
 
-  setMatrix: (matrix) => {
+  setMatrix: (matrix, stacks = {}) => {
     const rows = matrix.length;
     const cols = rows > 0 ? (matrix[0]?.length ?? 0) : 0;
+    const copiedStacks = Object.fromEntries(Object.entries(stacks).map(([k, v]) => [k, [...v]]));
     set({
       initialMatrix: matrix.map((r) => [...r]),
       matrix: matrix.map((r) => [...r]),
+      initialStacks: copiedStacks,
+      stacks: Object.fromEntries(Object.entries(stacks).map(([k, v]) => [k, [...v]])),
       rows,
       cols,
       orientationOffset: DEFAULT_ORIENTATION_OFFSET,
+      clearingAnimations: [],
+    });
+  },
+
+  setStacks: (stacks) => {
+    const copiedStacks = Object.fromEntries(Object.entries(stacks).map(([k, v]) => [k, [...v]]));
+    set({
+      initialStacks: copiedStacks,
+      stacks: Object.fromEntries(Object.entries(stacks).map(([k, v]) => [k, [...v]])),
     });
   },
 
   clearTiles: (tiles) => {
     const currentMatrix = get().matrix;
+    const currentStacks = get().stacks;
     const newMatrix = currentMatrix.map((row) => [...row]);
+    const newStacks: Record<string, number[]> = {};
+    for (const [k, v] of Object.entries(currentStacks)) {
+      newStacks[k] = [...v];
+    }
     let clearedCount = 0;
 
     tiles.forEach(({ col, row }) => {
       const rowArr = newMatrix[row];
       if (rowArr && (rowArr[col] ?? 0) > 0) {
-        rowArr[col] = 0;
         clearedCount++;
+        const stackKey = `${col},${row}`;
+        const stack = newStacks[stackKey];
+        if (stack && stack.length > 0) {
+          rowArr[col] = stack.pop()!;
+          if (stack.length === 0) {
+            delete newStacks[stackKey];
+          }
+        } else {
+          rowArr[col] = 0;
+        }
       }
     });
 
-    set({ matrix: newMatrix });
+    set({ matrix: newMatrix, stacks: newStacks });
     return clearedCount;
   },
 

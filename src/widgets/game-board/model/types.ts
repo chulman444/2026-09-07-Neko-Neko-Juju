@@ -28,6 +28,7 @@ export interface BoardRenderState {
   tileBorder: number;
   textSize: number;
   matrix: number[][];
+  stacks?: Record<string, number[]>;
   clearingAnimations: ClearingAnimation[];
 }
 

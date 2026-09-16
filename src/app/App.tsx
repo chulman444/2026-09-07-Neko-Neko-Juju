@@ -3,6 +3,7 @@ import { RouterProvider, useRouter, Link } from '@/shared/lib/router';
 import { GamePage as GamePageV01 } from '@/pages/game-v0.1.z';
 import { GamePage as GamePageV02 } from '@/pages/game-v0.2.z';
 import { GamePage as GamePageV03 } from '@/pages/game-v0.3.z';
+import { BoardMakerPage } from '@/pages/board-maker';
 import { ViteWelcomePage } from '@/pages/vite-welcome';
 
 const AppRoutes: React.FC = () => {
@@ -14,6 +15,9 @@ const AppRoutes: React.FC = () => {
   switch (normalizedPath) {
     case '/':
       return <ViteWelcomePage />;
+
+    case '/board-maker':
+      return <BoardMakerPage />;
 
     case '/game':
     case '/game-v0.3.z':

@@ -6,6 +6,7 @@ import { SolverPanelWidget } from '@/widgets/solver-panel';
 import { ItemsPanelWidget } from '@/widgets/items-panel';
 import type { SolverCombination } from '@/features/look-ahead-solver';
 import { useGameSessionStore } from '@/entities/game-session';
+import { Link } from '@/shared/lib/router';
 
 export interface SidePanelProps {
   isOpen: boolean;
@@ -94,6 +95,14 @@ export const SidePanel: React.FC<SidePanelProps> = ({
           >
             🎒 Items
           </button>
+          <Link
+            href="/board-maker"
+            className="shrink-0 whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-semibold text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700/50 transition cursor-pointer flex items-center gap-1"
+            title="Open Board Maker & Layer Editor"
+          >
+            <span>🛠️</span>
+            <span>Board Maker</span>
+          </Link>
         </div>
 
         <button

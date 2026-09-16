@@ -9,6 +9,8 @@ import { getGridPitch } from '../lib/coordinates';
 export interface GameBoardWidgetProps {
   /** Optional 2D array override. If not passed, reads from useBoardStore */
   matrix?: number[][];
+  /** Optional stacks override. If not passed, reads from useBoardStore */
+  stacks?: Record<string, number[]>;
   /** Whether user can interact with the board. Defaults to true */
   interactive?: boolean;
   /** Target sum required to clear tiles (default 10) */
@@ -45,6 +47,7 @@ export interface GameBoardWidgetProps {
 
 export const GameBoardWidget: React.FC<GameBoardWidgetProps> = ({
   matrix,
+  stacks,
   interactive = true,
   targetSum = 10,
   twoClickSelection = true,
@@ -93,6 +96,7 @@ export const GameBoardWidget: React.FC<GameBoardWidgetProps> = ({
       interactive,
       targetSum,
       matrix,
+      stacks,
       highlightedTiles,
       targetTile,
       visualConfig: {
@@ -186,6 +190,12 @@ export const GameBoardWidget: React.FC<GameBoardWidgetProps> = ({
       engineRef.current.setMatrixOverride(matrix);
     }
   }, [matrix]);
+
+  useEffect(() => {
+    if (engineRef.current) {
+      engineRef.current.setStacksOverride(stacks);
+    }
+  }, [stacks]);
 
   useEffect(() => {
     if (engineRef.current) {

@@ -65,6 +65,13 @@ export const ViteWelcomePage = () => {
                 ← v0.1.z (/game-v0.1.z)
               </Link>
             </div>
+            <Link
+              href="/board-maker"
+              className="w-full text-center px-3 py-2 rounded-xl font-bold text-xs bg-amber-200/80 dark:bg-amber-950/50 border border-amber-400/50 text-amber-950 dark:text-amber-300 hover:bg-amber-300/80 dark:hover:bg-amber-900/60 transition cursor-pointer flex items-center justify-center gap-1.5"
+            >
+              <span>🛠️</span>
+              <span>Board Maker &amp; Layer Editor (/board-maker)</span>
+            </Link>
           </div>
           <div className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1 flex items-center gap-1.5">
             <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />

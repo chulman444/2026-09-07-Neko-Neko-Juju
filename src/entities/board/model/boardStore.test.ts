@@ -261,3 +261,81 @@ describe('boardStore - setDimensions', () => {
     expect(useBoardStore.getState().orientationOffset).toEqual({ rot: 0, flip: false });
   });
 });
+
+describe('boardStore - stacked tiles (layers)', () => {
+  it('correctly pops from stacks into matrix when clearing tiles', () => {
+    const testMatrix = [
+      [3, 4],
+      [5, 6],
+    ];
+    const testStacks = {
+      '0,0': [7, 8], // Bottom to top: 7, 8. When popped: 8 first, then 7.
+      '1,0': [9],
+    };
+
+    useBoardStore.getState().setMatrix(testMatrix, testStacks);
+    expect(useBoardStore.getState().matrix[0]![0]).toBe(3);
+    expect(useBoardStore.getState().stacks['0,0']).toEqual([7, 8]);
+
+    // 1st clear at (0, 0): Active 3 cleared -> reveals 8 from stack
+    const cleared1 = useBoardStore.getState().clearTiles([{ col: 0, row: 0 }]);
+    expect(cleared1).toBe(1);
+    expect(useBoardStore.getState().matrix[0]![0]).toBe(8);
+    expect(useBoardStore.getState().stacks['0,0']).toEqual([7]);
+
+    // 2nd clear at (0, 0): Active 8 cleared -> reveals 7 from stack
+    const cleared2 = useBoardStore.getState().clearTiles([{ col: 0, row: 0 }]);
+    expect(cleared2).toBe(1);
+    expect(useBoardStore.getState().matrix[0]![0]).toBe(7);
+    expect(useBoardStore.getState().stacks['0,0']).toBeUndefined();
+
+    // 3rd clear at (0, 0): Stack is now empty -> tile becomes 0
+    const cleared3 = useBoardStore.getState().clearTiles([{ col: 0, row: 0 }]);
+    expect(cleared3).toBe(1);
+    expect(useBoardStore.getState().matrix[0]![0]).toBe(0);
+
+    // 4th clear at (0, 0): Already 0 -> not cleared
+    const cleared4 = useBoardStore.getState().clearTiles([{ col: 0, row: 0 }]);
+    expect(cleared4).toBe(0);
+  });
+
+  it('restores initialStacks upon restartCurrentBoard', () => {
+    const testMatrix = [
+      [1, 2],
+      [3, 4],
+    ];
+    const testStacks = {
+      '0,0': [5, 6],
+    };
+
+    useBoardStore.getState().setMatrix(testMatrix, testStacks);
+    useBoardStore.getState().clearTiles([{ col: 0, row: 0 }]);
+    expect(useBoardStore.getState().matrix[0]![0]).toBe(6);
+    expect(useBoardStore.getState().stacks['0,0']).toEqual([5]);
+
+    // Restart board
+    useBoardStore.getState().restartCurrentBoard();
+    const state = useBoardStore.getState();
+    expect(state.matrix[0]![0]).toBe(1);
+    expect(state.stacks['0,0']).toEqual([5, 6]);
+  });
+
+  it('rotates stack coordinates when rotating board', () => {
+    const testMatrix = [
+      [1, 2, 3],
+      [4, 5, 6],
+    ]; // 3 cols, 2 rows
+    const testStacks = {
+      '2,0': [9], // Top-right corner
+    };
+
+    useBoardStore.getState().setMatrix(testMatrix, testStacks);
+    // Rotate CW: (c: 2, r: 0) becomes (c: 2 - 1 - 0 = 1, r: 2) -> (1, 2)
+    useBoardStore.getState().applyRotationCW();
+    expect(useBoardStore.getState().stacks['1,2']).toEqual([9]);
+
+    // Rotate CCW: restores back to (2, 0)
+    useBoardStore.getState().applyRotationCCW();
+    expect(useBoardStore.getState().stacks['2,0']).toEqual([9]);
+  });
+});

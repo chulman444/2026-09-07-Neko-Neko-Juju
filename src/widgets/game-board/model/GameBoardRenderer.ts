@@ -82,6 +82,7 @@ export class GameBoardRenderer {
     this.drawValidSumCatHeads();
     this.drawSelectionIndicators();
     this.drawNumberText();
+    this.drawStackBadges();
     this.drawTargetBadge();
     this.drawClearingAnimations();
   }
@@ -119,7 +120,7 @@ export class GameBoardRenderer {
 
   // Layer 2: Base Bowls (with vector fallback)
   private drawBaseBowls(): void {
-    const { matrix, rows, cols, shapeSize, tileBorder } = this.board;
+    const { matrix, stacks, rows, cols, shapeSize, tileBorder } = this.board;
     const hasImage = gameAssets.bowl.complete && gameAssets.bowl.naturalWidth > 0;
 
     for (let r = 0; r < rows; r++) {
@@ -128,6 +129,19 @@ export class GameBoardRenderer {
         if (val === 0) continue;
         const cellX = c * this.pitch + tileBorder;
         const cellY = r * this.pitch + tileBorder;
+
+        // Pseudo-3D topography depth offset for stacked tiles
+        const stackLen = stacks?.[`${c},${r}`]?.length ?? 0;
+        if (stackLen > 0) {
+          const layersToDraw = Math.min(stackLen, 3);
+          for (let i = layersToDraw; i >= 1; i--) {
+            const offset = i * 2;
+            this.ctx.fillStyle = i === 1 ? '#d97706' : '#92400e';
+            this.ctx.beginPath();
+            this.ctx.roundRect(cellX + offset, cellY + offset, shapeSize, shapeSize, 10);
+            this.ctx.fill();
+          }
+        }
 
         if (hasImage) {
           this.ctx.drawImage(gameAssets.bowl, cellX, cellY, shapeSize, shapeSize);
@@ -502,6 +516,52 @@ export class GameBoardRenderer {
 
         this.ctx.fillStyle = isOmni ? '#fbbf24' : textColor;
         this.ctx.fillText(textToDraw, cx, textOffsetY);
+      }
+    }
+  }
+
+  // Layer 6.4: Stack Depth Badges (e.g. x2, x3, x7)
+  private drawStackBadges(): void {
+    const { matrix, stacks, rows, cols, shapeSize, tileBorder } = this.board;
+    if (!stacks) return;
+
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const val = matrix[r]?.[c] ?? 0;
+        if (val === 0) continue;
+
+        const stackKey = `${c},${r}`;
+        const stack = stacks[stackKey];
+        if (!stack || stack.length === 0) continue;
+
+        const totalDepth = stack.length + 1;
+        const text = `x${totalDepth}`;
+
+        const cellX = c * this.pitch + tileBorder;
+        const cellY = r * this.pitch + tileBorder;
+
+        // Position badge at top-right of the tile
+        const badgeW = text.length >= 3 ? 20 : 16;
+        const badgeH = 13;
+        const badgeX = cellX + shapeSize - badgeW;
+        const badgeY = cellY;
+
+        this.ctx.save();
+        this.ctx.fillStyle = '#b45309'; // Rich amber badge
+        this.ctx.beginPath();
+        this.ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 3);
+        this.ctx.fill();
+
+        this.ctx.strokeStyle = '#fef3c7';
+        this.ctx.lineWidth = 1;
+        this.ctx.stroke();
+
+        this.ctx.fillStyle = '#ffffff';
+        this.ctx.font = 'bold 9px sans-serif';
+        this.ctx.textAlign = 'center';
+        this.ctx.textBaseline = 'middle';
+        this.ctx.fillText(text, badgeX + badgeW / 2, badgeY + badgeH / 2);
+        this.ctx.restore();
       }
     }
   }
