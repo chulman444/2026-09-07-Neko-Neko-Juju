@@ -105,6 +105,7 @@ export const SolverPanelWidget: React.FC<SolverPanelWidgetProps> = ({
   // Wheel pagination
   const handleWheel = (e: React.WheelEvent, type: SolverListType) => {
     e.preventDefault();
+    e.stopPropagation();
     const direction = e.deltaY > 0 ? 1 : -1;
     changePage(type, direction);
   };

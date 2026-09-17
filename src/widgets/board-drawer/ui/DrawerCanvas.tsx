@@ -334,6 +334,7 @@ export const DrawerCanvas: React.FC = () => {
     // Scroll wheel: Cycle selectedBrush strictly through 1-9 (excluding 0, -, +)
     const handleWheel = (e: WheelEvent) => {
       e.preventDefault();
+      e.stopPropagation();
       const curBrush = useBoardMakerStore.getState().selectedBrush;
       let nextNum: number;
       if (typeof curBrush !== 'number' || curBrush < 1 || curBrush > 9) {
@@ -378,6 +379,9 @@ export const DrawerCanvas: React.FC = () => {
     canvas.addEventListener('mouseleave', handleMouseLeave);
     canvas.addEventListener('contextmenu', handleContextMenu);
     canvas.addEventListener('wheel', handleWheel, { passive: false });
+    if (container) {
+      container.addEventListener('wheel', handleWheel, { passive: false });
+    }
     window.addEventListener('mouseup', handleMouseUp);
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('keydown', handleKeyDown);
@@ -388,6 +392,9 @@ export const DrawerCanvas: React.FC = () => {
       canvas.removeEventListener('mouseleave', handleMouseLeave);
       canvas.removeEventListener('contextmenu', handleContextMenu);
       canvas.removeEventListener('wheel', handleWheel);
+      if (container) {
+        container.removeEventListener('wheel', handleWheel);
+      }
       window.removeEventListener('mouseup', handleMouseUp);
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('keydown', handleKeyDown);

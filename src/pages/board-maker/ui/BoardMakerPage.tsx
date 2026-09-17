@@ -35,6 +35,7 @@ export const BoardMakerPage: React.FC = () => {
 
   const [notification, setNotification] = useState<string | null>(null);
   const inspectorScrollRef = useRef<HTMLDivElement | null>(null);
+  const layerSelectorRef = useRef<HTMLDivElement | null>(null);
 
   const showNotification = (msg: string) => {
     setNotification(msg);
@@ -79,6 +80,40 @@ export const BoardMakerPage: React.FC = () => {
       }
     });
   };
+
+  // Non-passive wheel listener for Layer Selector to prevent page scrolling
+  useEffect(() => {
+    const el = layerSelectorRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      stepActiveLayer(e.deltaY < 0 ? 1 : -1, maxExistingLayer + 1);
+    };
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => {
+      el.removeEventListener('wheel', onWheel);
+    };
+  }, [maxExistingLayer, stepActiveLayer]);
+
+  // Non-passive wheel listener for Stack Inspector tiles to prevent container/page scrolling
+  useEffect(() => {
+    const container = inspectorScrollRef.current;
+    if (!container) return;
+    const onWheel = (e: WheelEvent) => {
+      const target = (e.target as HTMLElement | null)?.closest<HTMLElement>('[data-tile-depth]');
+      if (target && inspectedStack) {
+        e.preventDefault();
+        e.stopPropagation();
+        const depth = parseInt(target.getAttribute('data-tile-depth') ?? '0', 10);
+        cycleTileValueAtDepth(inspectedStack.col, inspectedStack.row, depth, e.deltaY < 0 ? 1 : -1);
+      }
+    };
+    container.addEventListener('wheel', onWheel, { passive: false });
+    return () => {
+      container.removeEventListener('wheel', onWheel);
+    };
+  }, [inspectedStack, cycleTileValueAtDepth]);
 
   // Global keyboard shortcuts for layers: Home (Base), End (Surface), [ (down), ] (up)
   useEffect(() => {
@@ -234,10 +269,7 @@ export const BoardMakerPage: React.FC = () => {
 
           {/* Layer Selector */}
           <div
-            onWheel={(e) => {
-              e.preventDefault();
-              stepActiveLayer(e.deltaY < 0 ? 1 : -1, maxExistingLayer + 1);
-            }}
+            ref={layerSelectorRef}
             className="flex flex-col gap-1.5 p-2.5 rounded-xl bg-white dark:bg-zinc-900 border border-amber-900/10 dark:border-zinc-700"
           >
             <div className="flex items-center justify-between">
@@ -511,16 +543,7 @@ export const BoardMakerPage: React.FC = () => {
                         <React.Fragment key={z}>
                           {/* Tile Card */}
                           <div
-                            onWheel={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              cycleTileValueAtDepth(
-                                inspectedStack.col,
-                                inspectedStack.row,
-                                z,
-                                e.deltaY < 0 ? 1 : -1
-                              );
-                            }}
+                            data-tile-depth={z}
                             className={`relative flex flex-col items-center justify-between p-1.5 rounded-lg w-16 h-20 border shrink-0 transition cursor-ns-resize ${
                               isActive
                                 ? 'ring-2 ring-sky-500 border-sky-400 shadow-md bg-sky-50/70 dark:bg-sky-950/40'
