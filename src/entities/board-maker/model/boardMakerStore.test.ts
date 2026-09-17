@@ -210,9 +210,7 @@ describe('boardMakerStore', () => {
       expect(useBoardMakerStore.getState().activeLayer).toBe(2);
 
       useBoardMakerStore.getState().stepActiveLayer(1, 3);
-      expect(useBoardMakerStore.getState().activeLayer).toBe(3);
-
-      // Exceeding maxLayer goes to 'surface'
+      // Stepping up at maxLayer (3) goes to 'surface' (top-down view)
       useBoardMakerStore.getState().stepActiveLayer(1, 3);
       expect(useBoardMakerStore.getState().activeLayer).toBe('surface');
 
@@ -220,9 +218,13 @@ describe('boardMakerStore', () => {
       useBoardMakerStore.getState().stepActiveLayer(1, 3);
       expect(useBoardMakerStore.getState().activeLayer).toBe('surface');
 
-      // Stepping down at 'surface' goes to maxLayer
+      // Stepping down at 'surface' goes to maxLayer (3)
       useBoardMakerStore.getState().stepActiveLayer(-1, 3);
       expect(useBoardMakerStore.getState().activeLayer).toBe(3);
+
+      // Stepping down from 3 goes to 2
+      useBoardMakerStore.getState().stepActiveLayer(-1, 3);
+      expect(useBoardMakerStore.getState().activeLayer).toBe(2);
     });
   });
 });

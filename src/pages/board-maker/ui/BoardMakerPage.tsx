@@ -59,9 +59,29 @@ export const BoardMakerPage: React.FC = () => {
 
   // Determine available layers for selector
   const maxExistingLayer = Object.values(bmStacks).reduce((max, s) => Math.max(max, s.length), 0);
-  const layerOptionsCount = Math.max(4, maxExistingLayer + 2);
-  const availableLayers = Array.from({ length: layerOptionsCount }, (_, i) => i);
+  // Ordered from surface down to base (highest layer down to 0)
+  const availableLayers = Array.from(
+    { length: maxExistingLayer + 1 },
+    (_, i) => maxExistingLayer - i
+  );
   const tileCounts = getTileCounts(bmCols, bmRows, bmMatrix, bmStacks);
+
+  const isSurfaceMode = activeLayer === 'surface';
+  const isBaseSelected = activeLayer === 0;
+
+  const handleSurfaceButtonClick = () => {
+    if (isSurfaceMode) {
+      // Switch from dynamic Top-Down to Top Layer slice
+      setActiveLayer(maxExistingLayer);
+    } else {
+      // Switch from any slice to dynamic Top-Down view
+      setActiveLayer('surface');
+    }
+  };
+
+  const handleBaseButtonClick = () => {
+    setActiveLayer(0);
+  };
 
   // Determine tile value to insert when clicking [+]
   const activeInsertValue =
@@ -88,7 +108,7 @@ export const BoardMakerPage: React.FC = () => {
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
       e.stopPropagation();
-      stepActiveLayer(e.deltaY < 0 ? 1 : -1, maxExistingLayer + 1);
+      stepActiveLayer(e.deltaY < 0 ? 1 : -1, maxExistingLayer);
     };
     el.addEventListener('wheel', onWheel, { passive: false });
     return () => {
@@ -129,10 +149,10 @@ export const BoardMakerPage: React.FC = () => {
         setActiveLayer('surface');
       } else if (e.key === '[') {
         e.preventDefault();
-        stepActiveLayer(-1, maxExistingLayer + 1);
+        stepActiveLayer(-1, maxExistingLayer);
       } else if (e.key === ']') {
         e.preventDefault();
-        stepActiveLayer(1, maxExistingLayer + 1);
+        stepActiveLayer(1, maxExistingLayer);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -276,82 +296,94 @@ export const BoardMakerPage: React.FC = () => {
               <span className="text-xs font-semibold text-zinc-500 flex items-center gap-1">
                 <span>📚 Layer Selector:</span>
                 <span className="font-bold text-amber-950 dark:text-zinc-200">
-                  {activeLayer === 'surface'
-                    ? 'Surface (Top of stacks)'
-                    : `Active Layer ${activeLayer}`}
+                  {isSurfaceMode
+                    ? 'Top-Down View (Surface Mode)'
+                    : activeLayer === maxExistingLayer && maxExistingLayer > 0
+                      ? `L${activeLayer} (Top Layer Slice)`
+                      : activeLayer === 0
+                        ? maxExistingLayer === 0
+                          ? 'L0 (Base / Top Layer Slice)'
+                          : 'L0 (Base Layer Slice)'
+                        : `Layer ${activeLayer} Slice`}
                 </span>
               </span>
-              <div className="flex items-center gap-1">
-                <button
-                  type="button"
-                  onClick={() => setActiveLayer(0)}
-                  className="text-[10px] font-bold px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 transition cursor-pointer"
-                  title="Jump to Base Layer 0 (Key: Home)"
-                >
-                  [Base]
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveLayer('surface')}
-                  className="text-[10px] font-bold px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 transition cursor-pointer"
-                  title="Jump to Surface (Key: End)"
-                >
-                  [Top]
-                </button>
-              </div>
+              <span className="text-[10px] text-zinc-400">Scroll to step layer</span>
             </div>
 
-            <div className="flex flex-wrap items-center gap-1.5">
+            <div className="flex items-center gap-2">
+              {/* Surface Button (Left) */}
               <button
                 type="button"
-                onClick={() => setActiveLayer('surface')}
-                className={`px-2.5 py-1 text-xs font-bold rounded-lg transition cursor-pointer flex items-center gap-1.5 ${
-                  activeLayer === 'surface'
+                onClick={handleSurfaceButtonClick}
+                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition cursor-pointer flex items-center gap-1.5 shrink-0 ${
+                  isSurfaceMode
                     ? 'bg-emerald-600 text-white shadow ring-2 ring-emerald-400'
-                    : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700'
+                    : activeLayer === maxExistingLayer
+                      ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-400'
+                      : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700'
                 }`}
+                title={
+                  isSurfaceMode
+                    ? 'Top-Down View Active (Click to switch to Top Layer Slice)'
+                    : 'Click to enable Top-Down View (Key: End)'
+                }
               >
-                <span>⛰️ Surface</span>
-                <span
-                  className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
-                    activeLayer === 'surface'
-                      ? 'bg-emerald-800/60 text-emerald-100'
-                      : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-500 dark:text-zinc-400'
-                  }`}
-                >
-                  {tileCounts.surface}
-                </span>
+                <span>⛰️ {isSurfaceMode ? 'Top-Down' : 'Top View'}</span>
               </button>
 
-              <div className="h-4 w-px bg-zinc-300 dark:bg-zinc-700 mx-0.5" />
+              {/* Select List (Middle) */}
+              <div className="flex-1 min-w-0">
+                <select
+                  value={isSurfaceMode ? 'surface' : String(activeLayer)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === 'surface') {
+                      setActiveLayer('surface');
+                    } else {
+                      setActiveLayer(Number(val));
+                    }
+                  }}
+                  className="w-full px-2.5 py-1.5 text-xs font-bold rounded-lg border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-amber-950 dark:text-zinc-100 cursor-pointer focus:outline-none focus:ring-2 focus:ring-amber-500 transition truncate"
+                  title="Select Layer or Top-Down View"
+                >
+                  <option value="surface">
+                    ⛰️ Top-Down View (Surface Mode) ({tileCounts.surface}{' '}
+                    {tileCounts.surface === 1 ? 'tile' : 'tiles'})
+                  </option>
+                  <optgroup label="Horizontal Layer Slices">
+                    {availableLayers.map((layerNum) => {
+                      const count = tileCounts.layers[layerNum] ?? 0;
+                      let label = `L${layerNum}`;
+                      if (layerNum === maxExistingLayer && maxExistingLayer > 0) {
+                        label = `L${layerNum} (Top Layer)`;
+                      } else if (layerNum === 0) {
+                        label =
+                          maxExistingLayer === 0 ? `L0 (Base / Top Layer)` : `L0 (Base Layer)`;
+                      }
 
-              {availableLayers.map((layerNum) => {
-                const count = tileCounts.layers[layerNum] ?? 0;
-                const isSelected = activeLayer === layerNum;
-                return (
-                  <button
-                    key={layerNum}
-                    type="button"
-                    onClick={() => setActiveLayer(layerNum)}
-                    className={`px-2 py-1 text-xs font-bold rounded-lg transition cursor-pointer flex items-center gap-1 ${
-                      isSelected
-                        ? 'bg-amber-600 text-white shadow ring-2 ring-amber-400'
-                        : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700'
-                    }`}
-                  >
-                    <span>{layerNum === 0 ? 'L0 (Base)' : `L${layerNum}`}</span>
-                    <span
-                      className={`text-[10px] px-1 py-0.2 rounded-full font-mono ${
-                        isSelected
-                          ? 'bg-amber-800/60 text-amber-100'
-                          : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-500 dark:text-zinc-400'
-                      }`}
-                    >
-                      {count}
-                    </span>
-                  </button>
-                );
-              })}
+                      return (
+                        <option key={layerNum} value={String(layerNum)}>
+                          {label} ({count} {count === 1 ? 'tile' : 'tiles'})
+                        </option>
+                      );
+                    })}
+                  </optgroup>
+                </select>
+              </div>
+
+              {/* Base Button (Right) */}
+              <button
+                type="button"
+                onClick={handleBaseButtonClick}
+                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition cursor-pointer flex items-center gap-1.5 shrink-0 ${
+                  isBaseSelected
+                    ? 'bg-amber-600 text-white shadow ring-2 ring-amber-400'
+                    : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700'
+                }`}
+                title="Jump to Base Layer 0 Slice (Key: Home)"
+              >
+                <span>🏠 L0 Base</span>
+              </button>
             </div>
           </div>
 

@@ -347,20 +347,22 @@ export const useBoardMakerStore = create<BoardMakerState>((set, get) => ({
     set({ matrix: newMatrix, stacks: newStacks, inspectedStack: updatedInspected });
   },
 
-  stepActiveLayer: (delta, maxLayer = 4) => {
+  stepActiveLayer: (delta, maxLayer = 0) => {
     const { activeLayer } = get();
-    if (activeLayer === 'surface') {
-      if (delta < 0) {
-        set({ activeLayer: maxLayer });
+    if (delta > 0) {
+      if (activeLayer === 'surface') {
+        return;
       }
-    } else {
-      const next = activeLayer + delta;
-      if (next > maxLayer) {
+      if (activeLayer >= maxLayer) {
         set({ activeLayer: 'surface' });
-      } else if (next < 0) {
-        set({ activeLayer: 0 });
       } else {
-        set({ activeLayer: next });
+        set({ activeLayer: activeLayer + 1 });
+      }
+    } else if (delta < 0) {
+      if (activeLayer === 'surface') {
+        set({ activeLayer: maxLayer });
+      } else if (typeof activeLayer === 'number' && activeLayer > 0) {
+        set({ activeLayer: activeLayer - 1 });
       }
     }
   },
