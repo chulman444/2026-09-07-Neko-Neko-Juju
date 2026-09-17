@@ -32,6 +32,8 @@ export const BoardMakerPage: React.FC = () => {
   const cycleTileValueAtDepth = useBoardMakerStore((state) => state.cycleTileValueAtDepth);
   const toggleHeatmapMode = useBoardMakerStore((state) => state.toggleHeatmapMode);
   const setBoard = useBoardMakerStore((state) => state.setBoard);
+  const cannotDrawStyle = useBoardMakerStore((state) => state.cannotDrawStyle);
+  const setCannotDrawStyle = useBoardMakerStore((state) => state.setCannotDrawStyle);
 
   const [notification, setNotification] = useState<string | null>(null);
   const inspectorScrollRef = useRef<HTMLDivElement | null>(null);
@@ -384,6 +386,37 @@ export const BoardMakerPage: React.FC = () => {
               >
                 <span>🏠 Base</span>
               </button>
+            </div>
+
+            {/* Cannot-Draw Indicator Style Toggle */}
+            <div className="flex items-center justify-between pt-1 border-t border-zinc-200/60 dark:border-zinc-800 text-[11px]">
+              <span className="text-zinc-500 font-medium">Cannot-draw indicator:</span>
+              <div className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 p-0.5 rounded-md">
+                <button
+                  type="button"
+                  onClick={() => setCannotDrawStyle('slash')}
+                  className={`px-2 py-0.5 rounded font-semibold transition cursor-pointer ${
+                    cannotDrawStyle === 'slash'
+                      ? 'bg-white dark:bg-zinc-700 text-amber-950 dark:text-zinc-100 shadow-xs'
+                      : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
+                  }`}
+                  title="Slash (/) indicator"
+                >
+                  / Slash
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCannotDrawStyle('cross')}
+                  className={`px-2 py-0.5 rounded font-semibold transition cursor-pointer ${
+                    cannotDrawStyle === 'cross'
+                      ? 'bg-white dark:bg-zinc-700 text-amber-950 dark:text-zinc-100 shadow-xs'
+                      : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
+                  }`}
+                  title="Cross (X) indicator"
+                >
+                  ✕ Cross
+                </button>
+              </div>
             </div>
           </div>
 

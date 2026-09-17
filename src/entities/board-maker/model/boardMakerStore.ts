@@ -22,6 +22,7 @@ export interface BoardMakerState {
   activeLayer: number | 'surface';
   inspectedStack: InspectedStack | null;
   heatmapMode: boolean;
+  cannotDrawStyle: 'slash' | 'cross';
 
   // Actions
   setDimensions: (cols: number, rows: number) => void;
@@ -34,6 +35,7 @@ export interface BoardMakerState {
   setActiveLayer: (layer: number | 'surface') => void;
   setInspectedStack: (coord: { col: number; row: number } | null) => void;
   toggleHeatmapMode: () => void;
+  setCannotDrawStyle: (style: 'slash' | 'cross') => void;
 
   setTileAtLayer: (col: number, row: number, z: number | 'surface', brush: Brush) => void;
   clearStackAt: (col: number, row: number) => void;
@@ -147,6 +149,7 @@ export const useBoardMakerStore = create<BoardMakerState>((set, get) => ({
   activeLayer: 'surface',
   inspectedStack: null,
   heatmapMode: false,
+  cannotDrawStyle: 'slash',
 
   setDimensions: (cols, rows) => {
     set({ cols, rows, inspectedStack: null });
@@ -169,6 +172,7 @@ export const useBoardMakerStore = create<BoardMakerState>((set, get) => ({
     set({ inspectedStack: { col: coord.col, row: coord.row, stack } });
   },
   toggleHeatmapMode: () => set((state) => ({ heatmapMode: !state.heatmapMode })),
+  setCannotDrawStyle: (cannotDrawStyle) => set({ cannotDrawStyle }),
 
   setTileAtLayer: (col, row, z, brush) => {
     const { matrix, stacks, cols, rows, inspectedStack } = get();

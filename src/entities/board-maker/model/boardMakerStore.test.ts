@@ -226,5 +226,15 @@ describe('boardMakerStore', () => {
       useBoardMakerStore.getState().stepActiveLayer(-1, 3);
       expect(useBoardMakerStore.getState().activeLayer).toBe(2);
     });
+
+    it('toggles cannotDrawStyle between slash and cross', () => {
+      expect(useBoardMakerStore.getState().cannotDrawStyle).toBe('slash');
+
+      useBoardMakerStore.getState().setCannotDrawStyle('cross');
+      expect(useBoardMakerStore.getState().cannotDrawStyle).toBe('cross');
+
+      useBoardMakerStore.getState().setCannotDrawStyle('slash');
+      expect(useBoardMakerStore.getState().cannotDrawStyle).toBe('slash');
+    });
   });
 });

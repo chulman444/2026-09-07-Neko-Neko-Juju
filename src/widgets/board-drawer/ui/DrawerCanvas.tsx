@@ -21,6 +21,7 @@ export const DrawerCanvas: React.FC = () => {
   const activeLayer = useBoardMakerStore((state) => state.activeLayer);
   const inspectedStack = useBoardMakerStore((state) => state.inspectedStack);
   const heatmapMode = useBoardMakerStore((state) => state.heatmapMode);
+  const cannotDrawStyle = useBoardMakerStore((state) => state.cannotDrawStyle);
 
   const setTileAtLayer = useBoardMakerStore((state) => state.setTileAtLayer);
   const setSelectedBrush = useBoardMakerStore((state) => state.setSelectedBrush);
@@ -118,35 +119,78 @@ export const DrawerCanvas: React.FC = () => {
           const topVal = matrix[r]?.[c] ?? 0;
 
           if (!hasSupport) {
-            // If a tile exists elsewhere in this stack, draw it ghosted underneath
-            if (topVal > 0) {
-              ctx.save();
-              ctx.globalAlpha = 0.3;
-              ctx.fillStyle = BM_COLOR_PALETTE[topVal] || '#3b82f6';
-              ctx.fillRect(cellX, cellY, tileSize, tileSize);
-              ctx.fillStyle = '#ffffff';
-              ctx.font = 'bold 14px monospace';
-              ctx.textAlign = 'center';
-              ctx.textBaseline = 'middle';
-              ctx.fillText(topVal.toString(), cellX + tileSize / 2, cellY + tileSize / 2);
-              ctx.restore();
+            // Dark well background for unsupported cell
+            ctx.fillStyle = '#27272a';
+            ctx.fillRect(cellX, cellY, tileSize, tileSize);
 
-              // Translucent cannot-draw hatch overlay
-              ctx.fillStyle = 'rgba(24, 24, 27, 0.75)';
-              ctx.fillRect(cellX, cellY, tileSize, tileSize);
-            } else {
-              // Plain dark background for completely empty non-drawable cells
-              ctx.fillStyle = '#27272a';
-              ctx.fillRect(cellX, cellY, tileSize, tileSize);
-            }
+            const innerSize = 20;
+            const innerOffset = (tileSize - innerSize) / 2;
+            const innerX = cellX + innerOffset;
+            const innerY = cellY + innerOffset;
 
-            // Diagonal hatch line
             ctx.strokeStyle = '#52525b';
-            ctx.lineWidth = 1.5;
-            ctx.beginPath();
-            ctx.moveTo(cellX, cellY + tileSize);
-            ctx.lineTo(cellX + tileSize, cellY);
-            ctx.stroke();
+            ctx.lineWidth = 1;
+
+            if (cannotDrawStyle === 'cross') {
+              if (topVal > 0) {
+                // Diagonals connecting 4 outer corners to inner square corners
+                ctx.beginPath();
+                ctx.moveTo(cellX, cellY);
+                ctx.lineTo(innerX, innerY);
+                ctx.moveTo(cellX + tileSize, cellY);
+                ctx.lineTo(innerX + innerSize, innerY);
+                ctx.moveTo(cellX, cellY + tileSize);
+                ctx.lineTo(innerX, innerY + innerSize);
+                ctx.moveTo(cellX + tileSize, cellY + tileSize);
+                ctx.lineTo(innerX + innerSize, innerY + innerSize);
+                ctx.stroke();
+
+                // Inner square framing the number
+                ctx.strokeRect(innerX, innerY, innerSize, innerSize);
+
+                // Centered number in tile's palette color (original font unchanged)
+                ctx.fillStyle = BM_COLOR_PALETTE[topVal] || '#3b82f6';
+                ctx.font = 'bold 14px monospace';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(topVal.toString(), cellX + tileSize / 2, cellY + tileSize / 2);
+              } else {
+                // Truly empty cell: full X cross
+                ctx.beginPath();
+                ctx.moveTo(cellX, cellY);
+                ctx.lineTo(cellX + tileSize, cellY + tileSize);
+                ctx.moveTo(cellX, cellY + tileSize);
+                ctx.lineTo(cellX + tileSize, cellY);
+                ctx.stroke();
+              }
+            } else {
+              // 'slash' mode
+              if (topVal > 0) {
+                // Diagonal slash connecting outer corners to inner square
+                ctx.beginPath();
+                ctx.moveTo(cellX, cellY + tileSize);
+                ctx.lineTo(innerX, innerY + innerSize);
+                ctx.moveTo(innerX + innerSize, innerY);
+                ctx.lineTo(cellX + tileSize, cellY);
+                ctx.stroke();
+
+                // Inner square framing the number
+                ctx.strokeRect(innerX, innerY, innerSize, innerSize);
+
+                // Centered number in tile's palette color (original font unchanged)
+                ctx.fillStyle = BM_COLOR_PALETTE[topVal] || '#3b82f6';
+                ctx.font = 'bold 14px monospace';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(topVal.toString(), cellX + tileSize / 2, cellY + tileSize / 2);
+              } else {
+                // Truly empty cell: full diagonal slash
+                ctx.beginPath();
+                ctx.moveTo(cellX, cellY + tileSize);
+                ctx.lineTo(cellX + tileSize, cellY);
+                ctx.stroke();
+              }
+            }
 
             ctx.strokeStyle = '#3f3f46';
             ctx.lineWidth = 1;
@@ -154,28 +198,24 @@ export const DrawerCanvas: React.FC = () => {
           } else {
             // Supported cell
             if (valAtZ === 0) {
-              // If supported empty slot at z > 0, show the top tile underneath ghosted
               if (topVal > 0) {
+                // Can-draw on top of stack: light pastel background + colored number (no blue dot)
                 ctx.save();
-                ctx.globalAlpha = 0.35;
+                ctx.globalAlpha = 0.25;
                 ctx.fillStyle = BM_COLOR_PALETTE[topVal] || '#3b82f6';
                 ctx.fillRect(cellX, cellY, tileSize, tileSize);
-                ctx.fillStyle = '#ffffff';
+                ctx.restore();
+
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+                ctx.fillRect(cellX, cellY, tileSize, tileSize);
+
+                ctx.fillStyle = BM_COLOR_PALETTE[topVal] || '#3b82f6';
                 ctx.font = 'bold 14px monospace';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 ctx.fillText(topVal.toString(), cellX + tileSize / 2, cellY + tileSize / 2);
-                ctx.restore();
-
-                // Platform border & dot indicating it can be drawn on
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
-                ctx.fillRect(cellX, cellY, tileSize, tileSize);
-
-                ctx.fillStyle = '#0284c7';
-                ctx.beginPath();
-                ctx.arc(cellX + tileSize / 2, cellY + tileSize / 2, 3, 0, Math.PI * 2);
-                ctx.fill();
               } else {
+                // Empty base layer cell (Z=0)
                 ctx.fillStyle = '#ffffff';
                 ctx.fillRect(cellX, cellY, tileSize, tileSize);
               }
@@ -230,7 +270,17 @@ export const DrawerCanvas: React.FC = () => {
         }
       }
     }
-  }, [cols, rows, matrix, stacks, activeLayer, inspectedStack, heatmapMode, tileSize]);
+  }, [
+    cols,
+    rows,
+    matrix,
+    stacks,
+    activeLayer,
+    inspectedStack,
+    heatmapMode,
+    cannotDrawStyle,
+    tileSize,
+  ]);
 
   // Handle Mouse / Wheel / Keyboard Events
   useEffect(() => {
