@@ -377,12 +377,12 @@ export const BoardMakerPage: React.FC = () => {
                 onClick={handleBaseButtonClick}
                 className={`px-3 py-1.5 text-xs font-bold rounded-lg transition cursor-pointer flex items-center gap-1.5 shrink-0 ${
                   isBaseSelected
-                    ? 'bg-amber-600 text-white shadow ring-2 ring-amber-400'
+                    ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-400'
                     : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700'
                 }`}
                 title="Jump to Base Layer 0 Slice (Key: Home)"
               >
-                <span>🏠 L0 Base</span>
+                <span>🏠 Base</span>
               </button>
             </div>
           </div>
