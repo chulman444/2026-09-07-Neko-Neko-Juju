@@ -30,7 +30,6 @@ export const DrawerCanvas: React.FC = () => {
   const isDrawingRef = useRef(false);
   const drawingBrushRef = useRef<Brush>(1);
   const lastInteractedKeyRef = useRef<string | null>(null);
-  const currentHoveredCoordRef = useRef<{ col: number; row: number } | null>(null);
 
   // Pan state for middle mouse button
   const isPanningRef = useRef(false);
@@ -301,8 +300,6 @@ export const DrawerCanvas: React.FC = () => {
       }
 
       const coord = getCoord(e);
-      currentHoveredCoordRef.current = coord;
-
       if (!isDrawingRef.current || !coord) return;
       const key = `${coord.col},${coord.row}`;
       if (lastInteractedKeyRef.current === key) return;
@@ -321,10 +318,6 @@ export const DrawerCanvas: React.FC = () => {
       }
       isDrawingRef.current = false;
       lastInteractedKeyRef.current = null;
-    };
-
-    const handleMouseLeave = () => {
-      currentHoveredCoordRef.current = null;
     };
 
     const handleContextMenu = (e: MouseEvent) => {
@@ -366,17 +359,11 @@ export const DrawerCanvas: React.FC = () => {
 
       if (brush !== null) {
         setSelectedBrush(brush);
-        const coord = currentHoveredCoordRef.current;
-        if (coord) {
-          const curState = useBoardMakerStore.getState();
-          setTileAtLayer(coord.col, coord.row, curState.activeLayer, brush);
-        }
       }
     };
 
     canvas.addEventListener('mousedown', handleMouseDown);
     canvas.addEventListener('mousemove', handleMouseMove);
-    canvas.addEventListener('mouseleave', handleMouseLeave);
     canvas.addEventListener('contextmenu', handleContextMenu);
     canvas.addEventListener('wheel', handleWheel, { passive: false });
     if (container) {
@@ -389,7 +376,6 @@ export const DrawerCanvas: React.FC = () => {
     return () => {
       canvas.removeEventListener('mousedown', handleMouseDown);
       canvas.removeEventListener('mousemove', handleMouseMove);
-      canvas.removeEventListener('mouseleave', handleMouseLeave);
       canvas.removeEventListener('contextmenu', handleContextMenu);
       canvas.removeEventListener('wheel', handleWheel);
       if (container) {
