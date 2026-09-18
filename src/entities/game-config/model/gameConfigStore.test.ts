@@ -26,7 +26,7 @@ describe('useGameConfigStore', () => {
     const state = useGameConfigStore.getState();
     expect(state.preset).toBe('classic');
     expect(state.enableItems).toBe(false);
-    expect(state.enableDevTools).toBe(false);
+    expect(state.enableDevTools).toBe(true);
     expect(state.enableHints).toBe(false);
     expect(state.enableSelectionHUD).toBe(false);
     expect(state.enableCombos).toBe(true);
@@ -47,19 +47,19 @@ describe('useGameConfigStore', () => {
     const state = useGameConfigStore.getState();
     expect(state.preset).toBe('roguelite');
     expect(state.enableItems).toBe(true);
-    expect(state.enableDevTools).toBe(false);
+    expect(state.enableDevTools).toBe(true);
     expect(state.enableSolidBlocks).toBe(true);
     expect(state.enableBounties).toBe(true);
   });
 
   it('allows overriding individual flags and resetting to preset', () => {
     useGameConfigStore.getState().setPreset('classic');
-    expect(useGameConfigStore.getState().enableDevTools).toBe(false);
+    expect(useGameConfigStore.getState().enableHints).toBe(false);
 
-    useGameConfigStore.getState().setFlag('enableDevTools', true);
-    expect(useGameConfigStore.getState().enableDevTools).toBe(true);
+    useGameConfigStore.getState().setFlag('enableHints', true);
+    expect(useGameConfigStore.getState().enableHints).toBe(true);
 
     useGameConfigStore.getState().resetToPreset();
-    expect(useGameConfigStore.getState().enableDevTools).toBe(false);
+    expect(useGameConfigStore.getState().enableHints).toBe(false);
   });
 });

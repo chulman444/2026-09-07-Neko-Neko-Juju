@@ -15,6 +15,7 @@ import { ComboBar } from './ComboBar';
 import { HintBar } from './HintBar';
 import { SidePanel } from './SidePanel';
 import { SelectionSumHUD } from './SelectionSumHUD';
+import { TitleCheatInput } from './TitleCheatInput';
 import type { SelectionMeta } from '@/widgets/game-board';
 
 export const GamePage: React.FC = () => {
@@ -191,9 +192,7 @@ export const GamePage: React.FC = () => {
             >
               ← Home
             </Link>
-            <span className="text-xl font-black tracking-tight text-neko-primary">
-              Neko Neko Juju
-            </span>
+            <TitleCheatInput onCheatSuccess={() => setShowSidePanel(true)} />
           </div>
           {/* 3-Part HUD Container */}
           <div className="flex flex-col bg-amber-50/70 dark:bg-zinc-800/70 border border-amber-200/80 dark:border-zinc-700 rounded-xl p-2.5 shadow-xs font-mono text-xs gap-1.5 min-w-[290px]">
@@ -374,18 +373,22 @@ export const GamePage: React.FC = () => {
         />
       )}
 
-      {/* Floating Edge Trigger when SidePanel is closed */}
-      {enableDevTools && !showSidePanel && (
+      {/* Floating Edge Trigger attached to viewport right when closed, or to side panel edge when open */}
+      {enableDevTools && (
         <button
           type="button"
-          onClick={() => setShowSidePanel(true)}
-          className="fixed top-1/2 right-0 -translate-y-1/2 z-40 bg-zinc-900/90 hover:bg-zinc-800 text-amber-400 p-2.5 rounded-l-xl border-l border-y border-zinc-700 shadow-xl cursor-pointer transition flex flex-col items-center gap-1 group"
-          title="Open Development Tools"
-          aria-label="Open Dev Tools Side Panel"
+          onClick={() => setShowSidePanel((prev) => !prev)}
+          className={`fixed top-1/2 -translate-y-1/2 z-50 bg-zinc-900/90 hover:bg-zinc-800 text-amber-400 p-2.5 rounded-l-xl border-l border-y border-zinc-700 shadow-xl cursor-pointer transition-all duration-300 flex flex-col items-center gap-1 group ${
+            showSidePanel ? 'right-[380px] md:right-[420px]' : 'right-0'
+          }`}
+          title={showSidePanel ? 'Close Development Tools' : 'Open Development Tools'}
+          aria-label={showSidePanel ? 'Close Dev Tools Side Panel' : 'Open Dev Tools Side Panel'}
         >
-          <span className="text-sm group-hover:scale-110 transition-transform">🛠️</span>
+          <span className="text-sm group-hover:scale-110 transition-transform">
+            {showSidePanel ? '▶' : '🛠️'}
+          </span>
           <span className="text-[10px] font-bold text-zinc-300 [writing-mode:vertical-rl] tracking-wider uppercase">
-            Tools
+            {showSidePanel ? 'Close' : 'Tools'}
           </span>
         </button>
       )}

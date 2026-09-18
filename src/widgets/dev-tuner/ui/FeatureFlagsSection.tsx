@@ -4,7 +4,7 @@ import { useGameConfigStore, type GamePreset, type GameFeatureFlags } from '@/en
 export const FeatureFlagsSection: React.FC = () => {
   const store = useGameConfigStore();
   const { preset, setPreset, setFlag } = store;
-  
+
   // Pluck flags manually or iterate
   const flags = {
     enableItems: store.enableItems,
@@ -30,7 +30,7 @@ export const FeatureFlagsSection: React.FC = () => {
       <h3 className="font-bold text-zinc-100 mb-3 flex items-center gap-2">
         <span>⚙️</span> Game Mode & Feature Flags
       </h3>
-      
+
       <div className="flex flex-col gap-4">
         {/* Preset Selector */}
         <div className="flex items-center justify-between">
@@ -62,8 +62,16 @@ export const FeatureFlagsSection: React.FC = () => {
                 onChange={() => toggleFlag(key)}
                 className="w-4 h-4 rounded bg-zinc-900 border-zinc-700 text-amber-500 focus:ring-amber-500/50 focus:ring-offset-0 cursor-pointer"
               />
-              <span className="text-xs text-zinc-400 group-hover:text-zinc-200 transition-colors select-none">
+              <span className="text-xs text-zinc-400 group-hover:text-zinc-200 transition-colors select-none flex items-center gap-1 flex-wrap">
                 {key}
+                {key === 'enableDevTools' && (
+                  <span
+                    className="text-[10px] text-amber-400 font-semibold px-1 py-0.5 rounded bg-amber-500/10 border border-amber-500/30 whitespace-nowrap"
+                    title="Warning: Disabling this will immediately hide this Dev Tools panel!"
+                  >
+                    ⚠️ Closes panel
+                  </span>
+                )}
               </span>
             </label>
           ))}

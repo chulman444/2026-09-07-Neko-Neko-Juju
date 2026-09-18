@@ -4,7 +4,7 @@ import type { GameConfigState, GameFeatureFlags, GamePreset } from './types';
 export const PRESET_CONFIGS: Record<GamePreset, GameFeatureFlags> = {
   classic: {
     enableItems: false,
-    enableDevTools: false,
+    enableDevTools: true,
     enableSolidBlocks: false,
     enableBounties: false,
     enableCombos: true,
@@ -34,7 +34,7 @@ export const PRESET_CONFIGS: Record<GamePreset, GameFeatureFlags> = {
   },
   roguelite: {
     enableItems: true,
-    enableDevTools: false,
+    enableDevTools: true,
     enableSolidBlocks: true,
     enableBounties: true,
     enableCombos: true,
