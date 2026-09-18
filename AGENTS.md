@@ -74,6 +74,14 @@ Code can only import from layers strictly below it. Never import upwards or hori
 - **Component → Widget Threshold**: If a component decomposes into its own business logic / state hook (`model/`), internal utilities (`lib/`), and multiple child components, it has outgrown being an inline page component. Promote it directly to a `widgets/<name>` slice (e.g., `widgets/solver-panel`, `widgets/dev-tuner`) rather than nesting pseudo-slices inside a page segment.
 - **Single-Use Widgets are Legitimate**: Unlike `entities/` or `shared/`, a `widgets/` slice does NOT require multi-page reuse to be extracted; self-contained composite blocks delivering an entire use case or dev tool belong in `widgets/`.
 
+### 3.6 Scaling Mechanics: ECS & Additive Features
+- **Never Mutate Core Entities**: When adding a new gameplay mechanic (e.g., Solid Blocks, Bounties, Stacks), the Planner Agent MUST NOT bake the state directly into the core `entities/board` model if it can be avoided. The core entity should remain pure domain data (e.g., a simple 2D grid of numbers).
+- **Use ECS/Parallel Data**: Implement new mechanics as separate `features/` slices. Use parallel data structures (like a `walls: Record<string, boolean>` or `stacks: Record<string, number[]>`) managed by the feature or orchestrated at a higher level, rather than creating "God Objects" by adding endless fields to a single `Cell` interface.
+
+### 3.7 Versioning & Game Modes (Feature Flags)
+- **No Hardcoded Page Versions**: Do NOT copy-paste page folders (e.g., `game-v0.1.z`, `game-v0.2.z`) to create new versions. 
+- **Use Config-Driven Presets**: The game must use a single master engine/page. Different "versions" should be handled dynamically via a `GameConfigStore` (Feature Flags) that toggles specific `features/` on or off (e.g., `enableSolidBlocks: true`). 
+
 ---
 
 ## 4. Code Style & TypeScript Standards
