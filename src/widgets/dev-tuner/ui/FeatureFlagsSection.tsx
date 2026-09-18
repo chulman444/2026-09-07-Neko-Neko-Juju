@@ -69,7 +69,7 @@ export const FeatureFlagsSection: React.FC = () => {
                     className="text-[10px] text-amber-400 font-semibold px-1 py-0.5 rounded bg-amber-500/10 border border-amber-500/30 whitespace-nowrap"
                     title="Warning: Disabling this will immediately hide this Dev Tools panel!"
                   >
-                    ⚠️ Closes panel
+                    ⚠️ Hides panel
                   </span>
                 )}
               </span>

@@ -15,11 +15,7 @@ export interface SidePanelProps {
   defaultTab?: 'generator' | 'tuner' | 'solver' | 'items';
 }
 
-export const SidePanel: React.FC<SidePanelProps> = ({
-  isOpen,
-  onClose,
-  defaultTab = 'generator',
-}) => {
+export const SidePanel: React.FC<SidePanelProps> = ({ isOpen, onClose, defaultTab = 'tuner' }) => {
   const [activeTab, setActiveTab] = useState<'generator' | 'tuner' | 'solver' | 'items'>(
     defaultTab
   );
@@ -30,7 +26,7 @@ export const SidePanel: React.FC<SidePanelProps> = ({
 
   if (!isOpen) return null;
 
-  const currentTab = !enableItems && activeTab === 'items' ? 'generator' : activeTab;
+  const currentTab = !enableItems && activeTab === 'items' ? 'tuner' : activeTab;
 
   const handleClearMatch = (match: SolverCombination) => {
     const coords: TileCoord[] = match.required.map((t) => ({ col: t.col, row: t.row }));
@@ -57,17 +53,6 @@ export const SidePanel: React.FC<SidePanelProps> = ({
         >
           <button
             type="button"
-            onClick={() => setActiveTab('generator')}
-            className={`shrink-0 whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
-              currentTab === 'generator'
-                ? 'bg-amber-500 text-white shadow font-bold'
-                : 'text-zinc-400 hover:text-zinc-200'
-            }`}
-          >
-            🎲 Board Generator
-          </button>
-          <button
-            type="button"
             onClick={() => setActiveTab('tuner')}
             className={`shrink-0 whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
               currentTab === 'tuner'
@@ -76,6 +61,17 @@ export const SidePanel: React.FC<SidePanelProps> = ({
             }`}
           >
             ⚙️ Dev Tuner
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('generator')}
+            className={`shrink-0 whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+              currentTab === 'generator'
+                ? 'bg-amber-500 text-white shadow font-bold'
+                : 'text-zinc-400 hover:text-zinc-200'
+            }`}
+          >
+            🎲 Board Generator
           </button>
           <button
             type="button"
