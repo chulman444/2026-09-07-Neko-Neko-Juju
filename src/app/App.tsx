@@ -1,9 +1,6 @@
 import React from 'react';
 import { RouterProvider, useRouter, Link } from '@/shared/lib/router';
 import { GamePage } from '@/pages/game';
-import { GamePage as GamePageV01 } from '@/pages/game-v0.1.z';
-import { GamePage as GamePageV02 } from '@/pages/game-v0.2.z';
-import { GamePage as GamePageV03 } from '@/pages/game-v0.3.z';
 import { BoardMakerPage } from '@/pages/board-maker';
 import { ViteWelcomePage } from '@/pages/vite-welcome';
 
@@ -22,19 +19,6 @@ const AppRoutes: React.FC = () => {
 
     case '/game':
       return <GamePage />;
-
-    case '/game-v0.3.z':
-    case '/game-v0.3':
-      return <GamePageV03 />;
-
-    case '/game-v0.2.z':
-    case '/game-v0.2':
-      return <GamePageV02 />;
-
-    case '/game-v0.1.z':
-    case '/game-v0.1':
-    case '/game-v0':
-      return <GamePageV01 />;
 
     default:
       return (

@@ -12,11 +12,6 @@ export const ViteWelcomePage = () => {
   const currentPreset = useGameConfigStore((state) => state.preset);
   const setPreset = useGameConfigStore((state) => state.setPreset);
 
-  const handleLaunchPreset = (preset: GamePreset) => {
-    setPreset(preset);
-    navigate('/game');
-  };
-
   return (
     <>
       <section id="center">
@@ -48,38 +43,38 @@ export const ViteWelcomePage = () => {
             Unified game engine driven by mode presets &amp; feature flags
           </p>
 
-          <div className="flex flex-col gap-2 w-full mt-1">
+          <div className="flex flex-col gap-3 w-full mt-1">
+            {/* Version / Mode Select */}
+            <div className="flex flex-col items-start gap-1 w-full text-left">
+              <label
+                htmlFor="game-mode-select"
+                className="text-xs font-semibold text-amber-900 dark:text-zinc-300"
+              >
+                Game Mode / Version
+              </label>
+              <select
+                id="game-mode-select"
+                value={currentPreset}
+                onChange={(e) => setPreset(e.target.value as GamePreset)}
+                className="w-full px-3 py-2 rounded-xl text-sm font-medium bg-white dark:bg-zinc-900 border border-amber-900/20 dark:border-zinc-700 text-amber-950 dark:text-zinc-200 outline-none focus:ring-2 focus:ring-amber-500/50 cursor-pointer"
+              >
+                <option value="arcade">Arcade (v0.3) — Items + Console</option>
+                <option value="editor">Sandbox / Editor (v0.2) — Dev Tools</option>
+                <option value="classic">Classic (v0.1) — Clean Core</option>
+                <option value="roguelite">Roguelite (v0.4) — Stacks &amp; Bounties</option>
+              </select>
+            </div>
+
+            {/* Launch Game Button */}
             <button
               type="button"
-              onClick={() => handleLaunchPreset('arcade')}
-              className="w-full text-center px-4 py-2.5 rounded-xl font-bold text-sm bg-neko-primary text-white shadow-sm hover:opacity-90 transition cursor-pointer flex items-center justify-between"
+              onClick={() => navigate('/game')}
+              className="w-full text-center px-4 py-2.5 rounded-xl font-bold text-sm bg-neko-primary text-white shadow-sm hover:opacity-90 transition cursor-pointer flex items-center justify-center gap-2"
             >
-              <span>🎮 Play Arcade (v0.3)</span>
-              <span className="text-[11px] font-mono font-normal opacity-85">Items + Console</span>
+              <span>🎮 Play Game</span>
             </button>
 
-            <button
-              type="button"
-              onClick={() => handleLaunchPreset('editor')}
-              className="w-full text-center px-4 py-2.5 rounded-xl font-bold text-sm bg-white dark:bg-zinc-900 border border-amber-900/20 dark:border-zinc-700 text-amber-950 dark:text-zinc-200 hover:bg-amber-100/50 dark:hover:bg-zinc-800 transition cursor-pointer flex items-center justify-between"
-            >
-              <span>🧩 Play Sandbox (v0.2)</span>
-              <span className="text-[11px] font-mono font-normal text-zinc-500 dark:text-zinc-400">
-                Dev Tools
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleLaunchPreset('classic')}
-              className="w-full text-center px-4 py-2.5 rounded-xl font-bold text-sm bg-white dark:bg-zinc-900 border border-amber-900/20 dark:border-zinc-700 text-amber-950 dark:text-zinc-200 hover:bg-amber-100/50 dark:hover:bg-zinc-800 transition cursor-pointer flex items-center justify-between"
-            >
-              <span>⚡ Play Classic (v0.1)</span>
-              <span className="text-[11px] font-mono font-normal text-zinc-500 dark:text-zinc-400">
-                Clean Core
-              </span>
-            </button>
-
+            {/* Board Maker & Layer Editor */}
             <Link
               href="/board-maker"
               className="w-full text-center px-3 py-2 rounded-xl font-bold text-xs bg-amber-200/80 dark:bg-amber-950/50 border border-amber-400/50 text-amber-950 dark:text-amber-300 hover:bg-amber-300/80 dark:hover:bg-amber-900/60 transition cursor-pointer flex items-center justify-center gap-1.5"
@@ -87,34 +82,6 @@ export const ViteWelcomePage = () => {
               <span>🛠️</span>
               <span>Board Maker &amp; Layer Editor (/board-maker)</span>
             </Link>
-          </div>
-
-          <div className="flex flex-col gap-1 w-full pt-2 border-t border-amber-900/10 dark:border-zinc-700/60">
-            <span className="text-[10px] uppercase font-bold text-zinc-400 tracking-wider">
-              Legacy Versions (Safety Net)
-            </span>
-            <div className="flex items-center justify-center gap-2">
-              <Link
-                href="/game-v0.3.z"
-                className="text-[11px] text-zinc-500 hover:text-amber-950 dark:text-zinc-400 dark:hover:text-zinc-200 hover:underline"
-              >
-                v0.3.z
-              </Link>
-              <span className="text-zinc-300 dark:text-zinc-600">•</span>
-              <Link
-                href="/game-v0.2.z"
-                className="text-[11px] text-zinc-500 hover:text-amber-950 dark:text-zinc-400 dark:hover:text-zinc-200 hover:underline"
-              >
-                v0.2.z
-              </Link>
-              <span className="text-zinc-300 dark:text-zinc-600">•</span>
-              <Link
-                href="/game-v0.1.z"
-                className="text-[11px] text-zinc-500 hover:text-amber-950 dark:text-zinc-400 dark:hover:text-zinc-200 hover:underline"
-              >
-                v0.1.z
-              </Link>
-            </div>
           </div>
 
           <div className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1 flex items-center gap-1.5">
