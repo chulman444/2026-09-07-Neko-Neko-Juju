@@ -1,4 +1,5 @@
 import React from 'react';
+import { FeatureFlagsSection } from './FeatureFlagsSection';
 import { HintsConfigSection } from './HintsConfigSection';
 import { ComboProgressionSection } from './ComboProgressionSection';
 import { SimulationSection } from './SimulationSection';
@@ -12,6 +13,7 @@ export interface DevTunerWidgetProps {
 export const DevTunerWidget: React.FC<DevTunerWidgetProps> = ({ className = '' }) => {
   return (
     <div className={`flex flex-col gap-4 text-sm select-none ${className}`.trim()}>
+      <FeatureFlagsSection />
       <HintsConfigSection />
       <ComboProgressionSection />
       <SimulationSection />
