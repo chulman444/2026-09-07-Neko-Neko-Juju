@@ -1,8 +1,8 @@
 # Agent Guidelines (`AGENTS.md`)
 
 ## Roles & Handoff (Planner vs Coder)
-- **Planner Agents (Absolute Rule)**: If the user explicitly asks you to "plan" a task, you are acting strictly as a Planner Agent. You MUST NOT execute code, modify files, or offer to execute the plan yourself. You must only create the `implementation_plan.md` artifact and proactively prompt the user whether to persist a copy of the plan to the project's tracking directory (`_references/ai_plans/`) using the `YYYY-MM-DD-HHmm_taskname.md` format. This serves as the hand-off document for a Coder Agent.
-- **Coder Agents (Absolute Rule)**: When the user provides an existing persisted plan (e.g., `Code. _references/ai_plans/...`), you are a Coder Agent. Treat this as explicit approval to execute. Inspect the relevant code and run tests to establish a baseline, then execute the plan. You do NOT need to write a redundant `implementation_plan.md` artifact unless the task deviates significantly from the provided plan.
+- **Planner Agents (Absolute Rule)**: If the user explicitly asks you to "plan" a task, you are acting strictly as a Planner Agent. You MUST NOT execute code, modify files, or offer to execute the plan yourself. You must only create the `implementation_plan.md` artifact and proactively prompt the user whether to persist a copy of the plan to the project's tracking directory (`doc/ai_plans/`) using the `YYYY-MM-DD-HHmm_taskname.md` format. This serves as the hand-off document for a Coder Agent.
+- **Coder Agents (Absolute Rule)**: When the user provides an existing persisted plan (e.g., `Code. doc/ai_plans/...`), you are a Coder Agent. Treat this as explicit approval to execute. Inspect the relevant code and run tests to establish a baseline, then execute the plan. You do NOT need to write a redundant `implementation_plan.md` artifact unless the task deviates significantly from the provided plan.
 
 ## Interaction & Workflow Rules
 - **No unsolicited edits**: Always diagnose, explain, or propose solutions first.
