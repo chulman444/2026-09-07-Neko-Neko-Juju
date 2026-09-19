@@ -187,6 +187,8 @@ export const DEFAULT_DIFFICULTY_TILT_RANGES: DifficultyTiltRanges = {
 export interface GameSessionState {
   // Session & Meta
   score: number;
+  phase1Score: number;
+  phase2Score: number;
   clearedTiles: number;
   retryAllowed: boolean;
   highlightedTiles: TileCoord[];
@@ -277,6 +279,8 @@ export interface GameSessionState {
 export const useGameSessionStore = create<GameSessionState>((set, get) => ({
   // Session & Meta Initial State
   score: 0,
+  phase1Score: 0,
+  phase2Score: 0,
   clearedTiles: 0,
   retryAllowed: true,
   highlightedTiles: [],
@@ -516,8 +520,13 @@ export const useGameSessionStore = create<GameSessionState>((set, get) => ({
       }
     }
 
+    const nextPhase1Score = state.isPhase1Over ? state.phase1Score : state.phase1Score + points;
+    const nextPhase2Score = state.isPhase1Over ? state.phase2Score + points : state.phase2Score;
+
     set({
       score: state.score + points,
+      phase1Score: nextPhase1Score,
+      phase2Score: nextPhase2Score,
       clearedTiles: state.clearedTiles + clearedTileCount,
       comboCount: newComboCount,
       comboPct: 100,
@@ -807,6 +816,8 @@ export const useGameSessionStore = create<GameSessionState>((set, get) => ({
   resetSession: () => {
     set((state) => ({
       score: 0,
+      phase1Score: 0,
+      phase2Score: 0,
       clearedTiles: 0,
       activeHintCombos: [],
       highlightedTiles: [],

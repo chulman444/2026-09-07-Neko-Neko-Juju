@@ -8,6 +8,8 @@ import { Link } from '@/shared/lib/router';
 import { useGameSessionStore } from '@/entities/game-session';
 import { useItemStore } from '@/entities/item';
 import { useGameConfigStore } from '@/entities/game-config';
+import { useMacroLoopStore } from '@/entities/macro-loop';
+import { useBoardGeneratorActions } from '@/widgets/board-generator';
 import { useGameSessionDriver } from '../model/useGameSessionDriver';
 import { FooterConsole } from '@/widgets/footer-console';
 import { SettingsHeaderButton, PlayerSettingsModal } from '@/widgets/player-settings';
@@ -98,6 +100,36 @@ export const GamePage: React.FC = () => {
       .recalculate(useBoardStore.getState().matrix, useBoardStore.getState().seed);
   }, [generateNewBoard, resetSession]);
 
+  const { generateBoard } = useBoardGeneratorActions();
+
+  const handleNextBoard = useCallback(() => {
+    const { phase1Score } = useGameSessionStore.getState();
+    const { matrix, cols, rows } = useBoardStore.getState();
+
+    const leftoverTiles: { col: number; row: number; val: number }[] = [];
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const val = matrix[r]?.[c] ?? 0;
+        if (val > 0) {
+          leftoverTiles.push({ col: c, row: r, val });
+        }
+      }
+    }
+
+    const macroStore = useMacroLoopStore.getState();
+    macroStore.advanceToNextBoard(phase1Score, leftoverTiles);
+
+    const nextIndex = useMacroLoopStore.getState().currentPlayIndex;
+    const nextConfig = useMacroLoopStore.getState().boards[nextIndex];
+
+    if (nextConfig) {
+      useGameSessionStore.getState().setSelectedSizeTier(nextConfig.sizeTier);
+      useGameSessionStore.getState().setSelectedDifficultyTier(nextConfig.difficultyTier);
+      useBoardStore.getState().setSeed(nextConfig.seed);
+      generateBoard();
+    }
+  }, [generateBoard]);
+
   const handleTileClick = useCallback(
     (tile: TileCoord): boolean => {
       if (!enableItems || !isToggled) return false;
@@ -136,6 +168,7 @@ export const GamePage: React.FC = () => {
   const totalTiles = cols * rows;
   const expectedSum = cols * rows * 5;
   const remainingTiles = Math.max(0, totalTiles - clearedTiles);
+  const isBoardCleared = totalTiles > 0 && remainingTiles === 0;
 
   const boardMetrics = useMemo(() => calculateBoardMetrics(initialMatrix), [initialMatrix]);
   const totalSum = boardMetrics.totalSum;
@@ -286,10 +319,17 @@ export const GamePage: React.FC = () => {
           {enableHints && <HintBar />}
           {enableCombos && <ComboBar />}
           {enableSelectionHUD && <SelectionSumHUD />}
-          {enableHints && noHintsAvailableMsg && (
-            <div className="text-[10px] font-bold text-zinc-500 bg-zinc-200/50 dark:bg-zinc-800/50 px-2 py-0.5 rounded-full border border-zinc-300 dark:border-zinc-700 animate-in fade-in duration-200">
-              {noHintsAvailableMsg}
+          {isBoardCleared ? (
+            <div className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-0.5 rounded-full border border-emerald-300 dark:border-emerald-700 animate-in fade-in duration-200 shadow-xs">
+              🎉 Board Cleared!
             </div>
+          ) : (
+            enableHints &&
+            noHintsAvailableMsg && (
+              <div className="text-[10px] font-bold text-zinc-500 bg-zinc-200/50 dark:bg-zinc-800/50 px-2 py-0.5 rounded-full border border-zinc-300 dark:border-zinc-700 animate-in fade-in duration-200">
+                {noHintsAvailableMsg}
+              </div>
+            )
           )}
         </div>
 
@@ -322,6 +362,17 @@ export const GamePage: React.FC = () => {
               }`}
             >
               🛠️ Dev Tools
+            </button>
+          )}
+          {(isPhase1Over || isBoardCleared) && (
+            <button
+              type="button"
+              onClick={handleNextBoard}
+              className="px-3 py-1.5 text-xs font-bold rounded-lg border border-emerald-500/50 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-800 dark:text-emerald-300 transition cursor-pointer shadow flex items-center gap-1.5 animate-pulse"
+              title="Advance to next board in Macro Loop playlist"
+            >
+              <span>⏭️</span>
+              <span>Next Board</span>
             </button>
           )}
           {retryAllowed && (

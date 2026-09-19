@@ -617,4 +617,41 @@ describe('gameSessionStore - Hint Highlight Invalidation', () => {
       });
     });
   });
+
+  describe('phase1Score and phase2Score tracking', () => {
+    it('tracks points in phase1Score during Phase 1 and freezes it during Phase 2', () => {
+      const store = useGameSessionStore.getState();
+      expect(store.phase1Score).toBe(0);
+      expect(store.phase2Score).toBe(0);
+      expect(store.score).toBe(0);
+
+      // Match during Phase 1
+      store.registerMatch(2);
+      expect(useGameSessionStore.getState().score).toBe(2);
+      expect(useGameSessionStore.getState().phase1Score).toBe(2);
+      expect(useGameSessionStore.getState().phase2Score).toBe(0);
+
+      // Another match during Phase 1
+      store.registerMatch(3);
+      const phase1Total = useGameSessionStore.getState().phase1Score;
+      expect(phase1Total).toBeGreaterThanOrEqual(5);
+      expect(useGameSessionStore.getState().phase2Score).toBe(0);
+
+      // Transition to Phase 2 (isPhase1Over = true)
+      useGameSessionStore.setState({ isPhase1Over: true });
+
+      // Match during Phase 2
+      store.registerMatch(2);
+      const afterPhase2State = useGameSessionStore.getState();
+      expect(afterPhase2State.phase1Score).toBe(phase1Total); // Frozen!
+      expect(afterPhase2State.phase2Score).toBeGreaterThan(0);
+      expect(afterPhase2State.score).toBe(phase1Total + afterPhase2State.phase2Score);
+
+      // Reset
+      useGameSessionStore.getState().resetSession();
+      expect(useGameSessionStore.getState().phase1Score).toBe(0);
+      expect(useGameSessionStore.getState().phase2Score).toBe(0);
+      expect(useGameSessionStore.getState().score).toBe(0);
+    });
+  });
 });

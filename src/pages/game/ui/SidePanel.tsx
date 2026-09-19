@@ -1,24 +1,26 @@
 import React, { useState } from 'react';
 import type { TileCoord } from '@/entities/board';
-import { BoardGeneratorWidget } from '@/widgets/board-generator';
+import { BoardGeneratorWidget, useBoardGeneratorActions } from '@/widgets/board-generator';
 import { DevTunerWidget } from '@/widgets/dev-tuner';
 import { SolverPanelWidget } from '@/widgets/solver-panel';
 import { ItemsPanelWidget } from '@/widgets/items-panel';
+import { MacroLoopManagerWidget } from '@/widgets/macro-loop-manager';
 import type { SolverCombination } from '@/features/look-ahead-solver';
 import { useGameSessionStore } from '@/entities/game-session';
 import { useGameConfigStore } from '@/entities/game-config';
 import { Link } from '@/shared/lib/router';
 
+export type SidePanelTab = 'generator' | 'tuner' | 'solver' | 'items' | 'macro-loop';
+
 export interface SidePanelProps {
   isOpen: boolean;
   onClose: () => void;
-  defaultTab?: 'generator' | 'tuner' | 'solver' | 'items';
+  defaultTab?: SidePanelTab;
 }
 
 export const SidePanel: React.FC<SidePanelProps> = ({ isOpen, onClose, defaultTab = 'tuner' }) => {
-  const [activeTab, setActiveTab] = useState<'generator' | 'tuner' | 'solver' | 'items'>(
-    defaultTab
-  );
+  const [activeTab, setActiveTab] = useState<SidePanelTab>(defaultTab);
+  const { generateBoard } = useBoardGeneratorActions();
   const enableItems = useGameConfigStore((state) => state.enableItems);
   const setHighlightedTiles = useGameSessionStore((state) => state.setHighlightedTiles);
   const registerMatch = useGameSessionStore((state) => state.registerMatch);
@@ -84,6 +86,17 @@ export const SidePanel: React.FC<SidePanelProps> = ({ isOpen, onClose, defaultTa
           >
             🔍 Look-Ahead Solver
           </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('macro-loop')}
+            className={`shrink-0 whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+              currentTab === 'macro-loop'
+                ? 'bg-amber-500 text-white shadow font-bold'
+                : 'text-zinc-400 hover:text-zinc-200'
+            }`}
+          >
+            🔄 Macro Loop
+          </button>
           {enableItems && (
             <button
               type="button"
@@ -126,6 +139,12 @@ export const SidePanel: React.FC<SidePanelProps> = ({ isOpen, onClose, defaultTa
           <DevTunerWidget />
         ) : currentTab === 'items' ? (
           <ItemsPanelWidget />
+        ) : currentTab === 'macro-loop' ? (
+          <MacroLoopManagerWidget
+            onPlayBoard={() => generateBoard()}
+            onLoadIntoGenerator={generateBoard}
+            onSwitchTab={(tab) => setActiveTab(tab)}
+          />
         ) : (
           <div className="w-full">
             <SolverPanelWidget

@@ -23,6 +23,7 @@ export function useBoardGeneratorActions() {
 
   const generateBoard = () => {
     const sessionState = useGameSessionStore.getState();
+
     const [minVal, maxVal] = sessionState.boardSizeRanges[sessionState.selectedSizeTier];
     const low = Math.min(minVal, maxVal);
     const high = Math.max(minVal, maxVal);

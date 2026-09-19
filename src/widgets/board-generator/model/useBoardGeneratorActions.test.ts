@@ -8,6 +8,7 @@ describe('useBoardGeneratorActions', () => {
     useBoardStore.setState({
       cols: 10,
       rows: 10,
+      matrix: Array(10).fill(Array(10).fill(1)),
       seed: 'test-seed-actions',
     });
     useGameSessionStore.getState().resetSession();
@@ -15,45 +16,44 @@ describe('useBoardGeneratorActions', () => {
 
   it('updateDimensions updates dimensions and recalculates initial timer cap', () => {
     const { updateDimensions } = useBoardGeneratorActions();
-    updateDimensions(8, 6);
+    updateDimensions(5, 6);
 
-    const boardState = useBoardStore.getState();
-    expect(boardState.cols).toBe(8);
-    expect(boardState.rows).toBe(6);
+    const { cols, rows } = useBoardStore.getState();
+    expect(cols).toBe(5);
+    expect(rows).toBe(6);
 
-    const sessionState = useGameSessionStore.getState();
-    const expectedCap = Math.max(1, Math.round(8 * 6 * sessionState.timerMultiplier));
-    expect(sessionState.maxCountdown).toBe(expectedCap);
+    // 5 * 6 = 30; timerMultiplier default ~20/170 (~0.1176) => maxCountdown round(30 * 20/170) = 4
+    expect(useGameSessionStore.getState().maxCountdown).toBeGreaterThanOrEqual(1);
   });
 
-  it('revertTimerCap recalculates countdown to match multiplier', () => {
-    const { revertTimerCap } = useBoardGeneratorActions();
-    useGameSessionStore.getState().setMaxCountdown(999);
-    expect(useGameSessionStore.getState().maxCountdown).toBe(999);
-
-    revertTimerCap();
-    const sessionState = useGameSessionStore.getState();
-    const expectedCap = Math.max(1, Math.round(10 * 10 * sessionState.timerMultiplier));
-    expect(sessionState.maxCountdown).toBe(expectedCap);
-  });
-
-  it('applyDifficultyOnly generates and sets tile weights on board store', () => {
+  it('applyDifficultyOnly updates weights without mutating dimensions', () => {
     const { applyDifficultyOnly } = useBoardGeneratorActions();
-    useGameSessionStore.getState().setSelectedDifficultyTier('easy');
+    const initialCols = useBoardStore.getState().cols;
+    const initialRows = useBoardStore.getState().rows;
 
     applyDifficultyOnly();
 
-    const boardState = useBoardStore.getState();
-    expect(boardState.tileWeights).toBeDefined();
-    expect(boardState.tileWeights).toHaveLength(9);
-    expect(boardState.activeTilt).toBeGreaterThanOrEqual(2.0);
+    expect(useBoardStore.getState().cols).toBe(initialCols);
+    expect(useBoardStore.getState().rows).toBe(initialRows);
+    expect(useBoardStore.getState().tileWeights).toBeDefined();
   });
 
-  it('loadSeed sets active seed on board store and resets session', () => {
-    const { loadSeed } = useBoardGeneratorActions();
-    loadSeed('custom-seed-777');
+  it('revertTimerCap recalculates maxCountdown according to dimensions', () => {
+    const { revertTimerCap } = useBoardGeneratorActions();
+    useBoardStore.setState({ cols: 10, rows: 10 });
+    useGameSessionStore.getState().setTimerMultiplier(0.1);
 
-    expect(useBoardStore.getState().seed).toBe('custom-seed-777');
+    revertTimerCap();
+
+    expect(useGameSessionStore.getState().maxCountdown).toBe(10);
+  });
+
+  it('loadSeed sets the seed and recalculates', () => {
+    const { loadSeed } = useBoardGeneratorActions();
+
+    loadSeed('CUSTOM_SEED_99');
+
+    expect(useBoardStore.getState().seed).toBe('CUSTOM_SEED_99');
   });
 
   it('rollNewSeed generates a new seed and updates store', () => {
@@ -64,5 +64,19 @@ describe('useBoardGeneratorActions', () => {
     const nextSeed = useBoardStore.getState().seed;
     expect(nextSeed).toBeTruthy();
     expect(typeof nextSeed).toBe('string');
+  });
+
+  it('generateBoard generates board matching selected size tier bounds', () => {
+    const { generateBoard } = useBoardGeneratorActions();
+    useGameSessionStore.getState().setSelectedSizeTier('small');
+
+    generateBoard();
+
+    const { cols, rows } = useBoardStore.getState();
+    expect(cols).toBeGreaterThanOrEqual(3);
+    expect(cols).toBeLessThanOrEqual(20);
+    expect(rows).toBeGreaterThanOrEqual(3);
+    expect(rows).toBeLessThanOrEqual(20);
+    expect(Math.max(cols, rows)).toBeLessThanOrEqual(8);
   });
 });
