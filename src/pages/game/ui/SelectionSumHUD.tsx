@@ -1,5 +1,5 @@
 import React from 'react';
-import { useGameSessionStore } from '@/entities/game-session';
+import { useSelectionStore } from '@/features/select-tiles';
 import type { TileCoord } from '@/entities/board';
 import { hexToRgba } from '@/shared/lib/prng';
 
@@ -24,11 +24,11 @@ export const SelectionSumHUD: React.FC<SelectionSumHUDProps> = ({
   validColor = '#10b981',
   className = '',
 }) => {
-  const storeSelectedTiles = useGameSessionStore((state) => state.selectedTiles);
-  const storeSelectedSum = useGameSessionStore((state) => state.selectedSum);
-  const storeDiagonalSum = useGameSessionStore((state) => state.diagonalSum);
-  const storeIsSquareSelection = useGameSessionStore((state) => state.isSquareSelection);
-  const storeActiveSelectionType = useGameSessionStore((state) => state.activeSelectionType);
+  const storeSelectedTiles = useSelectionStore((state) => state.selectedTiles);
+  const storeSelectedSum = useSelectionStore((state) => state.selectedSum);
+  const storeDiagonalSum = useSelectionStore((state) => state.diagonalSum);
+  const storeIsSquareSelection = useSelectionStore((state) => state.isSquareSelection);
+  const storeActiveSelectionType = useSelectionStore((state) => state.activeSelectionType);
 
   const selectedTiles = propsSelectedTiles ?? storeSelectedTiles;
   const selectedSum = propsSelectedSum ?? storeSelectedSum;

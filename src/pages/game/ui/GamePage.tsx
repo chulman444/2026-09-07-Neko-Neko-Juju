@@ -4,6 +4,7 @@ import { GameBoardWidget, PannableContainer } from '@/widgets/game-board';
 import { useBoardStore, calculateBoardMetrics, type TileCoord } from '@/entities/board';
 import { useSolverStore } from '@/features/look-ahead-solver';
 import { DevHotkeys } from '@/features/dev-hotkeys';
+import { useSelectionStore } from '@/features/select-tiles';
 import { Link } from '@/shared/lib/router';
 import { useGameSessionStore } from '@/entities/game-session';
 import { useItemStore } from '@/entities/item';
@@ -88,6 +89,7 @@ export const GamePage: React.FC = () => {
   const handleRetryGame = useCallback(() => {
     restartCurrentBoard();
     resetSession();
+    useSelectionStore.getState().clearSelection();
     useSolverStore
       .getState()
       .recalculate(useBoardStore.getState().matrix, useBoardStore.getState().seed);
@@ -96,6 +98,7 @@ export const GamePage: React.FC = () => {
   const handleNewGame = useCallback(() => {
     generateNewBoard();
     resetSession();
+    useSelectionStore.getState().clearSelection();
     useSolverStore
       .getState()
       .recalculate(useBoardStore.getState().matrix, useBoardStore.getState().seed);
@@ -154,7 +157,7 @@ export const GamePage: React.FC = () => {
 
   const handleSelectionChange = useCallback(
     (tiles: TileCoord[], sum: number, _isValid: boolean, meta?: SelectionMeta) => {
-      useGameSessionStore.getState().setSelection({
+      useSelectionStore.getState().setSelection({
         selectedTiles: tiles,
         selectedSum: sum,
         diagonalSum: meta?.diagonalSum ?? 0,
