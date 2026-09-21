@@ -1,5 +1,5 @@
 import React from 'react';
-import { useGameSessionStore } from '@/entities/game-session';
+import { useComboStore } from '@/features/combo-system';
 
 export interface ComboBarProps {
   comboCount?: number;
@@ -7,8 +7,8 @@ export interface ComboBarProps {
 }
 
 export const ComboBar: React.FC<ComboBarProps> = (props) => {
-  const storeComboCount = useGameSessionStore((state) => state.comboCount);
-  const storeComboPct = useGameSessionStore((state) => state.comboPct);
+  const storeComboCount = useComboStore((state) => state.comboCount);
+  const storeComboPct = useComboStore((state) => state.comboPct);
 
   const comboCount = props.comboCount ?? storeComboCount;
   const comboPct = props.comboPct ?? storeComboPct;

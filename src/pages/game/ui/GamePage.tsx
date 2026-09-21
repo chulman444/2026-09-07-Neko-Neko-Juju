@@ -5,6 +5,7 @@ import { useBoardStore, calculateBoardMetrics, type TileCoord } from '@/entities
 import { useSolverStore } from '@/features/look-ahead-solver';
 import { DevHotkeys } from '@/features/dev-hotkeys';
 import { useSelectionStore } from '@/features/select-tiles';
+import { useComboStore } from '@/features/combo-system';
 import { Link } from '@/shared/lib/router';
 import { useGameSessionStore } from '@/entities/game-session';
 import { useItemStore } from '@/entities/item';
@@ -80,7 +81,10 @@ export const GamePage: React.FC = () => {
       const matrix = useBoardStore.getState().matrix;
       const calculatedCount = tiles.filter((t) => (matrix[t.row]?.[t.col] ?? 0) > 0).length;
       const nonZeroCount = actualCount ?? (calculatedCount > 0 ? calculatedCount : tiles.length);
-      registerMatch(nonZeroCount, tiles.length);
+      const { scoreMultiplier, addTime } = useComboStore
+        .getState()
+        .registerMatch(nonZeroCount, tiles.length);
+      registerMatch(nonZeroCount, tiles.length, scoreMultiplier, addTime);
       removeClearedTiles(tiles);
     },
     [registerMatch, removeClearedTiles]
@@ -89,6 +93,7 @@ export const GamePage: React.FC = () => {
   const handleRetryGame = useCallback(() => {
     restartCurrentBoard();
     resetSession();
+    useComboStore.getState().resetCombo();
     useSelectionStore.getState().clearSelection();
     useSolverStore
       .getState()
@@ -98,6 +103,7 @@ export const GamePage: React.FC = () => {
   const handleNewGame = useCallback(() => {
     generateNewBoard();
     resetSession();
+    useComboStore.getState().resetCombo();
     useSelectionStore.getState().clearSelection();
     useSolverStore
       .getState()

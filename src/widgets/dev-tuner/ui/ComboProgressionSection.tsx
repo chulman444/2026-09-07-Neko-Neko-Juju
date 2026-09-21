@@ -1,9 +1,9 @@
 import React from 'react';
-import { useGameSessionStore, DEFAULT_COMBO_RULES, type ComboRule } from '@/entities/game-session';
+import { useComboStore, DEFAULT_COMBO_RULES, type ComboRule } from '@/features/combo-system';
 
 export const ComboProgressionSection: React.FC = () => {
-  const comboRules = useGameSessionStore((state) => state.comboRules);
-  const setComboRules = useGameSessionStore((state) => state.setComboRules);
+  const comboRules = useComboStore((state) => state.comboRules);
+  const setComboRules = useComboStore((state) => state.setComboRules);
 
   const handleAddRule = () => {
     // Determine a suggested upToCombo based on the highest existing bound

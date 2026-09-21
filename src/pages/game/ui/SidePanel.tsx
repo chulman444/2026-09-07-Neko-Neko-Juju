@@ -7,6 +7,7 @@ import { ItemsPanelWidget } from '@/widgets/items-panel';
 import { MacroLoopManagerWidget } from '@/widgets/macro-loop-manager';
 import type { SolverCombination } from '@/features/look-ahead-solver';
 import { useGameSessionStore } from '@/entities/game-session';
+import { useComboStore } from '@/features/combo-system';
 import { useGameConfigStore } from '@/entities/game-config';
 import { Link } from '@/shared/lib/router';
 
@@ -32,7 +33,10 @@ export const SidePanel: React.FC<SidePanelProps> = ({ isOpen, onClose, defaultTa
 
   const handleClearMatch = (match: SolverCombination) => {
     const coords: TileCoord[] = match.required.map((t) => ({ col: t.col, row: t.row }));
-    registerMatch(coords.length);
+    const { scoreMultiplier, addTime } = useComboStore
+      .getState()
+      .registerMatch(coords.length, coords.length);
+    registerMatch(coords.length, coords.length, scoreMultiplier, addTime);
     removeClearedTiles(coords);
   };
 
