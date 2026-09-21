@@ -101,6 +101,7 @@ export const useRivalCatStore = create<RivalCatState>((set, get) => ({
   pushbackPerClear: 1.5,
   toughCatPushbackBonus: -0.5,
   stolenTilesCount: 0,
+  showTargets: true,
 
   // Backward compatibility aliases
   rivalCatInterval: 5,
@@ -109,6 +110,10 @@ export const useRivalCatStore = create<RivalCatState>((set, get) => ({
 
   setIsEnabled: (enabled: boolean) => {
     set({ isEnabled: enabled });
+  },
+
+  setShowTargets: (show: boolean) => {
+    set({ showTargets: show });
   },
 
   setDefeatCondition: (condition: DefeatCondition) => {
@@ -237,72 +242,78 @@ export const useRivalCatStore = create<RivalCatState>((set, get) => ({
 
     let changed = false;
     const updatedCats = state.cats.map((cat) => {
-      if (cat.phase !== 'targeting' || !cat.targetMatch) {
-        return cat;
+      // 1. Idle cats receive pushback when player clears tiles
+      if (cat.phase === 'idle') {
+        changed = true;
+        const bonus = cat.type === 'tough' ? state.toughCatPushbackBonus : 0;
+        const pushback = Math.max(0, state.pushbackPerClear + bonus);
+        return {
+          ...cat,
+          countdown: cat.countdown + pushback,
+        };
       }
 
-      const result = evaluatePlayerClear(cat, clearedTiles, state.defeatCondition);
+      // 2. Targeting cats: evaluate counter-play (defeat or break), but no pushback on unrelated clear
+      if (cat.phase === 'targeting' && cat.targetMatch) {
+        const result = evaluatePlayerClear(cat, clearedTiles, state.defeatCondition);
 
-      if (result === 'defeated') {
-        changed = true;
-        if (cat.type === 'normal') {
-          return {
-            ...cat,
-            phase: 'dormant' as CatPhase,
-            countdown: state.dormantDuration,
-            targetMatch: null,
-          };
-        } else {
-          // Tough cat: massive timer penalty
-          return {
-            ...cat,
-            phase: 'idle' as CatPhase,
-            countdown: state.spawnInterval * 2,
-            targetMatch: null,
-          };
-        }
-      }
-
-      if (result === 'broken') {
-        changed = true;
-        if (cat.type === 'normal') {
-          // Normal cat: forgive, retreat to idle
-          return {
-            ...cat,
-            phase: 'idle' as CatPhase,
-            countdown: state.spawnInterval,
-            targetMatch: null,
-          };
-        } else {
-          // Tough cat: relentless! instantly pick new target, stay targeting, restart stealDuration
-          const otherCats = state.cats.filter((c) => c.id !== cat.id);
-          const newTarget = pickTargetMatch(otherCats);
-          if (newTarget) {
+        if (result === 'defeated') {
+          changed = true;
+          if (cat.type === 'normal') {
             return {
               ...cat,
-              phase: 'targeting' as CatPhase,
-              countdown: state.stealDuration,
-              targetMatch: newTarget,
+              phase: 'dormant' as CatPhase,
+              countdown: state.dormantDuration,
+              targetMatch: null,
             };
           } else {
+            // Tough cat: massive timer penalty
+            return {
+              ...cat,
+              phase: 'idle' as CatPhase,
+              countdown: state.spawnInterval * 2,
+              targetMatch: null,
+            };
+          }
+        }
+
+        if (result === 'broken') {
+          changed = true;
+          if (cat.type === 'normal') {
+            // Normal cat: forgive, retreat to idle
             return {
               ...cat,
               phase: 'idle' as CatPhase,
               countdown: state.spawnInterval,
               targetMatch: null,
             };
+          } else {
+            // Tough cat: relentless! instantly pick new target, stay targeting, restart stealDuration
+            const otherCats = state.cats.filter((c) => c.id !== cat.id);
+            const newTarget = pickTargetMatch(otherCats);
+            if (newTarget) {
+              return {
+                ...cat,
+                phase: 'targeting' as CatPhase,
+                countdown: state.stealDuration,
+                targetMatch: newTarget,
+              };
+            } else {
+              return {
+                ...cat,
+                phase: 'idle' as CatPhase,
+                countdown: state.spawnInterval,
+                targetMatch: null,
+              };
+            }
           }
         }
+
+        // result === 'none': Player cleared other tiles -> no pushback while targeting
+        return cat;
       }
 
-      // result === 'none': Player cleared other tiles -> pushback!
-      changed = true;
-      const bonus = cat.type === 'tough' ? state.toughCatPushbackBonus : 0;
-      const pushback = Math.max(0, state.pushbackPerClear + bonus);
-      return {
-        ...cat,
-        countdown: cat.countdown + pushback,
-      };
+      return cat;
     });
 
     if (changed) {

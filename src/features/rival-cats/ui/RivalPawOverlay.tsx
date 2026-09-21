@@ -9,6 +9,7 @@ export interface RivalPawOverlayProps {
 
 export const RivalPawOverlay: React.FC<RivalPawOverlayProps> = ({ className = '' }) => {
   const isEnabled = useRivalCatStore((state) => state.isEnabled);
+  const showTargets = useRivalCatStore((state) => state.showTargets);
   const cats = useRivalCatStore((state) => state.cats);
   const shapeSize = useBoardStore((state) => state.shapeSize);
   const tileBorder = useBoardStore((state) => state.tileBorder);
@@ -37,29 +38,30 @@ export const RivalPawOverlay: React.FC<RivalPawOverlayProps> = ({ className = ''
 
         return (
           <React.Fragment key={cat.id}>
-            {/* Combo Path / Tile Highlights */}
-            {cat.targetMatch.map((tile, idx) => {
-              const tileLeft = tile.col * pitch + tileBorder;
-              const tileTop = tile.row * pitch + tileBorder;
-              const isStart = idx === 0;
+            {/* Combo Path / Tile Highlights (only when showTargets is enabled) */}
+            {showTargets &&
+              cat.targetMatch.map((tile, idx) => {
+                const tileLeft = tile.col * pitch + tileBorder;
+                const tileTop = tile.row * pitch + tileBorder;
+                const isStart = idx === 0;
 
-              return (
-                <div
-                  key={`${cat.id}-tile-${tile.row}-${tile.col}`}
-                  className={`absolute rounded-xl transition-all duration-150 ${
-                    isTough
-                      ? 'border-2 border-dashed border-rose-400 bg-rose-500/20 shadow-[0_0_12px_rgba(244,63,94,0.45)]'
-                      : 'border-2 border-dashed border-amber-400 bg-amber-400/20 shadow-[0_0_10px_rgba(251,191,36,0.35)]'
-                  } ${isStart ? 'ring-2 ring-offset-1 ' + (isTough ? 'ring-rose-500 ring-offset-rose-950' : 'ring-amber-400 ring-offset-amber-950') : ''}`}
-                  style={{
-                    left: `${tileLeft}px`,
-                    top: `${tileTop}px`,
-                    width: `${shapeSize}px`,
-                    height: `${shapeSize}px`,
-                  }}
-                />
-              );
-            })}
+                return (
+                  <div
+                    key={`${cat.id}-tile-${tile.row}-${tile.col}`}
+                    className={`absolute rounded-xl transition-all duration-150 ${
+                      isTough
+                        ? 'border-2 border-dashed border-rose-400 bg-rose-500/20 shadow-[0_0_12px_rgba(244,63,94,0.45)]'
+                        : 'border-2 border-dashed border-amber-400 bg-amber-400/20 shadow-[0_0_10px_rgba(251,191,36,0.35)]'
+                    } ${isStart ? 'ring-2 ring-offset-1 ' + (isTough ? 'ring-rose-500 ring-offset-rose-950' : 'ring-amber-400 ring-offset-amber-950') : ''}`}
+                    style={{
+                      left: `${tileLeft}px`,
+                      top: `${tileTop}px`,
+                      width: `${shapeSize}px`,
+                      height: `${shapeSize}px`,
+                    }}
+                  />
+                );
+              })}
 
             {/* The Rival Paw Indicator on the Start Tile */}
             <div

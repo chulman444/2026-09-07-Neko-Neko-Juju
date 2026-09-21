@@ -247,7 +247,7 @@ describe('rivalCatStore', () => {
     expect(useRivalCatStore.getState().cats[0].phase).toBe('dormant');
   });
 
-  it('applies pushback when player clears unrelated tiles', () => {
+  it('applies pushback to idle cats when player clears tiles, but does not push back targeting cats', () => {
     useRivalCatStore.getState().setIsEnabled(true);
 
     const targetCombo = [
@@ -260,15 +260,22 @@ describe('rivalCatStore', () => {
       toughCatPushbackBonus: -0.5,
       cats: [
         {
-          id: 'cat-normal',
+          id: 'cat-idle-normal',
           type: 'normal',
-          phase: 'targeting',
-          countdown: 2.0,
-          targetMatch: targetCombo,
+          phase: 'idle',
+          countdown: 4.0,
+          targetMatch: null,
         },
         {
-          id: 'cat-tough',
+          id: 'cat-idle-tough',
           type: 'tough',
+          phase: 'idle',
+          countdown: 4.0,
+          targetMatch: null,
+        },
+        {
+          id: 'cat-targeting-normal',
+          type: 'normal',
           phase: 'targeting',
           countdown: 2.0,
           targetMatch: targetCombo,
@@ -279,13 +286,24 @@ describe('rivalCatStore', () => {
     // Player clears unrelated tile (2, 2)
     useRivalCatStore.getState().onPlayerClearedTiles([{ col: 2, row: 2 }]);
 
-    const normalCat = useRivalCatStore.getState().cats.find((c) => c.id === 'cat-normal')!;
-    const toughCat = useRivalCatStore.getState().cats.find((c) => c.id === 'cat-tough')!;
+    const idleNormalCat = useRivalCatStore.getState().cats.find((c) => c.id === 'cat-idle-normal')!;
+    const idleToughCat = useRivalCatStore.getState().cats.find((c) => c.id === 'cat-idle-tough')!;
+    const targetingCat = useRivalCatStore
+      .getState()
+      .cats.find((c) => c.id === 'cat-targeting-normal')!;
 
-    // Normal: 2.0 + 1.5 = 3.5
-    expect(normalCat.countdown).toBeCloseTo(3.5);
-    // Tough: 2.0 + (1.5 - 0.5) = 3.0
-    expect(toughCat.countdown).toBeCloseTo(3.0);
+    // Idle Normal: 4.0 + 1.5 = 5.5
+    expect(idleNormalCat.countdown).toBeCloseTo(5.5);
+    // Idle Tough: 4.0 + (1.5 - 0.5) = 5.0
+    expect(idleToughCat.countdown).toBeCloseTo(5.0);
+    // Targeting: Unchanged, no pushback while targeting
+    expect(targetingCat.countdown).toBeCloseTo(2.0);
+  });
+
+  it('updates showTargets via setShowTargets', () => {
+    expect(useRivalCatStore.getState().showTargets).toBe(true);
+    useRivalCatStore.getState().setShowTargets(false);
+    expect(useRivalCatStore.getState().showTargets).toBe(false);
   });
 
   it('detects externally broken targets on tick and reacts accordingly', () => {
