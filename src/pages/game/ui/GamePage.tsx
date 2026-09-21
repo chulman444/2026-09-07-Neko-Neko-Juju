@@ -15,15 +15,7 @@ import { useBoardGenConfigStore } from '@/features/board-generator';
 import { usePhaseProgressionStore } from '@/features/phase-progression';
 import { useBoardGeneratorActions } from '@/widgets/board-generator';
 import { useGameSessionDriver } from '../model/useGameSessionDriver';
-import { FooterConsole, ReCenterButton, PanModeButton } from '@/widgets/footer-console';
-import { ItemsToolbar } from '@/widgets/items-toolbar';
-import {
-  randomNumberBehavior,
-  randomChooseBehavior,
-  omnitileBehavior,
-  hintBehavior,
-  shakeBehavior,
-} from '@/features/core-items';
+import { FooterConsole } from '@/widgets/footer-console';
 import { TrackballControl } from '@/features/trackball-pan';
 import { PlayerSettingsModal } from '@/widgets/player-settings';
 import { GameHeaderBar } from './GameHeaderBar';
@@ -49,7 +41,6 @@ export const GamePage: React.FC = () => {
   const restartCurrentBoard = useBoardStore((state) => state.restartCurrentBoard);
 
   // Item Store Selectors
-  const itemCounts = useItemStore((state) => state.counts);
   const isToggled = useItemStore((state) => state.isToggled);
   const targetTile = useCoreItemsStore((state) => state.targetTile);
   const handleBoardTileClick = useCoreItemsStore((state) => state.handleBoardTileClick);
@@ -192,23 +183,6 @@ export const GamePage: React.FC = () => {
         <FooterConsole
           isCollapsed={!showItemArea}
           onToggleCollapse={() => setShowItemArea((prev) => !prev)}
-          row1Left={<ItemsToolbar activeItems={[randomNumberBehavior, randomChooseBehavior]} />}
-          row1Center={<TrackballControl />}
-          row1Right={
-            <div className="flex items-center gap-2.5">
-              <ItemsToolbar activeItems={[hintBehavior]} />
-              <ReCenterButton />
-            </div>
-          }
-          row2Left={<ItemsToolbar activeItems={[omnitileBehavior]} size="sm" />}
-          row2Center={<PanModeButton />}
-          row2Right={<ItemsToolbar activeItems={[shakeBehavior]} size="sm" />}
-          collapsedContent={
-            <span className="text-[11px] font-mono text-zinc-500 dark:text-zinc-400">
-              (🎲 ×{itemCounts.randomNumber} · 🎰 ×{itemCounts.randomChoose} · ⭐ ×
-              {itemCounts.omnitile} · 💡 ×{itemCounts.hint} · 🔀 ×{itemCounts.shake})
-            </span>
-          }
         />
       )}
 
