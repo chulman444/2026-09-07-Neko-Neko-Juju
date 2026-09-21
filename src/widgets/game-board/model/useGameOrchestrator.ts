@@ -4,6 +4,8 @@ import { useComboStore } from '@/features/combo-system';
 import { useHintStore } from '@/features/free-triggered-hint';
 import { useSolverStore } from '@/features/look-ahead-solver';
 import { useSelectionStore } from '@/features/select-tiles';
+import { useSurvivalTimerStore } from '@/features/survival-timer';
+import { usePhaseProgressionStore } from '@/features/phase-progression';
 import { useGameSessionStore } from '@/entities/game-session';
 
 export interface GameOrchestratorOptions {
@@ -35,19 +37,20 @@ export const createGameOrchestrator = (options: GameOrchestratorOptions = {}) =>
     }
 
     // 2. Score & Session points
-    const isPhase1Over = useHintStore.getState().isPhase1Over;
+    const isPhase1Over = usePhaseProgressionStore.getState().isPhase1Over;
     const isPhase1 = !isPhase1Over;
     const basePoints = spanTileCount;
     const points = Math.round(basePoints * Math.max(0, scoreMultiplier));
 
-    const sessionStore = useGameSessionStore.getState();
-    sessionStore.addScore(points, isPhase1);
-    sessionStore.addClearedTiles(nonZeroCount);
+    useGameSessionStore.getState().addScore(points);
+    useGameSessionStore.getState().addClearedTiles(nonZeroCount);
+    usePhaseProgressionStore.getState().addScore(points, isPhase1);
 
     // 3. Timer bonus in Phase 1 (if timer enabled)
     if (enableTimer && isPhase1) {
-      const addedTime = nonZeroCount * sessionStore.baseSecondsPerTile + Math.max(0, addTimeBonus);
-      sessionStore.addTime(addedTime);
+      const timerStore = useSurvivalTimerStore.getState();
+      const addedTime = nonZeroCount * timerStore.baseSecondsPerTile + Math.max(0, addTimeBonus);
+      timerStore.addTime(addedTime);
     }
 
     // 4. Invalidate / update hints
@@ -61,6 +64,8 @@ export const createGameOrchestrator = (options: GameOrchestratorOptions = {}) =>
 
   const resetAllSessions = () => {
     useGameSessionStore.getState().resetSession();
+    useSurvivalTimerStore.getState().resetTimer();
+    usePhaseProgressionStore.getState().resetProgression();
     useComboStore.getState().resetCombo();
     useHintStore.getState().resetHintSession();
     useSelectionStore.getState().clearSelection();

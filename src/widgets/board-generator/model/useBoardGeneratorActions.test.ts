@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { useBoardStore } from '@/entities/board';
 import { useBoardGenConfigStore } from '@/features/board-generator';
+import { useSurvivalTimerStore } from '@/features/survival-timer';
 import { useDifficultyStore } from '@/entities/difficulty';
 import { useGameSessionStore } from '@/entities/game-session';
 import { useBoardGeneratorActions } from './useBoardGeneratorActions';
@@ -25,7 +26,7 @@ describe('useBoardGeneratorActions', () => {
     expect(rows).toBe(6);
 
     // 5 * 6 = 30; timerMultiplier default ~20/170 (~0.1176) => maxCountdown round(30 * 20/170) = 4
-    expect(useGameSessionStore.getState().maxCountdown).toBeGreaterThanOrEqual(1);
+    expect(useSurvivalTimerStore.getState().maxCountdown).toBeGreaterThanOrEqual(1);
   });
 
   it('applyDifficultyOnly updates weights without mutating dimensions', () => {
@@ -47,7 +48,7 @@ describe('useBoardGeneratorActions', () => {
 
     revertTimerCap();
 
-    expect(useGameSessionStore.getState().maxCountdown).toBe(10);
+    expect(useSurvivalTimerStore.getState().maxCountdown).toBe(10);
   });
 
   it('loadSeed sets the seed and recalculates', () => {

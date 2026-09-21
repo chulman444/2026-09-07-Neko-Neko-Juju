@@ -1,5 +1,6 @@
 import { useBoardStore, generateLinearTileWeights, sampleNormal } from '@/entities/board';
 import { useBoardGenConfigStore } from '@/features/board-generator';
+import { useSurvivalTimerStore } from '@/features/survival-timer';
 import { useDifficultyStore } from '@/entities/difficulty';
 import { useSolverStore } from '@/features/look-ahead-solver';
 import { useGameSessionStore } from '@/entities/game-session';
@@ -9,7 +10,8 @@ export function useBoardGeneratorActions() {
     const clampedCols = Math.min(20, Math.max(3, nextCols));
     const clampedRows = Math.min(20, Math.max(3, nextRows));
     const { timerMultiplier } = useDifficultyStore.getState();
-    const { setMaxCountdown, resetSession } = useGameSessionStore.getState();
+    const { resetSession } = useGameSessionStore.getState();
+    const { setMaxCountdown, resetTimer } = useSurvivalTimerStore.getState();
     const { setDimensions } = useBoardStore.getState();
 
     setDimensions(clampedCols, clampedRows);
@@ -19,6 +21,7 @@ export function useBoardGeneratorActions() {
     setMaxCountdown(calculatedTimer);
 
     resetSession();
+    resetTimer();
     useSolverStore
       .getState()
       .recalculate(useBoardStore.getState().matrix, useBoardStore.getState().seed);
@@ -90,7 +93,7 @@ export function useBoardGeneratorActions() {
   const revertTimerCap = () => {
     const { cols, rows } = useBoardStore.getState();
     const { timerMultiplier } = useDifficultyStore.getState();
-    const { setMaxCountdown } = useGameSessionStore.getState();
+    const { setMaxCountdown } = useSurvivalTimerStore.getState();
     const calculated = Math.max(1, Math.round(cols * rows * timerMultiplier));
     setMaxCountdown(calculated);
   };
@@ -98,12 +101,14 @@ export function useBoardGeneratorActions() {
   const loadSeed = (seedToLoad: string) => {
     useBoardStore.getState().setSeed(seedToLoad);
     useGameSessionStore.getState().resetSession();
+    useSurvivalTimerStore.getState().resetTimer();
     useSolverStore.getState().recalculate(useBoardStore.getState().matrix, seedToLoad);
   };
 
   const rollNewSeed = () => {
     useBoardStore.getState().generateNewBoard();
     useGameSessionStore.getState().resetSession();
+    useSurvivalTimerStore.getState().resetTimer();
     useSolverStore
       .getState()
       .recalculate(useBoardStore.getState().matrix, useBoardStore.getState().seed);

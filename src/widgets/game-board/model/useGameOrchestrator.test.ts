@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createGameOrchestrator } from './useGameOrchestrator';
 import { useGameSessionStore } from '@/entities/game-session';
+import { useSurvivalTimerStore } from '@/features/survival-timer';
+import { usePhaseProgressionStore } from '@/features/phase-progression';
 import { useComboStore } from '@/features/combo-system';
 import { useHintStore } from '@/features/free-triggered-hint';
 import { useBoardStore } from '@/entities/board';
@@ -10,6 +12,8 @@ import { useSelectionStore } from '@/features/select-tiles';
 describe('useGameOrchestrator / createGameOrchestrator', () => {
   beforeEach(() => {
     useGameSessionStore.getState().resetSession();
+    useSurvivalTimerStore.getState().resetTimer();
+    usePhaseProgressionStore.getState().resetProgression();
     useComboStore.getState().resetCombo();
     useHintStore.getState().resetHintSession();
     useSelectionStore.getState().clearSelection();
@@ -36,10 +40,13 @@ describe('useGameOrchestrator / createGameOrchestrator', () => {
     // Game session store received score and cleared tiles
     expect(useGameSessionStore.getState().score).toBeGreaterThanOrEqual(2);
     expect(useGameSessionStore.getState().clearedTiles).toBe(2);
+    expect(usePhaseProgressionStore.getState().phase1Score).toBeGreaterThanOrEqual(2);
   });
 
   it('resets all decoupled stores on resetAllSessions', () => {
     useGameSessionStore.setState({ score: 100 });
+    useSurvivalTimerStore.setState({ countdown: 1, isDepleted: true });
+    usePhaseProgressionStore.setState({ phase1Score: 50, currentPhase: 2, isPhase1Over: true });
     useComboStore.setState({ comboCount: 5 });
     useHintStore.setState({ hintsRemaining: 0, isPhase1Over: true });
     useSelectionStore.setState({ selectedSum: 10 });
@@ -48,6 +55,10 @@ describe('useGameOrchestrator / createGameOrchestrator', () => {
     orchestrator.resetAllSessions();
 
     expect(useGameSessionStore.getState().score).toBe(0);
+    expect(useSurvivalTimerStore.getState().countdown).toBe(6);
+    expect(useSurvivalTimerStore.getState().isDepleted).toBe(false);
+    expect(usePhaseProgressionStore.getState().phase1Score).toBe(0);
+    expect(usePhaseProgressionStore.getState().isPhase1Over).toBe(false);
     expect(useComboStore.getState().comboCount).toBe(0);
     expect(useHintStore.getState().isPhase1Over).toBe(false);
     expect(useSelectionStore.getState().selectedSum).toBe(0);

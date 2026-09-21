@@ -11,6 +11,7 @@ import { useGameConfigStore } from '@/entities/game-config';
 import { useMacroLoopStore } from '@/entities/macro-loop';
 import { useDifficultyStore } from '@/entities/difficulty';
 import { useBoardGenConfigStore } from '@/features/board-generator';
+import { usePhaseProgressionStore } from '@/features/phase-progression';
 import { useBoardGeneratorActions } from '@/widgets/board-generator';
 import { useGameSessionDriver } from '../model/useGameSessionDriver';
 import { FooterConsole } from '@/widgets/footer-console';
@@ -80,7 +81,7 @@ export const GamePage: React.FC = () => {
   const { generateBoard } = useBoardGeneratorActions();
 
   const handleNextBoard = useCallback(() => {
-    const { phase1Score } = useGameSessionStore.getState();
+    const { phase1Score } = usePhaseProgressionStore.getState();
     const { matrix, cols, rows } = useBoardStore.getState();
 
     const leftoverTiles: { col: number; row: number; val: number }[] = [];

@@ -4,6 +4,8 @@ import { Link } from '@/shared/lib/router';
 import { useBoardStore, calculateBoardMetrics } from '@/entities/board';
 import { useSolverStore } from '@/features/look-ahead-solver';
 import { useGameSessionStore } from '@/entities/game-session';
+import { useSurvivalTimerStore } from '@/features/survival-timer';
+import { usePhaseProgressionStore } from '@/features/phase-progression';
 import { useGameConfigStore } from '@/entities/game-config';
 import { useHintStore } from '@/features/free-triggered-hint';
 import { SettingsHeaderButton } from '@/widgets/player-settings';
@@ -47,14 +49,14 @@ export const GameHeaderBar: React.FC<GameHeaderBarProps> = ({
   // Solver Store Selectors
   const combinations = useSolverStore((state) => state.combinations);
 
-  // Game Session Selectors
+  // Game Session & Timer Selectors
   const score = useGameSessionStore((state) => state.score);
   const clearedTiles = useGameSessionStore((state) => state.clearedTiles);
-  const countdown = useGameSessionStore((state) => state.countdown);
-  const maxCountdown = useGameSessionStore((state) => state.maxCountdown);
+  const countdown = useSurvivalTimerStore((state) => state.countdown);
+  const maxCountdown = useSurvivalTimerStore((state) => state.maxCountdown);
   const isPaused = useGameSessionStore((state) => state.isPaused);
   const retryAllowed = useGameSessionStore((state) => state.retryAllowed);
-  const isPhase1Over = useHintStore((state) => state.isPhase1Over);
+  const isPhase1Over = usePhaseProgressionStore((state) => state.isPhase1Over);
   const noHintsAvailableMsg = useHintStore((state) => state.noHintsAvailableMsg);
 
   // Derived Board & Clearable Metrics

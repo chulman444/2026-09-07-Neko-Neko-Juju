@@ -1,15 +1,15 @@
 import React from 'react';
-import { useGameSessionStore } from '@/entities/game-session';
+import { useSurvivalTimerStore } from '@/features/survival-timer';
 import { useHintStore } from '@/features/free-triggered-hint';
 
 export const HintsConfigSection: React.FC = () => {
   const maxFreeHints = useHintStore((state) => state.maxFreeHints);
   const freeHintInterval = useHintStore((state) => state.freeHintInterval);
-  const baseSecondsPerTile = useGameSessionStore((state) => state.baseSecondsPerTile);
+  const baseSecondsPerTile = useSurvivalTimerStore((state) => state.baseSecondsPerTile);
 
   const setMaxFreeHints = useHintStore((state) => state.setMaxFreeHints);
   const setFreeHintInterval = useHintStore((state) => state.setFreeHintInterval);
-  const setBaseSecondsPerTile = useGameSessionStore((state) => state.setBaseSecondsPerTile);
+  const setBaseSecondsPerTile = useSurvivalTimerStore((state) => state.setBaseSecondsPerTile);
 
   return (
     <div>

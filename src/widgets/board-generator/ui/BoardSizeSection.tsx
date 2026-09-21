@@ -1,8 +1,8 @@
 import React from 'react';
 import { useBoardStore, type BoardSizeTier } from '@/entities/board';
 import { useBoardGenConfigStore } from '@/features/board-generator';
+import { useSurvivalTimerStore } from '@/features/survival-timer';
 import { useDifficultyStore } from '@/entities/difficulty';
-import { useGameSessionStore } from '@/entities/game-session';
 import { useBoardGeneratorActions } from '../model/useBoardGeneratorActions';
 
 const SIZE_TIERS: readonly BoardSizeTier[] = ['small', 'medium', 'large', 'any'] as const;
@@ -11,14 +11,14 @@ export const BoardSizeSection: React.FC = () => {
   const cols = useBoardStore((state) => state.cols);
   const rows = useBoardStore((state) => state.rows);
 
-  const maxCountdown = useGameSessionStore((state) => state.maxCountdown);
+  const maxCountdown = useSurvivalTimerStore((state) => state.maxCountdown);
   const timerMultiplier = useDifficultyStore((state) => state.timerMultiplier);
   const boardSizeRanges = useBoardGenConfigStore((state) => state.boardSizeRanges);
   const selectedSizeTier = useBoardGenConfigStore((state) => state.selectedSizeTier);
   const tierAspectConfigs = useBoardGenConfigStore((state) => state.tierAspectConfigs);
   const rollSeedOnGenerate = useBoardGenConfigStore((state) => state.rollSeedOnGenerate);
 
-  const setMaxCountdown = useGameSessionStore((state) => state.setMaxCountdown);
+  const setMaxCountdown = useSurvivalTimerStore((state) => state.setMaxCountdown);
   const setTimerMultiplier = useDifficultyStore((state) => state.setTimerMultiplier);
   const setBoardSizeRange = useBoardGenConfigStore((state) => state.setBoardSizeRange);
   const setSelectedSizeTier = useBoardGenConfigStore((state) => state.setSelectedSizeTier);

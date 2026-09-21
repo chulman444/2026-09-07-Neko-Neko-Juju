@@ -1,5 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useGameSessionStore } from '@/entities/game-session';
+import { useSurvivalTimerStore } from '@/features/survival-timer';
+import { usePhaseProgressionStore } from '@/features/phase-progression';
 import { useComboStore } from '@/features/combo-system';
 import { useHintStore, setClearableHintsResolver } from '@/features/free-triggered-hint';
 import { useBoardStore } from '@/entities/board';
@@ -39,11 +41,19 @@ export const useGameSessionDriver = () => {
         // Limit max delta to prevent huge jumps when switching tabs
         const clampedDelta = Math.min(deltaSeconds, 0.1);
         const isComboPaused = useComboStore.getState().isTimerPaused();
-        const isSurvivalDepleted = useGameSessionStore.getState().isDepleted;
+        const isSessionPaused = useGameSessionStore.getState().isPaused;
+        const isTimerPaused = isComboPaused || isSessionPaused;
+        const isSurvivalDepleted = useSurvivalTimerStore.getState().isDepleted;
 
-        useGameSessionStore.getState().tick(clampedDelta, isComboPaused);
+        useSurvivalTimerStore.getState().tick(clampedDelta, isTimerPaused);
         useComboStore.getState().tick(clampedDelta);
-        useHintStore.getState().tick(clampedDelta, isSurvivalDepleted, isComboPaused);
+        useHintStore.getState().tick(clampedDelta, isSurvivalDepleted, isTimerPaused);
+
+        // Orchestrate Phase Progression
+        const isHintPhase1Over = useHintStore.getState().isPhase1Over;
+        if (isHintPhase1Over && !usePhaseProgressionStore.getState().isPhase1Over) {
+          usePhaseProgressionStore.getState().setPhase(2);
+        }
       }
       lastTimeRef.current = now;
       animFrameRef.current = requestAnimationFrame(loop);
