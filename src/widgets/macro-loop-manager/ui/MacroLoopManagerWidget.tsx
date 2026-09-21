@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useBoardStore } from '@/entities/board';
-import { useGameSessionStore } from '@/entities/game-session';
+import { useDifficultyStore } from '@/entities/difficulty';
 import {
   useMacroLoopStore,
   type MacroBoardConfig,
@@ -57,8 +57,8 @@ export const MacroLoopManagerWidget: React.FC<MacroLoopManagerWidgetProps> = ({
     startEditing(index);
 
     // Sync board config into generator / session stores
-    useGameSessionStore.getState().setSelectedSizeTier(board.sizeTier);
-    useGameSessionStore.getState().setSelectedDifficultyTier(board.difficultyTier);
+    useBoardStore.getState().setSelectedSizeTier(board.sizeTier);
+    useDifficultyStore.getState().setSelectedDifficultyTier(board.difficultyTier);
     useBoardStore.getState().setSeed(board.seed);
 
     showFeedback(`Board #${index + 1} locked for editing in Generator`);
@@ -69,9 +69,8 @@ export const MacroLoopManagerWidget: React.FC<MacroLoopManagerWidgetProps> = ({
 
   // Handle Save from Board Generator
   const handleSaveEditing = () => {
-    const currentSize = useGameSessionStore.getState().selectedSizeTier as MacroBoardSizeTier;
-    const currentDiff = useGameSessionStore.getState()
-      .selectedDifficultyTier as MacroDifficultyTier;
+    const currentSize = useBoardStore.getState().selectedSizeTier as MacroBoardSizeTier;
+    const currentDiff = useDifficultyStore.getState().selectedDifficultyTier as MacroDifficultyTier;
     const currentSeed = useBoardStore.getState().seed;
 
     saveEditing({
@@ -89,8 +88,8 @@ export const MacroLoopManagerWidget: React.FC<MacroLoopManagerWidgetProps> = ({
     if (!board) return;
 
     playBoard(index);
-    useGameSessionStore.getState().setSelectedSizeTier(board.sizeTier);
-    useGameSessionStore.getState().setSelectedDifficultyTier(board.difficultyTier);
+    useBoardStore.getState().setSelectedSizeTier(board.sizeTier);
+    useDifficultyStore.getState().setSelectedDifficultyTier(board.difficultyTier);
     useBoardStore.getState().setSeed(board.seed);
 
     if (onPlayBoard) {

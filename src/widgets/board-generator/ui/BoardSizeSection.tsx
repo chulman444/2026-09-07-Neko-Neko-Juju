@@ -1,6 +1,7 @@
 import React from 'react';
-import { useBoardStore } from '@/entities/board';
-import { useGameSessionStore, type BoardSizeTier } from '@/entities/game-session';
+import { useBoardStore, type BoardSizeTier } from '@/entities/board';
+import { useDifficultyStore } from '@/entities/difficulty';
+import { useGameSessionStore } from '@/entities/game-session';
 import { useBoardGeneratorActions } from '../model/useBoardGeneratorActions';
 
 const SIZE_TIERS: readonly BoardSizeTier[] = ['small', 'medium', 'large', 'any'] as const;
@@ -10,19 +11,19 @@ export const BoardSizeSection: React.FC = () => {
   const rows = useBoardStore((state) => state.rows);
 
   const maxCountdown = useGameSessionStore((state) => state.maxCountdown);
-  const timerMultiplier = useGameSessionStore((state) => state.timerMultiplier);
-  const boardSizeRanges = useGameSessionStore((state) => state.boardSizeRanges);
-  const selectedSizeTier = useGameSessionStore((state) => state.selectedSizeTier);
-  const tierAspectConfigs = useGameSessionStore((state) => state.tierAspectConfigs);
-  const rollSeedOnGenerate = useGameSessionStore((state) => state.rollSeedOnGenerate);
+  const timerMultiplier = useDifficultyStore((state) => state.timerMultiplier);
+  const boardSizeRanges = useBoardStore((state) => state.boardSizeRanges);
+  const selectedSizeTier = useBoardStore((state) => state.selectedSizeTier);
+  const tierAspectConfigs = useBoardStore((state) => state.tierAspectConfigs);
+  const rollSeedOnGenerate = useBoardStore((state) => state.rollSeedOnGenerate);
 
   const setMaxCountdown = useGameSessionStore((state) => state.setMaxCountdown);
-  const setTimerMultiplier = useGameSessionStore((state) => state.setTimerMultiplier);
-  const setBoardSizeRange = useGameSessionStore((state) => state.setBoardSizeRange);
-  const setSelectedSizeTier = useGameSessionStore((state) => state.setSelectedSizeTier);
-  const setTierRatioMean = useGameSessionStore((state) => state.setTierRatioMean);
-  const setTierRatioSpread = useGameSessionStore((state) => state.setTierRatioSpread);
-  const setRollSeedOnGenerate = useGameSessionStore((state) => state.setRollSeedOnGenerate);
+  const setTimerMultiplier = useDifficultyStore((state) => state.setTimerMultiplier);
+  const setBoardSizeRange = useBoardStore((state) => state.setBoardSizeRange);
+  const setSelectedSizeTier = useBoardStore((state) => state.setSelectedSizeTier);
+  const setTierRatioMean = useBoardStore((state) => state.setTierRatioMean);
+  const setTierRatioSpread = useBoardStore((state) => state.setTierRatioSpread);
+  const setRollSeedOnGenerate = useBoardStore((state) => state.setRollSeedOnGenerate);
 
   const { updateDimensions, generateBoard, revertTimerCap } = useBoardGeneratorActions();
 

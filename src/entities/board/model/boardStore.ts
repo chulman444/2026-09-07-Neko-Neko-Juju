@@ -2,7 +2,14 @@ import { create } from 'zustand';
 import { generateSeed, seededRandomGenerator } from '@/shared/lib/prng';
 import { DEFAULT_CONFIG } from '@/shared/config';
 import { createBoardMatrix } from './boardGenerators';
-import type { TileCoord, ClearingAnimation } from './types';
+import type {
+  TileCoord,
+  ClearingAnimation,
+  BoardSizeTier,
+  BoardSizeRanges,
+  TierAspectConfigs,
+} from './types';
+import { DEFAULT_TIER_ASPECT_CONFIGS, DEFAULT_BOARD_SIZE_RANGES } from './types';
 import {
   rotateCW,
   rotateCCW,
@@ -69,6 +76,18 @@ export interface BoardState {
   shakeBoard: () => number[][];
   addClearingAnimation: (anim: ClearingAnimation) => void;
   removeExpiredAnimations: (now: number) => void;
+
+  // Board Size & Aspect Tuning
+  boardSizeRanges: BoardSizeRanges;
+  selectedSizeTier: BoardSizeTier;
+  tierAspectConfigs: TierAspectConfigs;
+  rollSeedOnGenerate: boolean;
+
+  setBoardSizeRange: (tier: BoardSizeTier, index: 0 | 1, val: number) => void;
+  setSelectedSizeTier: (tier: BoardSizeTier) => void;
+  setTierRatioMean: (tier: BoardSizeTier, val: number) => void;
+  setTierRatioSpread: (tier: BoardSizeTier, val: number) => void;
+  setRollSeedOnGenerate: (val: boolean) => void;
 }
 
 const initialSeed = generateSeed();
@@ -471,5 +490,57 @@ export const useBoardStore = create<BoardState>((set, get) => ({
         (anim) => now - anim.startTime < anim.duration
       ),
     }));
+  },
+
+  // Board Size & Aspect Initial State & Setters
+  boardSizeRanges: { ...DEFAULT_BOARD_SIZE_RANGES },
+  selectedSizeTier: 'medium',
+  tierAspectConfigs: { ...DEFAULT_TIER_ASPECT_CONFIGS },
+  rollSeedOnGenerate: false,
+
+  setBoardSizeRange: (tier, index, val) => {
+    set((state) => {
+      const current = state.boardSizeRanges[tier];
+      const updated: [number, number] = [...current];
+      updated[index] = val;
+      return {
+        boardSizeRanges: {
+          ...state.boardSizeRanges,
+          [tier]: updated,
+        },
+      };
+    });
+  },
+
+  setSelectedSizeTier: (tier) => {
+    set({ selectedSizeTier: tier });
+  },
+
+  setTierRatioMean: (tier, val) => {
+    set((state) => ({
+      tierAspectConfigs: {
+        ...state.tierAspectConfigs,
+        [tier]: {
+          ...state.tierAspectConfigs[tier],
+          ratioMean: val,
+        },
+      },
+    }));
+  },
+
+  setTierRatioSpread: (tier, val) => {
+    set((state) => ({
+      tierAspectConfigs: {
+        ...state.tierAspectConfigs,
+        [tier]: {
+          ...state.tierAspectConfigs[tier],
+          ratioSpread: Math.max(0.01, val),
+        },
+      },
+    }));
+  },
+
+  setRollSeedOnGenerate: (val) => {
+    set({ rollSeedOnGenerate: val });
   },
 }));

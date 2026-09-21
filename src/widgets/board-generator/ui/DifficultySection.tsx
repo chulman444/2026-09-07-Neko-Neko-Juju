@@ -1,6 +1,6 @@
 import React from 'react';
 import { useBoardStore } from '@/entities/board';
-import { useGameSessionStore, type DifficultyTier } from '@/entities/game-session';
+import { useDifficultyStore, type DifficultyTier } from '@/entities/difficulty';
 import { useBoardGeneratorActions } from '../model/useBoardGeneratorActions';
 import { BoardMetricsCard } from './BoardMetricsCard';
 import { TileDistributionChart } from './TileDistributionChart';
@@ -12,13 +12,13 @@ export const DifficultySection: React.FC = () => {
   const rows = useBoardStore((state) => state.rows);
   const activeTilt = useBoardStore((state) => state.activeTilt);
 
-  const selectedDifficultyTier = useGameSessionStore((state) => state.selectedDifficultyTier);
-  const difficultyTiltRanges = useGameSessionStore((state) => state.difficultyTiltRanges);
-  const difficultyNoiseSpread = useGameSessionStore((state) => state.difficultyNoiseSpread);
+  const selectedDifficultyTier = useDifficultyStore((state) => state.selectedDifficultyTier);
+  const difficultyTiltRanges = useDifficultyStore((state) => state.difficultyTiltRanges);
+  const difficultyNoiseSpread = useDifficultyStore((state) => state.difficultyNoiseSpread);
 
-  const setSelectedDifficultyTier = useGameSessionStore((state) => state.setSelectedDifficultyTier);
-  const setDifficultyTiltRange = useGameSessionStore((state) => state.setDifficultyTiltRange);
-  const setDifficultyNoiseSpread = useGameSessionStore((state) => state.setDifficultyNoiseSpread);
+  const setSelectedDifficultyTier = useDifficultyStore((state) => state.setSelectedDifficultyTier);
+  const setDifficultyTiltRange = useDifficultyStore((state) => state.setDifficultyTiltRange);
+  const setDifficultyNoiseSpread = useDifficultyStore((state) => state.setDifficultyNoiseSpread);
 
   const { applyDifficultyOnly } = useBoardGeneratorActions();
 

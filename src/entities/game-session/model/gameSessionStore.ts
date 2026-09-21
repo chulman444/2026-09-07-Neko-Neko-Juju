@@ -145,45 +145,6 @@ export function getMatchingComboRule(rules: ComboRule[], combo: number): ComboRu
   return sorted[sorted.length - 1]!;
 }
 
-export type BoardSizeTier = 'small' | 'medium' | 'large' | 'any';
-
-export interface BoardSizeRanges {
-  small: [number, number];
-  medium: [number, number];
-  large: [number, number];
-  any: [number, number];
-}
-
-export interface TierAspectConfig {
-  ratioMean: number;
-  ratioSpread: number;
-}
-
-export type TierAspectConfigs = Record<BoardSizeTier, TierAspectConfig>;
-
-export const DEFAULT_TIER_ASPECT_CONFIGS: TierAspectConfigs = {
-  small: { ratioMean: 1.0, ratioSpread: 0.15 },
-  medium: { ratioMean: 1.35, ratioSpread: 0.25 },
-  large: { ratioMean: 1.65, ratioSpread: 0.3 },
-  any: { ratioMean: 1.25, ratioSpread: 0.35 },
-};
-
-export type DifficultyTier = 'easy' | 'medium' | 'hard' | 'any';
-
-export interface DifficultyTiltRanges {
-  easy: [number, number];
-  medium: [number, number];
-  hard: [number, number];
-  any: [number, number];
-}
-
-export const DEFAULT_DIFFICULTY_TILT_RANGES: DifficultyTiltRanges = {
-  easy: [2.0, 5.0],
-  medium: [-1.0, 1.0],
-  hard: [-5.0, -2.0],
-  any: [-5.0, 5.0],
-};
-
 export interface GameSessionState {
   // Session & Meta
   score: number;
@@ -200,18 +161,6 @@ export interface GameSessionState {
   baseSecondsPerTile: number;
   isPaused: boolean;
   isDepleted: boolean;
-
-  // Board Size & Timer Multiplier Tuning
-  timerMultiplier: number;
-  boardSizeRanges: BoardSizeRanges;
-  selectedSizeTier: BoardSizeTier;
-  tierAspectConfigs: TierAspectConfigs;
-  rollSeedOnGenerate: boolean;
-
-  // Game Difficulty Tuning (Tilt & Gaussian Noise)
-  selectedDifficultyTier: DifficultyTier;
-  difficultyTiltRanges: DifficultyTiltRanges;
-  difficultyNoiseSpread: number;
 
   // Phase 1 Hint State
   maxFreeHints: number;
@@ -262,15 +211,6 @@ export interface GameSessionState {
   setBaseSecondsPerTile: (val: number) => void;
   setRetryAllowed: (val: boolean) => void;
   setComboRules: (rules: ComboRule[]) => void;
-  setTimerMultiplier: (val: number) => void;
-  setBoardSizeRange: (tier: BoardSizeTier, index: 0 | 1, val: number) => void;
-  setSelectedSizeTier: (tier: BoardSizeTier) => void;
-  setTierRatioMean: (tier: BoardSizeTier, val: number) => void;
-  setTierRatioSpread: (tier: BoardSizeTier, val: number) => void;
-  setRollSeedOnGenerate: (val: boolean) => void;
-  setSelectedDifficultyTier: (tier: DifficultyTier) => void;
-  setDifficultyTiltRange: (tier: DifficultyTier, index: 0 | 1, val: number) => void;
-  setDifficultyNoiseSpread: (val: number) => void;
 
   // Lifecycle
   resetSession: () => void;
@@ -292,23 +232,6 @@ export const useGameSessionStore = create<GameSessionState>((set, get) => ({
   baseSecondsPerTile: 0,
   isPaused: false,
   isDepleted: false,
-
-  // Board Size & Timer Multiplier Initial State
-  timerMultiplier: 20 / 170,
-  boardSizeRanges: {
-    small: [3, 8],
-    medium: [9, 14],
-    large: [15, 20],
-    any: [3, 20],
-  },
-  selectedSizeTier: 'medium',
-  tierAspectConfigs: { ...DEFAULT_TIER_ASPECT_CONFIGS },
-  rollSeedOnGenerate: false,
-
-  // Game Difficulty Initial State
-  selectedDifficultyTier: 'medium',
-  difficultyTiltRanges: { ...DEFAULT_DIFFICULTY_TILT_RANGES },
-  difficultyNoiseSpread: 0.015,
 
   // Phase 1 Hint Initial State
   maxFreeHints: 3,
@@ -740,77 +663,6 @@ export const useGameSessionStore = create<GameSessionState>((set, get) => ({
 
   setComboRules: (rules) => {
     set({ comboRules: rules });
-  },
-
-  setTimerMultiplier: (val) => {
-    set({ timerMultiplier: Math.max(0, val) });
-  },
-
-  setBoardSizeRange: (tier, index, val) => {
-    set((state) => {
-      const current = state.boardSizeRanges[tier];
-      const updated: [number, number] = [...current];
-      updated[index] = val;
-      return {
-        boardSizeRanges: {
-          ...state.boardSizeRanges,
-          [tier]: updated,
-        },
-      };
-    });
-  },
-
-  setSelectedSizeTier: (tier) => {
-    set({ selectedSizeTier: tier });
-  },
-
-  setTierRatioMean: (tier, val) => {
-    set((state) => ({
-      tierAspectConfigs: {
-        ...state.tierAspectConfigs,
-        [tier]: {
-          ...state.tierAspectConfigs[tier],
-          ratioMean: val,
-        },
-      },
-    }));
-  },
-
-  setTierRatioSpread: (tier, val) => {
-    set((state) => ({
-      tierAspectConfigs: {
-        ...state.tierAspectConfigs,
-        [tier]: {
-          ...state.tierAspectConfigs[tier],
-          ratioSpread: Math.max(0.01, val),
-        },
-      },
-    }));
-  },
-
-  setRollSeedOnGenerate: (val) => {
-    set({ rollSeedOnGenerate: val });
-  },
-
-  setSelectedDifficultyTier: (tier) => {
-    set({ selectedDifficultyTier: tier });
-  },
-
-  setDifficultyTiltRange: (tier, index, val) => {
-    set((state) => {
-      const current = [...state.difficultyTiltRanges[tier]] as [number, number];
-      current[index] = val;
-      return {
-        difficultyTiltRanges: {
-          ...state.difficultyTiltRanges,
-          [tier]: current,
-        },
-      };
-    });
-  },
-
-  setDifficultyNoiseSpread: (val) => {
-    set({ difficultyNoiseSpread: Math.max(0, val) });
   },
 
   resetSession: () => {

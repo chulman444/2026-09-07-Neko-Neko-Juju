@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { useBoardStore } from '@/entities/board';
+import { useDifficultyStore } from '@/entities/difficulty';
 import { useGameSessionStore } from '@/entities/game-session';
 import { useBoardGeneratorActions } from './useBoardGeneratorActions';
 
@@ -41,7 +42,7 @@ describe('useBoardGeneratorActions', () => {
   it('revertTimerCap recalculates maxCountdown according to dimensions', () => {
     const { revertTimerCap } = useBoardGeneratorActions();
     useBoardStore.setState({ cols: 10, rows: 10 });
-    useGameSessionStore.getState().setTimerMultiplier(0.1);
+    useDifficultyStore.getState().setTimerMultiplier(0.1);
 
     revertTimerCap();
 
@@ -68,7 +69,7 @@ describe('useBoardGeneratorActions', () => {
 
   it('generateBoard generates board matching selected size tier bounds', () => {
     const { generateBoard } = useBoardGeneratorActions();
-    useGameSessionStore.getState().setSelectedSizeTier('small');
+    useBoardStore.getState().setSelectedSizeTier('small');
 
     generateBoard();
 

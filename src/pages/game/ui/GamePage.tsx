@@ -9,6 +9,7 @@ import { useGameSessionStore } from '@/entities/game-session';
 import { useItemStore } from '@/entities/item';
 import { useGameConfigStore } from '@/entities/game-config';
 import { useMacroLoopStore } from '@/entities/macro-loop';
+import { useDifficultyStore } from '@/entities/difficulty';
 import { useBoardGeneratorActions } from '@/widgets/board-generator';
 import { useGameSessionDriver } from '../model/useGameSessionDriver';
 import { FooterConsole } from '@/widgets/footer-console';
@@ -123,8 +124,8 @@ export const GamePage: React.FC = () => {
     const nextConfig = useMacroLoopStore.getState().boards[nextIndex];
 
     if (nextConfig) {
-      useGameSessionStore.getState().setSelectedSizeTier(nextConfig.sizeTier);
-      useGameSessionStore.getState().setSelectedDifficultyTier(nextConfig.difficultyTier);
+      useBoardStore.getState().setSelectedSizeTier(nextConfig.sizeTier);
+      useDifficultyStore.getState().setSelectedDifficultyTier(nextConfig.difficultyTier);
       useBoardStore.getState().setSeed(nextConfig.seed);
       generateBoard();
     }

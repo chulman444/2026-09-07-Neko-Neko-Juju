@@ -1,4 +1,5 @@
 import { useBoardStore, generateLinearTileWeights, sampleNormal } from '@/entities/board';
+import { useDifficultyStore } from '@/entities/difficulty';
 import { useSolverStore } from '@/features/look-ahead-solver';
 import { useGameSessionStore } from '@/entities/game-session';
 
@@ -6,7 +7,8 @@ export function useBoardGeneratorActions() {
   const updateDimensions = (nextCols: number, nextRows: number) => {
     const clampedCols = Math.min(20, Math.max(3, nextCols));
     const clampedRows = Math.min(20, Math.max(3, nextRows));
-    const { timerMultiplier, setMaxCountdown, resetSession } = useGameSessionStore.getState();
+    const { timerMultiplier } = useDifficultyStore.getState();
+    const { setMaxCountdown, resetSession } = useGameSessionStore.getState();
     const { setDimensions } = useBoardStore.getState();
 
     setDimensions(clampedCols, clampedRows);
@@ -22,16 +24,16 @@ export function useBoardGeneratorActions() {
   };
 
   const generateBoard = () => {
-    const sessionState = useGameSessionStore.getState();
+    const boardState = useBoardStore.getState();
+    const difficultyState = useDifficultyStore.getState();
 
-    const [minVal, maxVal] = sessionState.boardSizeRanges[sessionState.selectedSizeTier];
+    const [minVal, maxVal] = boardState.boardSizeRanges[boardState.selectedSizeTier];
     const low = Math.min(minVal, maxVal);
     const high = Math.max(minVal, maxVal);
     // The tier range bounds the longest side of the board
     const longestSide = Math.floor(Math.random() * (high - low + 1)) + low;
 
-    const { ratioMean, ratioSpread } =
-      sessionState.tierAspectConfigs[sessionState.selectedSizeTier];
+    const { ratioMean, ratioSpread } = boardState.tierAspectConfigs[boardState.selectedSizeTier];
     // Sample aspect ratio from normal distribution (bell curve)
     const sampledRatio = Math.max(0.3, Math.min(3.0, sampleNormal(ratioMean, ratioSpread)));
 
@@ -54,14 +56,14 @@ export function useBoardGeneratorActions() {
 
     // Roll difficulty tilt within selected difficulty tier range
     const [minTilt, maxTilt] =
-      sessionState.difficultyTiltRanges[sessionState.selectedDifficultyTier];
+      difficultyState.difficultyTiltRanges[difficultyState.selectedDifficultyTier];
     const lowTilt = Math.min(minTilt, maxTilt);
     const highTilt = Math.max(minTilt, maxTilt);
     const rolledTilt = Math.round((lowTilt + Math.random() * (highTilt - lowTilt)) * 10) / 10;
-    const weights = generateLinearTileWeights(rolledTilt, sessionState.difficultyNoiseSpread);
+    const weights = generateLinearTileWeights(rolledTilt, difficultyState.difficultyNoiseSpread);
     useBoardStore.getState().setTileWeights(weights, rolledTilt);
 
-    if (sessionState.rollSeedOnGenerate) {
+    if (boardState.rollSeedOnGenerate) {
       useBoardStore.getState().generateNewBoard();
     }
 
@@ -69,15 +71,15 @@ export function useBoardGeneratorActions() {
   };
 
   const applyDifficultyOnly = () => {
-    const sessionState = useGameSessionStore.getState();
+    const difficultyState = useDifficultyStore.getState();
     const [minTilt, maxTilt] =
-      sessionState.difficultyTiltRanges[sessionState.selectedDifficultyTier];
+      difficultyState.difficultyTiltRanges[difficultyState.selectedDifficultyTier];
     const lowTilt = Math.min(minTilt, maxTilt);
     const highTilt = Math.max(minTilt, maxTilt);
     const rolledTilt = Math.round((lowTilt + Math.random() * (highTilt - lowTilt)) * 10) / 10;
-    const weights = generateLinearTileWeights(rolledTilt, sessionState.difficultyNoiseSpread);
+    const weights = generateLinearTileWeights(rolledTilt, difficultyState.difficultyNoiseSpread);
     useBoardStore.getState().setTileWeights(weights, rolledTilt);
-    sessionState.resetSession();
+    useGameSessionStore.getState().resetSession();
     useSolverStore
       .getState()
       .recalculate(useBoardStore.getState().matrix, useBoardStore.getState().seed);
@@ -85,7 +87,8 @@ export function useBoardGeneratorActions() {
 
   const revertTimerCap = () => {
     const { cols, rows } = useBoardStore.getState();
-    const { timerMultiplier, setMaxCountdown } = useGameSessionStore.getState();
+    const { timerMultiplier } = useDifficultyStore.getState();
+    const { setMaxCountdown } = useGameSessionStore.getState();
     const calculated = Math.max(1, Math.round(cols * rows * timerMultiplier));
     setMaxCountdown(calculated);
   };
