@@ -15,7 +15,7 @@ import { useBoardGenConfigStore } from '@/features/board-generator';
 import { usePhaseProgressionStore } from '@/features/phase-progression';
 import { useBoardGeneratorActions } from '@/widgets/board-generator';
 import { useGameSessionDriver } from '../model/useGameSessionDriver';
-import { FooterConsole } from '@/widgets/footer-console';
+import { FooterConsole, ReCenterButton, PanModeButton } from '@/widgets/footer-console';
 import { ItemsToolbar } from '@/widgets/items-toolbar';
 import {
   randomNumberBehavior,
@@ -192,13 +192,17 @@ export const GamePage: React.FC = () => {
         <FooterConsole
           isCollapsed={!showItemArea}
           onToggleCollapse={() => setShowItemArea((prev) => !prev)}
-          centerSlot={<TrackballControl />}
-          leftSlot={
-            <ItemsToolbar
-              activeItems={[randomNumberBehavior, randomChooseBehavior, omnitileBehavior]}
-            />
+          row1Left={<ItemsToolbar activeItems={[randomNumberBehavior, randomChooseBehavior]} />}
+          row1Center={<TrackballControl />}
+          row1Right={
+            <div className="flex items-center gap-2.5">
+              <ItemsToolbar activeItems={[hintBehavior]} />
+              <ReCenterButton />
+            </div>
           }
-          rightSlot={<ItemsToolbar activeItems={[hintBehavior, shakeBehavior]} />}
+          row2Left={<ItemsToolbar activeItems={[omnitileBehavior]} size="sm" />}
+          row2Center={<PanModeButton />}
+          row2Right={<ItemsToolbar activeItems={[shakeBehavior]} size="sm" />}
           collapsedContent={
             <span className="text-[11px] font-mono text-zinc-500 dark:text-zinc-400">
               (🎲 ×{itemCounts.randomNumber} · 🎰 ×{itemCounts.randomChoose} · ⭐ ×

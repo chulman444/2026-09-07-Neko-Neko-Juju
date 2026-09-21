@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { FooterConsole } from './FooterConsole';
 import { TrackballControl } from '@/features/trackball-pan';
+import { ReCenterButton } from './ReCenterButton';
+import { PanModeButton } from './PanModeButton';
 
 const meta = {
   title: 'Widgets/FooterConsole',
@@ -11,8 +13,7 @@ const meta = {
   args: {
     isCollapsed: false,
     onToggleCollapse: () => {},
-    centerSlot: <TrackballControl />,
-    leftSlot: (
+    row1Left: (
       <div className="flex items-center gap-2">
         <button
           type="button"
@@ -28,21 +29,34 @@ const meta = {
         </button>
       </div>
     ),
-    rightSlot: (
-      <div className="flex items-center gap-2">
+    row1Center: <TrackballControl />,
+    row1Right: (
+      <div className="flex items-center gap-2.5">
         <button
           type="button"
           className="px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-900 dark:text-emerald-200 text-xs font-bold font-mono border border-emerald-500/40"
         >
           💡 ×2
         </button>
-        <button
-          type="button"
-          className="px-3 py-1.5 rounded-lg bg-blue-500/20 text-blue-900 dark:text-blue-200 text-xs font-bold font-mono border border-blue-500/40"
-        >
-          🔀 ×4
-        </button>
+        <ReCenterButton />
       </div>
+    ),
+    row2Left: (
+      <button
+        type="button"
+        className="px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-900 dark:text-amber-200 text-[11px] font-bold font-mono border border-amber-500/40"
+      >
+        ⭐ ×1
+      </button>
+    ),
+    row2Center: <PanModeButton />,
+    row2Right: (
+      <button
+        type="button"
+        className="px-2.5 py-1 rounded-lg bg-blue-500/20 text-blue-900 dark:text-blue-200 text-[11px] font-bold font-mono border border-blue-500/40"
+      >
+        🔀 ×4
+      </button>
     ),
   },
   decorators: [
@@ -70,8 +84,8 @@ export const Collapsed: Story = {
 
 export const CustomSlots: Story = {
   args: {
-    leftSlot: <span className="text-xs font-bold font-mono">Custom Left</span>,
-    centerSlot: <TrackballControl />,
-    rightSlot: <span className="text-xs font-bold font-mono">Custom Right</span>,
+    row1Left: <span className="text-xs font-bold font-mono">Custom Left</span>,
+    row1Center: <TrackballControl />,
+    row1Right: <span className="text-xs font-bold font-mono">Custom Right</span>,
   },
 };

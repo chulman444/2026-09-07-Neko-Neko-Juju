@@ -1,10 +1,23 @@
 import React from 'react';
 
 export interface FooterConsoleProps {
+  // Row 1 (Primary Row)
+  row1Left?: React.ReactNode;
+  row1Center?: React.ReactNode;
+  row1Right?: React.ReactNode;
+
+  // Row 2 (Secondary Extension Row)
+  row2Left?: React.ReactNode;
+  row2Center?: React.ReactNode;
+  row2Right?: React.ReactNode;
+
+  // Fallback / legacy slot props
   leftSlot?: React.ReactNode;
   centerSlot?: React.ReactNode;
   rightSlot?: React.ReactNode;
   bottomSlot?: React.ReactNode;
+
+  // Global Console Slots
   overlaySlot?: React.ReactNode;
   children?: React.ReactNode;
   collapsedContent?: React.ReactNode;
@@ -14,6 +27,12 @@ export interface FooterConsoleProps {
 }
 
 export const FooterConsole: React.FC<FooterConsoleProps> = ({
+  row1Left,
+  row1Center,
+  row1Right,
+  row2Left,
+  row2Center,
+  row2Right,
   leftSlot,
   centerSlot,
   rightSlot,
@@ -48,6 +67,13 @@ export const FooterConsole: React.FC<FooterConsoleProps> = ({
     );
   }
 
+  const r1Left = row1Left ?? leftSlot;
+  const r1Center = row1Center ?? centerSlot;
+  const r1Right = row1Right ?? rightSlot;
+
+  const hasRow1 = Boolean(r1Left || r1Center || r1Right);
+  const hasRow2 = Boolean(row2Left || row2Center || row2Right);
+
   return (
     <div
       className={`fixed bottom-4 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center select-none animate-in fade-in slide-in-from-bottom-3 duration-200 ${className}`}
@@ -63,19 +89,28 @@ export const FooterConsole: React.FC<FooterConsoleProps> = ({
           children
         ) : (
           <>
-            {/* Primary Row: Left, Center, Right Slots in symmetric 3-column layout */}
-            {(leftSlot || centerSlot || rightSlot) && (
+            {/* Row 1: Primary Row (Left, Center, Right in symmetric 3-column layout) */}
+            {hasRow1 && (
               <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2.5 w-full">
-                <div className="flex items-center justify-end gap-2.5">{leftSlot}</div>
+                <div className="flex items-center justify-end gap-2.5">{r1Left}</div>
                 <div className="flex flex-col items-center justify-center relative px-1">
-                  {centerSlot}
+                  {r1Center}
                 </div>
-                <div className="flex items-center justify-start gap-2.5">{rightSlot}</div>
+                <div className="flex items-center justify-start gap-2.5">{r1Right}</div>
               </div>
             )}
 
-            {/* Optional Secondary Row: Bottom Slot */}
-            {bottomSlot && (
+            {/* Row 2: Secondary Extension Row (Symmetric 3-column grid matching Row 1) */}
+            {hasRow2 && (
+              <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2.5 w-full pt-1.5 border-t border-[#edd4b2]/60 dark:border-zinc-800">
+                <div className="flex items-center justify-end">{row2Left}</div>
+                <div className="flex items-center justify-center">{row2Center}</div>
+                <div className="flex items-center justify-start">{row2Right}</div>
+              </div>
+            )}
+
+            {/* Optional legacy bottom slot when row2 is not used */}
+            {!hasRow2 && bottomSlot && (
               <div className="w-full pt-1.5 border-t border-[#edd4b2]/60 dark:border-zinc-800 flex items-center justify-center">
                 {bottomSlot}
               </div>
