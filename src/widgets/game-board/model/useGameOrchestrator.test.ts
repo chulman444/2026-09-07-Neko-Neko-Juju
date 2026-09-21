@@ -1,0 +1,69 @@
+import { describe, it, expect, beforeEach } from 'vitest';
+import { createGameOrchestrator } from './useGameOrchestrator';
+import { useGameSessionStore } from '@/entities/game-session';
+import { useComboStore } from '@/features/combo-system';
+import { useHintStore } from '@/features/free-triggered-hint';
+import { useBoardStore } from '@/entities/board';
+import { useSolverStore } from '@/features/look-ahead-solver';
+import { useSelectionStore } from '@/features/select-tiles';
+
+describe('useGameOrchestrator / createGameOrchestrator', () => {
+  beforeEach(() => {
+    useGameSessionStore.getState().resetSession();
+    useComboStore.getState().resetCombo();
+    useHintStore.getState().resetHintSession();
+    useSelectionStore.getState().clearSelection();
+    useSolverStore.getState().reset();
+  });
+
+  it('dispatches match events across combo, session, hint, and solver stores', () => {
+    const matrix = [
+      [5, 5, 0],
+      [0, 0, 0],
+    ];
+    useBoardStore.getState().setMatrix(matrix);
+
+    const orchestrator = createGameOrchestrator();
+
+    orchestrator.handleMatch([
+      { row: 0, col: 0 },
+      { row: 0, col: 1 },
+    ]);
+
+    // Combo store was updated
+    expect(useComboStore.getState().comboCount).toBe(1);
+
+    // Game session store received score and cleared tiles
+    expect(useGameSessionStore.getState().score).toBeGreaterThanOrEqual(2);
+    expect(useGameSessionStore.getState().clearedTiles).toBe(2);
+  });
+
+  it('resets all decoupled stores on resetAllSessions', () => {
+    useGameSessionStore.setState({ score: 100 });
+    useComboStore.setState({ comboCount: 5 });
+    useHintStore.setState({ hintsRemaining: 0, isPhase1Over: true });
+    useSelectionStore.setState({ selectedSum: 10 });
+
+    const orchestrator = createGameOrchestrator();
+    orchestrator.resetAllSessions();
+
+    expect(useGameSessionStore.getState().score).toBe(0);
+    expect(useComboStore.getState().comboCount).toBe(0);
+    expect(useHintStore.getState().isPhase1Over).toBe(false);
+    expect(useSelectionStore.getState().selectedSum).toBe(0);
+  });
+
+  it('skips combo multiplier when enableCombos is false', () => {
+    const orchestrator = createGameOrchestrator({ enableCombos: false });
+
+    orchestrator.handleMatch([
+      { row: 0, col: 0 },
+      { row: 0, col: 1 },
+    ]);
+
+    // Combo store not incremented
+    expect(useComboStore.getState().comboCount).toBe(0);
+    // Base score awarded
+    expect(useGameSessionStore.getState().score).toBe(2);
+  });
+});

@@ -1,11 +1,10 @@
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { TimerBar } from '@/shared/ui';
-import { GameBoardWidget, PannableContainer } from '@/widgets/game-board';
+import { GameBoardWidget, PannableContainer, useGameOrchestrator } from '@/widgets/game-board';
 import { useBoardStore, calculateBoardMetrics, type TileCoord } from '@/entities/board';
 import { useSolverStore } from '@/features/look-ahead-solver';
 import { DevHotkeys } from '@/features/dev-hotkeys';
 import { useSelectionStore } from '@/features/select-tiles';
-import { useComboStore } from '@/features/combo-system';
 import { useHintStore } from '@/features/free-triggered-hint';
 import { Link } from '@/shared/lib/router';
 import { useGameSessionStore } from '@/entities/game-session';
@@ -72,47 +71,29 @@ export const GamePage: React.FC = () => {
   const highlightedTiles = useHintStore((state) => state.highlightedTiles);
   const noHintsAvailableMsg = useHintStore((state) => state.noHintsAvailableMsg);
 
-  // Store Actions
-  const registerMatch = useGameSessionStore((state) => state.registerMatch);
-  const resetSession = useGameSessionStore((state) => state.resetSession);
+  // Game Orchestration Hook
+  const { handleMatch, resetAllSessions } = useGameOrchestrator({
+    enableCombos,
+    enableTimer,
+    enableHints,
+  });
 
   const handleTilesCleared = useCallback(
     (tiles: TileCoord[], _sum: number, actualCount?: number) => {
-      const matrix = useBoardStore.getState().matrix;
-      const calculatedCount = tiles.filter((t) => (matrix[t.row]?.[t.col] ?? 0) > 0).length;
-      const nonZeroCount = actualCount ?? (calculatedCount > 0 ? calculatedCount : tiles.length);
-      const { scoreMultiplier, addTime } = useComboStore
-        .getState()
-        .registerMatch(nonZeroCount, tiles.length);
-      const isPhase1Over = useHintStore.getState().isPhase1Over;
-      registerMatch(nonZeroCount, tiles.length, scoreMultiplier, addTime, !isPhase1Over);
-      useHintStore.getState().removeClearedTiles(tiles);
-      useSolverStore.getState().cascadeTiles(tiles);
+      handleMatch(tiles, tiles.length, actualCount);
     },
-    [registerMatch]
+    [handleMatch]
   );
 
   const handleRetryGame = useCallback(() => {
     restartCurrentBoard();
-    resetSession();
-    useComboStore.getState().resetCombo();
-    useHintStore.getState().resetHintSession();
-    useSelectionStore.getState().clearSelection();
-    useSolverStore
-      .getState()
-      .recalculate(useBoardStore.getState().matrix, useBoardStore.getState().seed);
-  }, [restartCurrentBoard, resetSession]);
+    resetAllSessions();
+  }, [restartCurrentBoard, resetAllSessions]);
 
   const handleNewGame = useCallback(() => {
     generateNewBoard();
-    resetSession();
-    useComboStore.getState().resetCombo();
-    useHintStore.getState().resetHintSession();
-    useSelectionStore.getState().clearSelection();
-    useSolverStore
-      .getState()
-      .recalculate(useBoardStore.getState().matrix, useBoardStore.getState().seed);
-  }, [generateNewBoard, resetSession]);
+    resetAllSessions();
+  }, [generateNewBoard, resetAllSessions]);
 
   const { generateBoard } = useBoardGeneratorActions();
 

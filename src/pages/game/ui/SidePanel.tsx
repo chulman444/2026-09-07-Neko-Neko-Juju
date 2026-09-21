@@ -5,9 +5,8 @@ import { DevTunerWidget } from '@/widgets/dev-tuner';
 import { SolverPanelWidget } from '@/widgets/solver-panel';
 import { ItemsPanelWidget } from '@/widgets/items-panel';
 import { MacroLoopManagerWidget } from '@/widgets/macro-loop-manager';
-import { type SolverCombination, useSolverStore } from '@/features/look-ahead-solver';
-import { useGameSessionStore } from '@/entities/game-session';
-import { useComboStore } from '@/features/combo-system';
+import type { SolverCombination } from '@/features/look-ahead-solver';
+import { useGameOrchestrator } from '@/widgets/game-board';
 import { useHintStore } from '@/features/free-triggered-hint';
 import { useGameConfigStore } from '@/entities/game-config';
 import { Link } from '@/shared/lib/router';
@@ -25,7 +24,7 @@ export const SidePanel: React.FC<SidePanelProps> = ({ isOpen, onClose, defaultTa
   const { generateBoard } = useBoardGeneratorActions();
   const enableItems = useGameConfigStore((state) => state.enableItems);
   const setHighlightedTiles = useHintStore((state) => state.setHighlightedTiles);
-  const registerMatch = useGameSessionStore((state) => state.registerMatch);
+  const { handleMatch } = useGameOrchestrator();
 
   if (!isOpen) return null;
 
@@ -33,13 +32,7 @@ export const SidePanel: React.FC<SidePanelProps> = ({ isOpen, onClose, defaultTa
 
   const handleClearMatch = (match: SolverCombination) => {
     const coords: TileCoord[] = match.required.map((t) => ({ col: t.col, row: t.row }));
-    const { scoreMultiplier, addTime } = useComboStore
-      .getState()
-      .registerMatch(coords.length, coords.length);
-    const isPhase1Over = useHintStore.getState().isPhase1Over;
-    registerMatch(coords.length, coords.length, scoreMultiplier, addTime, !isPhase1Over);
-    useHintStore.getState().removeClearedTiles(coords);
-    useSolverStore.getState().cascadeTiles(coords);
+    handleMatch(coords, coords.length, coords.length);
   };
 
   const handleTabWheel = (e: React.WheelEvent<HTMLDivElement>) => {
