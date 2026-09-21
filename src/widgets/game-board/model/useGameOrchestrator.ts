@@ -61,6 +61,9 @@ export const createGameOrchestrator = (options: GameOrchestratorOptions = {}) =>
 
     // 5. Cascade solver
     useSolverStore.getState().cascadeTiles(tiles);
+
+    // 6. Notify rival cats of player cleared tiles (counter-play & pushback)
+    useRivalCatStore.getState().onPlayerClearedTiles(tiles);
   };
 
   const resetAllSessions = () => {

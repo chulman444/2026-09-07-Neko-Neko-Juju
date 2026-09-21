@@ -5,6 +5,7 @@ import { useItemStore } from '@/entities/item';
 import { GameBoardEngine } from '../model/GameBoardEngine';
 import type { SelectionMeta } from '../model/GameBoardInteraction';
 import { getGridPitch } from '../lib/coordinates';
+import { RivalPawOverlay } from '@/features/rival-cats';
 
 export interface GameBoardWidgetProps {
   /** Optional 2D array override. If not passed, reads from useBoardStore */
@@ -216,7 +217,7 @@ export const GameBoardWidget: React.FC<GameBoardWidgetProps> = ({
   }, [onTilesCleared, onSelectionChange, onTileClick]);
 
   return (
-    <div className={`inline-block select-none ${className}`}>
+    <div className={`relative inline-block select-none ${className}`}>
       <canvas
         ref={canvasRef}
         width={canvasWidth}
@@ -228,6 +229,7 @@ export const GameBoardWidget: React.FC<GameBoardWidgetProps> = ({
           touchAction: 'none',
         }}
       />
+      <RivalPawOverlay />
     </div>
   );
 };
