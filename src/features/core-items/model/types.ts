@@ -22,6 +22,10 @@ export interface CoreItemsState {
   randomChooseOptions: [number, number, number] | null;
   selectedChooseNumber: number | null;
 
+  // Visual Trigger Flashes (Hint & Shake)
+  hintSuccessFlash: boolean;
+  shakeSuccessFlash: boolean;
+
   // Seed Configuration
   useBoardSeed: boolean;
   itemSeed: string;

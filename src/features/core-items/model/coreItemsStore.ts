@@ -10,6 +10,26 @@ export const registerHintTriggerHandler = (fn: (() => boolean) | null) => {
   hintTriggerHandler = fn;
 };
 
+let unsolvableResolver: (() => boolean) | null = null;
+
+export const setUnsolvableResolver = (fn: (() => boolean) | null) => {
+  unsolvableResolver = fn;
+};
+
+export const isBoardUnsolvable = (): boolean => {
+  return unsolvableResolver ? unsolvableResolver() : false;
+};
+
+let boardMutationListener: (() => void) | null = null;
+
+export const registerBoardMutationListener = (fn: (() => void) | null) => {
+  boardMutationListener = fn;
+};
+
+export const notifyBoardMutated = (): void => {
+  boardMutationListener?.();
+};
+
 let separateItemPrng: (() => number) | null = null;
 let cachedItemSeed = '';
 
@@ -40,6 +60,9 @@ export const useCoreItemsStore = create<CoreItemsState>((set, get) => ({
 
   randomChooseOptions: null,
   selectedChooseNumber: null,
+
+  hintSuccessFlash: false,
+  shakeSuccessFlash: false,
 
   useBoardSeed: true,
   itemSeed: initialSeed,
@@ -269,6 +292,7 @@ export const useCoreItemsStore = create<CoreItemsState>((set, get) => ({
       },
     });
 
+    notifyBoardMutated();
     return true;
   },
 
@@ -364,6 +388,10 @@ export const useCoreItemsStore = create<CoreItemsState>((set, get) => ({
     if (success && !isFree) {
       itemStore.consumeItem('hint', 1);
     }
+    if (success) {
+      set({ hintSuccessFlash: true });
+      setTimeout(() => set({ hintSuccessFlash: false }), 500);
+    }
     return success;
   },
 
@@ -378,6 +406,9 @@ export const useCoreItemsStore = create<CoreItemsState>((set, get) => ({
     if (!isFree) {
       itemStore.consumeItem('shake', 1);
     }
+    set({ shakeSuccessFlash: true });
+    setTimeout(() => set({ shakeSuccessFlash: false }), 500);
+    notifyBoardMutated();
     return true;
   },
 

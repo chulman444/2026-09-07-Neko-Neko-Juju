@@ -5,7 +5,11 @@ import { usePhaseProgressionStore } from '@/features/phase-progression';
 import { useComboStore } from '@/features/combo-system';
 import { useHintStore, setClearableHintsResolver } from '@/features/free-triggered-hint';
 import { useBoardStore } from '@/entities/board';
-import { registerHintTriggerHandler } from '@/features/core-items';
+import {
+  registerHintTriggerHandler,
+  setUnsolvableResolver,
+  registerBoardMutationListener,
+} from '@/features/core-items';
 import { useSolverStore, findClearableCombinationsOnly } from '@/features/look-ahead-solver';
 
 /**
@@ -34,6 +38,22 @@ export const useGameSessionDriver = () => {
     });
 
     registerHintTriggerHandler(() => useHintStore.getState().triggerHint());
+
+    setUnsolvableResolver(() => {
+      const solverStore = useSolverStore.getState();
+      const combinations = solverStore.combinations;
+      const isCalculated = solverStore.isCalculated;
+      const clearableCount = combinations.filter(
+        (c) => c.isActive && c.blockers.length === 0
+      ).length;
+      return isCalculated && clearableCount === 0;
+    });
+
+    registerBoardMutationListener(() => {
+      const matrix = useBoardStore.getState().matrix;
+      const seed = useBoardStore.getState().seed;
+      useSolverStore.getState().recalculate(matrix, seed);
+    });
 
     const loop = (now: number) => {
       if (lastTimeRef.current !== null) {

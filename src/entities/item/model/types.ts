@@ -1,4 +1,8 @@
+import type { ReactNode } from 'react';
+
 export type ItemType = 'randomNumber' | 'randomChoose' | 'omnitile' | 'shake' | 'hint';
+
+export type ItemWingColor = 'inactive' | 'active' | 'success' | 'amber' | 'purple' | 'emerald';
 
 export interface ItemCounts {
   randomNumber: number;
@@ -6,6 +10,29 @@ export interface ItemCounts {
   omnitile: number;
   shake: number;
   hint: number;
+}
+
+export interface ItemRenderContext {
+  counts: ItemCounts;
+  activeItem: string | null;
+  activeItemStage: 0 | 1 | 2;
+  isToggled: boolean;
+  isPaused: boolean;
+}
+
+export interface ItemBehavior {
+  id: ItemType | string;
+  label?: string | ((context: ItemRenderContext) => string);
+  icon: ReactNode;
+  title: string | ((context: ItemRenderContext) => string);
+  size?: 'sm' | 'md';
+  leftWingState?: ItemWingColor | ((context: ItemRenderContext) => ItemWingColor);
+  rightWingState?: ItemWingColor | ((context: ItemRenderContext) => ItemWingColor);
+  leftWingTitle?: string | ((context: ItemRenderContext) => string);
+  rightWingTitle?: string | ((context: ItemRenderContext) => string);
+  disabled?: boolean | ((context: ItemRenderContext) => boolean);
+  onActivate: (context: ItemRenderContext) => void;
+  renderOverlay?: (context: ItemRenderContext) => ReactNode;
 }
 
 export interface ItemState {
