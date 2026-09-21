@@ -26,8 +26,8 @@ import {
 } from '@/features/core-items';
 import { TrackballControl } from '@/features/trackball-pan';
 import { PlayerSettingsModal } from '@/widgets/player-settings';
-import { SidePanel } from './SidePanel';
 import { GameHeaderBar } from './GameHeaderBar';
+import { SidePanel } from './SidePanel';
 import type { SelectionMeta } from '@/widgets/game-board';
 
 export const GamePage: React.FC = () => {
