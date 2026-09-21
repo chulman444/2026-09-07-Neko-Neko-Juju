@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { generateSeed, seededRandomGenerator } from '@/shared/lib/prng';
 import { DEFAULT_CONFIG } from '@/shared/config';
-import { createBoardMatrix } from './boardGenerators';
+import { createBoardMatrix, createBoardWithStacks } from './boardGenerators';
 import type { TileCoord, ClearingAnimation } from './types';
 import {
   rotateCW,
@@ -52,7 +52,7 @@ export interface BoardState {
   resetPanOffset: () => void;
   setIsPanMode: (isPanMode: boolean | ((prev: boolean) => boolean)) => void;
   togglePanMode: () => void;
-  setDimensions: (cols: number, rows: number) => void;
+  setDimensions: (cols: number, rows: number, stackedTilesCount?: number) => void;
   setTileWeights: (weights?: number[], activeTilt?: number) => void;
   setShapeSize: (shapeSize: number) => void;
   setTileBorder: (tileBorder: number) => void;
@@ -60,7 +60,7 @@ export interface BoardState {
   setMinNum: (minNum: number) => void;
   setMaxNum: (maxNum: number) => void;
   setSeed: (seed: string) => void;
-  generateNewBoard: (forcedSeed?: string) => void;
+  generateNewBoard: (forcedSeed?: string, stackedTilesCount?: number) => void;
   restartCurrentBoard: () => void;
   setMatrix: (matrix: number[][], stacks?: Record<string, number[]>) => void;
   setStacks: (stacks: Record<string, number[]>) => void;
@@ -252,10 +252,18 @@ export const useBoardStore = create<BoardState>((set, get) => ({
 
   togglePanMode: () => set((state) => ({ isPanMode: !state.isPanMode })),
 
-  setDimensions: (cols, rows) => {
+  setDimensions: (cols, rows, stackedTilesCount = 0) => {
     const { minNum, maxNum, seed, tileWeights } = get();
     const prng = seededRandomGenerator(seed);
-    const initialMatrix = createBoardMatrix(cols, rows, minNum, maxNum, prng, tileWeights);
+    const { matrix: initialMatrix, stacks: initialStacks } = createBoardWithStacks(
+      cols,
+      rows,
+      minNum,
+      maxNum,
+      prng,
+      tileWeights,
+      stackedTilesCount
+    );
     set({
       cols,
       rows,
@@ -263,8 +271,8 @@ export const useBoardStore = create<BoardState>((set, get) => ({
       prng,
       initialMatrix,
       matrix: initialMatrix.map((r) => [...r]),
-      stacks: {},
-      initialStacks: {},
+      stacks: Object.fromEntries(Object.entries(initialStacks).map(([k, v]) => [k, [...v]])),
+      initialStacks: Object.fromEntries(Object.entries(initialStacks).map(([k, v]) => [k, [...v]])),
       clearingAnimations: [],
       panOffset: { x: 0, y: 0 },
     });
@@ -321,11 +329,19 @@ export const useBoardStore = create<BoardState>((set, get) => ({
     });
   },
 
-  generateNewBoard: (forcedSeed) => {
+  generateNewBoard: (forcedSeed, stackedTilesCount = 0) => {
     const { cols, rows, minNum, maxNum, seedHistory, tileWeights } = get();
     const newSeed = forcedSeed || generateSeed();
     const prng = seededRandomGenerator(newSeed);
-    const initialMatrix = createBoardMatrix(cols, rows, minNum, maxNum, prng, tileWeights);
+    const { matrix: initialMatrix, stacks: initialStacks } = createBoardWithStacks(
+      cols,
+      rows,
+      minNum,
+      maxNum,
+      prng,
+      tileWeights,
+      stackedTilesCount
+    );
     const updatedHistory = seedHistory.includes(newSeed)
       ? seedHistory
       : [newSeed, ...seedHistory].slice(0, 50);
@@ -335,8 +351,8 @@ export const useBoardStore = create<BoardState>((set, get) => ({
       prng,
       initialMatrix,
       matrix: initialMatrix.map((r) => [...r]),
-      stacks: {},
-      initialStacks: {},
+      stacks: Object.fromEntries(Object.entries(initialStacks).map(([k, v]) => [k, [...v]])),
+      initialStacks: Object.fromEntries(Object.entries(initialStacks).map(([k, v]) => [k, [...v]])),
       seedHistory: updatedHistory,
       clearingAnimations: [],
       panOffset: { x: 0, y: 0 },

@@ -154,6 +154,63 @@ export function createBoardMatrix(
   return matrix;
 }
 
+export interface BoardWithStacks {
+  matrix: number[][];
+  stacks: Record<string, number[]>;
+}
+
+export function createBoardWithStacks(
+  cols: number,
+  rows: number,
+  minNum: number,
+  maxNum: number,
+  seedOrPrng: string | (() => number),
+  tileWeights?: number[],
+  stackedTilesCount = 0
+): BoardWithStacks {
+  const prng = typeof seedOrPrng === 'function' ? seedOrPrng : seededRandomGenerator(seedOrPrng);
+  const matrix = createBoardMatrix(cols, rows, minNum, maxNum, prng, tileWeights);
+  const stacks: Record<string, number[]> = {};
+
+  if (stackedTilesCount > 0 && cols > 0 && rows > 0) {
+    const count = maxNum - minNum + 1;
+    let normalizedWeights: number[] | null = null;
+    if (tileWeights && tileWeights.length === count) {
+      const sum = tileWeights.reduce((a, b) => a + b, 0);
+      if (sum > 0) {
+        normalizedWeights = tileWeights.map((w) => w / sum);
+      }
+    }
+
+    const sampleTileValue = (): number => {
+      if (normalizedWeights) {
+        const roll = prng();
+        let acc = 0;
+        for (let i = 0; i < normalizedWeights.length; i++) {
+          acc += normalizedWeights[i]!;
+          if (roll <= acc || i === normalizedWeights.length - 1) {
+            return minNum + i;
+          }
+        }
+      }
+      return Math.floor(prng() * (maxNum - minNum + 1)) + minNum;
+    };
+
+    for (let i = 0; i < stackedTilesCount; i++) {
+      const c = Math.floor(prng() * cols);
+      const r = Math.floor(prng() * rows);
+      const key = `${c},${r}`;
+      const val = sampleTileValue();
+      if (!stacks[key]) {
+        stacks[key] = [];
+      }
+      stacks[key].push(val);
+    }
+  }
+
+  return { matrix, stacks };
+}
+
 export interface BoardMetrics {
   totalTiles: number;
   totalSum: number;

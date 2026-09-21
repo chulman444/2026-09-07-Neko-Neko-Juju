@@ -7,6 +7,7 @@ import { useSelectionStore } from '@/features/select-tiles';
 import { useSurvivalTimerStore } from '@/features/survival-timer';
 import { usePhaseProgressionStore } from '@/features/phase-progression';
 import { useGameSessionStore } from '@/entities/game-session';
+import { useRivalCatStore } from '@/features/rival-cats';
 
 export interface GameOrchestratorOptions {
   enableCombos?: boolean;
@@ -68,6 +69,7 @@ export const createGameOrchestrator = (options: GameOrchestratorOptions = {}) =>
     usePhaseProgressionStore.getState().resetProgression();
     useComboStore.getState().resetCombo();
     useHintStore.getState().resetHintSession();
+    useRivalCatStore.getState().resetCountdown();
     useSelectionStore.getState().clearSelection();
     useSolverStore
       .getState()

@@ -17,6 +17,7 @@ export const BoardSizeSection: React.FC = () => {
   const selectedSizeTier = useBoardGenConfigStore((state) => state.selectedSizeTier);
   const tierAspectConfigs = useBoardGenConfigStore((state) => state.tierAspectConfigs);
   const rollSeedOnGenerate = useBoardGenConfigStore((state) => state.rollSeedOnGenerate);
+  const stackedTilesCount = useBoardGenConfigStore((state) => state.stackedTilesCount);
 
   const setMaxCountdown = useSurvivalTimerStore((state) => state.setMaxCountdown);
   const setTimerMultiplier = useDifficultyStore((state) => state.setTimerMultiplier);
@@ -25,6 +26,7 @@ export const BoardSizeSection: React.FC = () => {
   const setTierRatioMean = useBoardGenConfigStore((state) => state.setTierRatioMean);
   const setTierRatioSpread = useBoardGenConfigStore((state) => state.setTierRatioSpread);
   const setRollSeedOnGenerate = useBoardGenConfigStore((state) => state.setRollSeedOnGenerate);
+  const setStackedTilesCount = useBoardGenConfigStore((state) => state.setStackedTilesCount);
 
   const { updateDimensions, generateBoard, revertTimerCap } = useBoardGeneratorActions();
 
@@ -197,11 +199,27 @@ export const BoardSizeSection: React.FC = () => {
           </label>
         </div>
 
+        {/* Add Stacked Tiles Input */}
+        <div className="flex items-center justify-between pt-2 border-t border-zinc-700/60 text-xs">
+          <div className="flex flex-col">
+            <span className="text-zinc-300 font-medium">Add Stacked Tiles</span>
+            <span className="text-[10px] text-zinc-400">Inject extra tiles under grid cells</span>
+          </div>
+          <input
+            type="number"
+            min="0"
+            step="1"
+            value={stackedTilesCount}
+            onChange={(e) => setStackedTilesCount(Math.max(0, parseInt(e.target.value, 10) || 0))}
+            className="w-16 bg-zinc-850 border border-zinc-700 rounded-lg px-2 py-1 text-right text-xs font-mono text-white focus:border-amber-500 focus:outline-none"
+          />
+        </div>
+
         {/* Generate Action Bar */}
         <div className="flex items-center gap-3 pt-2 border-t border-zinc-700/60">
           <button
             type="button"
-            onClick={generateBoard}
+            onClick={() => generateBoard()}
             className="flex-1 py-2 text-xs font-bold rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 transition cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
             title="Generate a board using the selected size tier and aspect ratio bell curve"
           >

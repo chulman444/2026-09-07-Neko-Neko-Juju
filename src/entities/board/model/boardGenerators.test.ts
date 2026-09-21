@@ -3,6 +3,7 @@ import {
   generateLinearTileWeights,
   calculateBoardMetrics,
   createBoardMatrix,
+  createBoardWithStacks,
 } from './boardGenerators';
 
 describe('boardGenerators - Linear Slope Tile Weights', () => {
@@ -82,5 +83,54 @@ describe('boardGenerators - createBoardMatrix with weighted tiles', () => {
     const metrics = calculateBoardMetrics(matrix1);
     // With +4% tilt, average tile should be lower than 5.0
     expect(metrics.averageTile).toBeLessThan(5.0);
+  });
+});
+
+describe('boardGenerators - createBoardWithStacks', () => {
+  it('generates board with empty stacks when stackedTilesCount is 0', () => {
+    const { matrix, stacks } = createBoardWithStacks(5, 5, 1, 9, 'seed-1', undefined, 0);
+    expect(matrix).toHaveLength(5);
+    expect(matrix[0]).toHaveLength(5);
+    expect(stacks).toEqual({});
+  });
+
+  it('distributes exactly stackedTilesCount tiles across grid cells', () => {
+    const cols = 6;
+    const rows = 6;
+    const count = 10;
+    const { matrix, stacks } = createBoardWithStacks(
+      cols,
+      rows,
+      1,
+      9,
+      'seed-stacks-test',
+      undefined,
+      count
+    );
+    expect(matrix).toHaveLength(rows);
+    expect(matrix[0]).toHaveLength(cols);
+
+    const totalStacked = Object.values(stacks).reduce((sum, s) => sum + s.length, 0);
+    expect(totalStacked).toBe(count);
+
+    // Validate that every stack coordinate is within bounds and values are 1..9
+    Object.entries(stacks).forEach(([coord, tileValues]) => {
+      const [c, r] = coord.split(',').map(Number);
+      expect(c).toBeGreaterThanOrEqual(0);
+      expect(c).toBeLessThan(cols);
+      expect(r).toBeGreaterThanOrEqual(0);
+      expect(r).toBeLessThan(rows);
+      tileValues.forEach((val) => {
+        expect(val).toBeGreaterThanOrEqual(1);
+        expect(val).toBeLessThanOrEqual(9);
+      });
+    });
+  });
+
+  it('generates identical stacks given identical seed', () => {
+    const res1 = createBoardWithStacks(8, 8, 1, 9, 'seed-reproducible', undefined, 12);
+    const res2 = createBoardWithStacks(8, 8, 1, 9, 'seed-reproducible', undefined, 12);
+    expect(res1.matrix).toEqual(res2.matrix);
+    expect(res1.stacks).toEqual(res2.stacks);
   });
 });

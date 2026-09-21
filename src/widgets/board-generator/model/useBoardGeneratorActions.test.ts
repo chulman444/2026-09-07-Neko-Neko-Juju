@@ -82,4 +82,16 @@ describe('useBoardGeneratorActions', () => {
     expect(rows).toBeLessThanOrEqual(20);
     expect(Math.max(cols, rows)).toBeLessThanOrEqual(8);
   });
+
+  it('generateBoard injects stacked tiles into useBoardStore when stackedTilesCount is configured', () => {
+    const { generateBoard } = useBoardGeneratorActions();
+    useBoardGenConfigStore.getState().setSelectedSizeTier('small');
+    useBoardGenConfigStore.getState().setStackedTilesCount(8);
+
+    generateBoard();
+
+    const stacks = useBoardStore.getState().stacks;
+    const totalStacked = Object.values(stacks).reduce((sum, s) => sum + s.length, 0);
+    expect(totalStacked).toBe(8);
+  });
 });

@@ -6,7 +6,7 @@ import { useSolverStore } from '@/features/look-ahead-solver';
 import { useGameSessionStore } from '@/entities/game-session';
 
 export function useBoardGeneratorActions() {
-  const updateDimensions = (nextCols: number, nextRows: number) => {
+  const updateDimensions = (nextCols: number, nextRows: number, stackedTilesCount?: number) => {
     const clampedCols = Math.min(20, Math.max(3, nextCols));
     const clampedRows = Math.min(20, Math.max(3, nextRows));
     const { timerMultiplier } = useDifficultyStore.getState();
@@ -14,7 +14,7 @@ export function useBoardGeneratorActions() {
     const { setMaxCountdown, resetTimer } = useSurvivalTimerStore.getState();
     const { setDimensions } = useBoardStore.getState();
 
-    setDimensions(clampedCols, clampedRows);
+    setDimensions(clampedCols, clampedRows, stackedTilesCount ?? 0);
 
     // Auto-calculate and set initial timer cap for the new board size
     const calculatedTimer = Math.max(1, Math.round(clampedCols * clampedRows * timerMultiplier));
@@ -27,9 +27,13 @@ export function useBoardGeneratorActions() {
       .recalculate(useBoardStore.getState().matrix, useBoardStore.getState().seed);
   };
 
-  const generateBoard = () => {
+  const generateBoard = (explicitStackedCount?: number) => {
     const boardGenConfig = useBoardGenConfigStore.getState();
     const difficultyState = useDifficultyStore.getState();
+    const stackedCount =
+      typeof explicitStackedCount === 'number'
+        ? explicitStackedCount
+        : boardGenConfig.stackedTilesCount;
 
     const [minVal, maxVal] = boardGenConfig.boardSizeRanges[boardGenConfig.selectedSizeTier];
     const low = Math.min(minVal, maxVal);
@@ -69,10 +73,10 @@ export function useBoardGeneratorActions() {
     useBoardStore.getState().setTileWeights(weights, rolledTilt);
 
     if (boardGenConfig.rollSeedOnGenerate) {
-      useBoardStore.getState().generateNewBoard();
+      useBoardStore.getState().generateNewBoard(undefined, stackedCount);
     }
 
-    updateDimensions(nextCols, nextRows);
+    updateDimensions(nextCols, nextRows, stackedCount);
   };
 
   const applyDifficultyOnly = () => {

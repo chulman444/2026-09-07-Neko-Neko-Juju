@@ -12,12 +12,14 @@ export interface BoardGenConfigState {
   selectedSizeTier: BoardSizeTier;
   tierAspectConfigs: TierAspectConfigs;
   rollSeedOnGenerate: boolean;
+  stackedTilesCount: number;
 
   setBoardSizeRange: (tier: BoardSizeTier, index: 0 | 1, val: number) => void;
   setSelectedSizeTier: (tier: BoardSizeTier) => void;
   setTierRatioMean: (tier: BoardSizeTier, val: number) => void;
   setTierRatioSpread: (tier: BoardSizeTier, val: number) => void;
   setRollSeedOnGenerate: (val: boolean) => void;
+  setStackedTilesCount: (val: number) => void;
 }
 
 export const useBoardGenConfigStore = create<BoardGenConfigState>((set) => ({
@@ -25,6 +27,7 @@ export const useBoardGenConfigStore = create<BoardGenConfigState>((set) => ({
   selectedSizeTier: 'medium',
   tierAspectConfigs: { ...DEFAULT_TIER_ASPECT_CONFIGS },
   rollSeedOnGenerate: false,
+  stackedTilesCount: 0,
 
   setBoardSizeRange: (tier, index, val) => {
     set((state) => {
@@ -70,5 +73,9 @@ export const useBoardGenConfigStore = create<BoardGenConfigState>((set) => ({
 
   setRollSeedOnGenerate: (val) => {
     set({ rollSeedOnGenerate: val });
+  },
+
+  setStackedTilesCount: (val) => {
+    set({ stackedTilesCount: Math.max(0, val) });
   },
 }));

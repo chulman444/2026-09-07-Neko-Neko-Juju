@@ -8,6 +8,7 @@ import { useHintStore } from '@/features/free-triggered-hint';
 import { useBoardStore } from '@/entities/board';
 import { useSolverStore } from '@/features/look-ahead-solver';
 import { useSelectionStore } from '@/features/select-tiles';
+import { useRivalCatStore } from '@/features/rival-cats';
 
 describe('useGameOrchestrator / createGameOrchestrator', () => {
   beforeEach(() => {
@@ -50,6 +51,7 @@ describe('useGameOrchestrator / createGameOrchestrator', () => {
     useComboStore.setState({ comboCount: 5 });
     useHintStore.setState({ hintsRemaining: 0, isPhase1Over: true });
     useSelectionStore.setState({ selectedSum: 10 });
+    useRivalCatStore.setState({ rivalCatCountdown: 1.0 });
 
     const orchestrator = createGameOrchestrator();
     orchestrator.resetAllSessions();
@@ -61,6 +63,7 @@ describe('useGameOrchestrator / createGameOrchestrator', () => {
     expect(usePhaseProgressionStore.getState().isPhase1Over).toBe(false);
     expect(useComboStore.getState().comboCount).toBe(0);
     expect(useHintStore.getState().isPhase1Over).toBe(false);
+    expect(useRivalCatStore.getState().rivalCatCountdown).toBe(5);
     expect(useSelectionStore.getState().selectedSum).toBe(0);
   });
 

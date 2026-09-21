@@ -45,5 +45,8 @@ describe('boardGenConfigStore', () => {
 
     useBoardGenConfigStore.getState().setRollSeedOnGenerate(true);
     expect(useBoardGenConfigStore.getState().rollSeedOnGenerate).toBe(true);
+
+    useBoardGenConfigStore.getState().setStackedTilesCount(15);
+    expect(useBoardGenConfigStore.getState().stackedTilesCount).toBe(15);
   });
 });

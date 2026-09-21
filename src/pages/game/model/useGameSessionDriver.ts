@@ -4,6 +4,11 @@ import { useSurvivalTimerStore } from '@/features/survival-timer';
 import { usePhaseProgressionStore } from '@/features/phase-progression';
 import { useComboStore } from '@/features/combo-system';
 import { useHintStore, setClearableHintsResolver } from '@/features/free-triggered-hint';
+import {
+  useRivalCatStore,
+  setRivalCatHintsResolver,
+  registerRivalStealListener,
+} from '@/features/rival-cats';
 import { useBoardStore } from '@/entities/board';
 import {
   registerHintTriggerHandler,
@@ -23,8 +28,7 @@ export const useGameSessionDriver = () => {
   useEffect(() => {
     lastTimeRef.current = performance.now();
 
-    // Register cross-feature hint combination resolver in the page orchestration layer
-    setClearableHintsResolver(() => {
+    const getClearableCombinations = () => {
       const solverStore = useSolverStore.getState();
       if (solverStore.hintMode === 'default' && solverStore.isCalculated) {
         return solverStore.combinations.map((c) =>
@@ -35,6 +39,15 @@ export const useGameSessionDriver = () => {
       return findClearableCombinationsOnly(matrix).map((c) =>
         c.required.map((t) => ({ col: t.col, row: t.row }))
       );
+    };
+
+    // Register cross-feature hint combination resolvers in the page orchestration layer
+    setClearableHintsResolver(getClearableCombinations);
+    setRivalCatHintsResolver(getClearableCombinations);
+
+    registerRivalStealListener((tiles) => {
+      useSolverStore.getState().cascadeTiles(tiles.map((t) => ({ row: t.row, col: t.col })));
+      useHintStore.getState().removeClearedTiles(tiles);
     });
 
     registerHintTriggerHandler(() => useHintStore.getState().triggerHint());
@@ -68,6 +81,7 @@ export const useGameSessionDriver = () => {
         useSurvivalTimerStore.getState().tick(clampedDelta, isTimerPaused);
         useComboStore.getState().tick(clampedDelta);
         useHintStore.getState().tick(clampedDelta, isSurvivalDepleted, isTimerPaused);
+        useRivalCatStore.getState().tick(clampedDelta, isTimerPaused);
 
         // Orchestrate Phase Progression
         const isHintPhase1Over = useHintStore.getState().isPhase1Over;
@@ -83,6 +97,8 @@ export const useGameSessionDriver = () => {
 
     return () => {
       setClearableHintsResolver(null);
+      setRivalCatHintsResolver(null);
+      registerRivalStealListener(null);
       registerHintTriggerHandler(null);
       if (animFrameRef.current !== null) {
         cancelAnimationFrame(animFrameRef.current);
