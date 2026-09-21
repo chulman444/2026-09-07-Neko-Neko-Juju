@@ -102,6 +102,7 @@ export const useRivalCatStore = create<RivalCatState>((set, get) => ({
   toughCatPushbackBonus: -0.5,
   stolenTilesCount: 0,
   showTargets: true,
+  showTimer: true,
 
   // Backward compatibility aliases
   rivalCatInterval: 5,
@@ -114,6 +115,10 @@ export const useRivalCatStore = create<RivalCatState>((set, get) => ({
 
   setShowTargets: (show: boolean) => {
     set({ showTargets: show });
+  },
+
+  setShowTimer: (show: boolean) => {
+    set({ showTimer: show });
   },
 
   setDefeatCondition: (condition: DefeatCondition) => {

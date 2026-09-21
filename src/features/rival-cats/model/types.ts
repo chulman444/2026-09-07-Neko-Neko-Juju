@@ -23,6 +23,7 @@ export interface RivalCatState {
   toughCatPushbackBonus: number;
   stolenTilesCount: number;
   showTargets: boolean;
+  showTimer: boolean;
 
   // Backward compatibility aliases
   rivalCatInterval: number;
@@ -32,6 +33,7 @@ export interface RivalCatState {
   // Setters & Configuration
   setIsEnabled: (enabled: boolean) => void;
   setShowTargets: (show: boolean) => void;
+  setShowTimer: (show: boolean) => void;
   setDefeatCondition: (condition: DefeatCondition) => void;
   setDormantDuration: (val: number) => void;
   setSpawnInterval: (val: number) => void;

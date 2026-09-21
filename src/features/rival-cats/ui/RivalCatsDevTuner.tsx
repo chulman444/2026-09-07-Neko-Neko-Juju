@@ -17,9 +17,11 @@ export const RivalCatsDevTuner: React.FC<RivalCatsDevTunerProps> = ({ className 
   const toughCatPushbackBonus = useRivalCatStore((state) => state.toughCatPushbackBonus);
   const stolenTilesCount = useRivalCatStore((state) => state.stolenTilesCount);
   const showTargets = useRivalCatStore((state) => state.showTargets);
+  const showTimer = useRivalCatStore((state) => state.showTimer);
 
   const setIsEnabled = useRivalCatStore((state) => state.setIsEnabled);
   const setShowTargets = useRivalCatStore((state) => state.setShowTargets);
+  const setShowTimer = useRivalCatStore((state) => state.setShowTimer);
   const setDefeatCondition = useRivalCatStore((state) => state.setDefeatCondition);
   const setDormantDuration = useRivalCatStore((state) => state.setDormantDuration);
   const setSpawnInterval = useRivalCatStore((state) => state.setSpawnInterval);
@@ -73,6 +75,23 @@ export const RivalCatsDevTuner: React.FC<RivalCatsDevTunerProps> = ({ className 
             type="checkbox"
             checked={showTargets}
             onChange={(e) => setShowTargets(e.target.checked)}
+            className="w-4 h-4 rounded bg-zinc-900 border-zinc-700 text-amber-500 focus:ring-amber-500/50 cursor-pointer"
+          />
+        </div>
+
+        {/* Toggle Show Timer */}
+        <div className="flex items-center justify-between">
+          <label
+            htmlFor="rival-cats-show-timer"
+            className="text-xs font-medium text-zinc-300 cursor-pointer"
+          >
+            Show Timer
+          </label>
+          <input
+            id="rival-cats-show-timer"
+            type="checkbox"
+            checked={showTimer}
+            onChange={(e) => setShowTimer(e.target.checked)}
             className="w-4 h-4 rounded bg-zinc-900 border-zinc-700 text-amber-500 focus:ring-amber-500/50 cursor-pointer"
           />
         </div>

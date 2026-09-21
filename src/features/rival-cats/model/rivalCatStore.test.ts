@@ -306,6 +306,12 @@ describe('rivalCatStore', () => {
     expect(useRivalCatStore.getState().showTargets).toBe(false);
   });
 
+  it('updates showTimer via setShowTimer', () => {
+    expect(useRivalCatStore.getState().showTimer).toBe(true);
+    useRivalCatStore.getState().setShowTimer(false);
+    expect(useRivalCatStore.getState().showTimer).toBe(false);
+  });
+
   it('detects externally broken targets on tick and reacts accordingly', () => {
     useRivalCatStore.getState().setIsEnabled(true);
 

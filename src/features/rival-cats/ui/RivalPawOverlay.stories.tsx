@@ -88,6 +88,8 @@ export const MultipleCats: Story = {
     (Story) => {
       useRivalCatStore.setState({
         isEnabled: true,
+        showTargets: true,
+        showTimer: true,
         cats: [
           {
             id: 'cat-1',
@@ -107,6 +109,31 @@ export const MultipleCats: Story = {
             targetMatch: [
               { col: 4, row: 3 },
               { col: 5, row: 3 },
+            ],
+          },
+        ],
+      });
+      return <Story />;
+    },
+  ],
+};
+
+export const WithoutTimerAndTargets: Story = {
+  decorators: [
+    (Story) => {
+      useRivalCatStore.setState({
+        isEnabled: true,
+        showTargets: false,
+        showTimer: false,
+        cats: [
+          {
+            id: 'cat-1',
+            type: 'normal',
+            phase: 'targeting',
+            countdown: 2.5,
+            targetMatch: [
+              { col: 2, row: 2 },
+              { col: 3, row: 2 },
             ],
           },
         ],

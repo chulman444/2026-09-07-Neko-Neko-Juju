@@ -10,6 +10,8 @@ export interface RivalPawOverlayProps {
 export const RivalPawOverlay: React.FC<RivalPawOverlayProps> = ({ className = '' }) => {
   const isEnabled = useRivalCatStore((state) => state.isEnabled);
   const showTargets = useRivalCatStore((state) => state.showTargets);
+  const showTimer = useRivalCatStore((state) => state.showTimer);
+  const stealDuration = useRivalCatStore((state) => state.stealDuration);
   const cats = useRivalCatStore((state) => state.cats);
   const shapeSize = useBoardStore((state) => state.shapeSize);
   const tileBorder = useBoardStore((state) => state.tileBorder);
@@ -36,23 +38,26 @@ export const RivalPawOverlay: React.FC<RivalPawOverlayProps> = ({ className = ''
         const startLeft = startTile.col * pitch + tileBorder;
         const startTop = startTile.row * pitch + tileBorder;
 
+        // Drain progress: 1.0 (full) down to 0.0 (empty)
+        const totalDuration = stealDuration > 0 ? stealDuration : 4;
+        const progress = Math.max(0, Math.min(1, cat.countdown / totalDuration));
+
         return (
           <React.Fragment key={cat.id}>
-            {/* Combo Path / Tile Highlights (only when showTargets is enabled) */}
+            {/* Combo Path / Target Tile Outlines (only when showTargets is enabled) */}
             {showTargets &&
-              cat.targetMatch.map((tile, idx) => {
+              cat.targetMatch.slice(1).map((tile) => {
                 const tileLeft = tile.col * pitch + tileBorder;
                 const tileTop = tile.row * pitch + tileBorder;
-                const isStart = idx === 0;
 
                 return (
                   <div
                     key={`${cat.id}-tile-${tile.row}-${tile.col}`}
                     className={`absolute rounded-xl transition-all duration-150 ${
                       isTough
-                        ? 'border-2 border-dashed border-rose-400 bg-rose-500/20 shadow-[0_0_12px_rgba(244,63,94,0.45)]'
-                        : 'border-2 border-dashed border-amber-400 bg-amber-400/20 shadow-[0_0_10px_rgba(251,191,36,0.35)]'
-                    } ${isStart ? 'ring-2 ring-offset-1 ' + (isTough ? 'ring-rose-500 ring-offset-rose-950' : 'ring-amber-400 ring-offset-amber-950') : ''}`}
+                        ? 'border-2 border-dashed border-rose-500/80 bg-rose-500/15 shadow-[0_0_8px_rgba(244,63,94,0.3)]'
+                        : 'border-2 border-dashed border-pink-400/80 bg-pink-400/15 shadow-[0_0_8px_rgba(244,114,182,0.25)]'
+                    }`}
                     style={{
                       left: `${tileLeft}px`,
                       top: `${tileTop}px`,
@@ -63,9 +68,13 @@ export const RivalPawOverlay: React.FC<RivalPawOverlayProps> = ({ className = ''
                 );
               })}
 
-            {/* The Rival Paw Indicator on the Start Tile */}
+            {/* Telegraphed Start Tile Container with Draining Square Timer Fill */}
             <div
-              className="absolute flex flex-col items-center justify-center transition-transform pointer-events-none select-none"
+              className={`absolute rounded-xl overflow-hidden border-2 transition-all duration-75 ${
+                isTough
+                  ? 'border-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.45)]'
+                  : 'border-pink-400 shadow-[0_0_8px_rgba(244,114,182,0.35)]'
+              }`}
               style={{
                 left: `${startLeft}px`,
                 top: `${startTop}px`,
@@ -73,33 +82,38 @@ export const RivalPawOverlay: React.FC<RivalPawOverlayProps> = ({ className = ''
                 height: `${shapeSize}px`,
               }}
             >
-              {/* Paw Icon */}
+              {/* Draining liquid square fill: empties from top to bottom as countdown runs out */}
               <div
-                className={`relative flex items-center justify-center w-8 h-8 rounded-full shadow-lg ${
-                  isTough
-                    ? 'bg-rose-950/90 border border-rose-500 text-rose-300 drop-shadow-[0_0_8px_rgba(244,63,94,0.9)] animate-pulse'
-                    : 'bg-amber-950/90 border border-amber-400 text-amber-300 drop-shadow-[0_0_8px_rgba(251,191,36,0.8)]'
+                className={`absolute bottom-0 left-0 right-0 transition-[height] duration-75 ease-linear ${
+                  isTough ? 'bg-rose-500/35' : 'bg-pink-400/30'
                 }`}
-              >
-                <span className="text-base select-none leading-none">{isTough ? '😾' : '🐾'}</span>
-                {isTough && (
-                  <span className="absolute -top-1.5 -right-1 text-[8px] font-black uppercase px-1 py-0.2 bg-rose-600 text-white rounded-full tracking-tighter">
-                    Tough
-                  </span>
-                )}
-              </div>
-
-              {/* Countdown Badge */}
-              <div
-                className={`mt-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold leading-none shadow-md ${
-                  isTough
-                    ? 'bg-rose-900/90 text-rose-200 border border-rose-500/60'
-                    : 'bg-zinc-900/90 text-amber-300 border border-amber-400/60'
-                }`}
-              >
-                {cat.countdown.toFixed(1)}s
-              </div>
+                style={{
+                  height: `${progress * 100}%`,
+                }}
+              />
             </div>
+
+            {/* Countdown Timer Badge positioned slightly below the tile */}
+            {showTimer && (
+              <div
+                className="absolute flex items-center justify-center transition-transform pointer-events-none select-none z-30"
+                style={{
+                  left: `${startLeft + shapeSize / 2}px`,
+                  top: `${startTop + shapeSize + 4}px`,
+                  transform: 'translateX(-50%)',
+                }}
+              >
+                <div
+                  className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold leading-none shadow-md ${
+                    isTough
+                      ? 'bg-rose-950/95 text-rose-200 border border-rose-500/80'
+                      : 'bg-pink-950/95 text-pink-200 border border-pink-400/80'
+                  }`}
+                >
+                  {cat.countdown.toFixed(1)}s
+                </div>
+              </div>
+            )}
           </React.Fragment>
         );
       })}
