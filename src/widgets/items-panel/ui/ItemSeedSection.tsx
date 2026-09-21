@@ -1,14 +1,14 @@
 import React from 'react';
 import { useBoardStore } from '@/entities/board';
-import { useItemStore } from '@/entities/item';
+import { useCoreItemsStore } from '@/features/core-items';
 
 export const ItemSeedSection: React.FC = () => {
   const boardSeed = useBoardStore((state) => state.seed);
-  const useBoardSeed = useItemStore((state) => state.useBoardSeed);
-  const setUseBoardSeed = useItemStore((state) => state.setUseBoardSeed);
-  const itemSeed = useItemStore((state) => state.itemSeed);
-  const setItemSeed = useItemStore((state) => state.setItemSeed);
-  const regenerateItemSeed = useItemStore((state) => state.regenerateItemSeed);
+  const useBoardSeed = useCoreItemsStore((state) => state.useBoardSeed);
+  const setUseBoardSeed = useCoreItemsStore((state) => state.setUseBoardSeed);
+  const itemSeed = useCoreItemsStore((state) => state.itemSeed);
+  const setItemSeed = useCoreItemsStore((state) => state.setItemSeed);
+  const regenerateItemSeed = useCoreItemsStore((state) => state.regenerateItemSeed);
 
   return (
     <div>

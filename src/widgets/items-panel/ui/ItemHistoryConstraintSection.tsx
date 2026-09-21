@@ -1,11 +1,11 @@
 import React from 'react';
-import { useItemStore } from '@/entities/item';
+import { useCoreItemsStore } from '@/features/core-items';
 
 export const ItemHistoryConstraintSection: React.FC = () => {
-  const historyConstraintN = useItemStore((state) => state.historyConstraintN);
-  const setHistoryConstraintN = useItemStore((state) => state.setHistoryConstraintN);
-  const rollHistory = useItemStore((state) => state.rollHistory);
-  const clearRollHistory = useItemStore((state) => state.clearRollHistory);
+  const historyConstraintN = useCoreItemsStore((state) => state.historyConstraintN);
+  const setHistoryConstraintN = useCoreItemsStore((state) => state.setHistoryConstraintN);
+  const rollHistory = useCoreItemsStore((state) => state.rollHistory);
+  const clearRollHistory = useCoreItemsStore((state) => state.clearRollHistory);
 
   return (
     <div>

@@ -1,25 +1,27 @@
 import React from 'react';
 import { useItemStore } from '@/entities/item';
+import { useCoreItemsStore } from '@/features/core-items';
 import { useSolverStore } from '@/features/look-ahead-solver';
 import { useBoardStore } from '@/entities/board';
 
 export const ItemFreeTriggersSection: React.FC = () => {
   const activeItem = useItemStore((state) => state.activeItem);
   const isToggled = useItemStore((state) => state.isToggled);
-  const toggleCheck = useItemStore((state) => state.toggleCheck);
-  const targetTile = useItemStore((state) => state.targetTile);
-  const currentRolledNumber = useItemStore((state) => state.currentRolledNumber);
-  const randomChooseOptions = useItemStore((state) => state.randomChooseOptions);
-  const selectedChooseNumber = useItemStore((state) => state.selectedChooseNumber);
 
-  const toggleItem = useItemStore((state) => state.toggleItem);
-  const untoggle = useItemStore((state) => state.untoggle);
-  const setToggleCheck = useItemStore((state) => state.setToggleCheck);
-  const rollRandomNumber = useItemStore((state) => state.rollRandomNumber);
-  const rollRandomChoose = useItemStore((state) => state.rollRandomChoose);
-  const selectChooseNumber = useItemStore((state) => state.selectChooseNumber);
-  const triggerHintItem = useItemStore((state) => state.triggerHintItem);
-  const triggerShakeItem = useItemStore((state) => state.triggerShakeItem);
+  const toggleCheck = useCoreItemsStore((state) => state.toggleCheck);
+  const targetTile = useCoreItemsStore((state) => state.targetTile);
+  const currentRolledNumber = useCoreItemsStore((state) => state.currentRolledNumber);
+  const randomChooseOptions = useCoreItemsStore((state) => state.randomChooseOptions);
+  const selectedChooseNumber = useCoreItemsStore((state) => state.selectedChooseNumber);
+
+  const toggleItem = useCoreItemsStore((state) => state.toggleItem);
+  const untoggle = useCoreItemsStore((state) => state.untoggle);
+  const setToggleCheck = useCoreItemsStore((state) => state.setToggleCheck);
+  const rollRandomNumber = useCoreItemsStore((state) => state.rollRandomNumber);
+  const rollRandomChoose = useCoreItemsStore((state) => state.rollRandomChoose);
+  const selectChooseNumber = useCoreItemsStore((state) => state.selectChooseNumber);
+  const triggerHintItem = useCoreItemsStore((state) => state.triggerHintItem);
+  const triggerShakeItem = useCoreItemsStore((state) => state.triggerShakeItem);
 
   const combinations = useSolverStore((state) => state.combinations);
   const isCalculated = useSolverStore((state) => state.isCalculated);

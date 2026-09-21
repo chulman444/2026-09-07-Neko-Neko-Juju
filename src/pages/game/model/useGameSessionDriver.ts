@@ -5,7 +5,7 @@ import { usePhaseProgressionStore } from '@/features/phase-progression';
 import { useComboStore } from '@/features/combo-system';
 import { useHintStore, setClearableHintsResolver } from '@/features/free-triggered-hint';
 import { useBoardStore } from '@/entities/board';
-import { registerHintTriggerHandler } from '@/entities/item';
+import { registerHintTriggerHandler } from '@/features/core-items';
 import { useSolverStore, findClearableCombinationsOnly } from '@/features/look-ahead-solver';
 
 /**

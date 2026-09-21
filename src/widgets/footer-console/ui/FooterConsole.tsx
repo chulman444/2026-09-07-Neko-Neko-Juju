@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useBoardStore } from '@/entities/board';
 import { useItemStore } from '@/entities/item';
+import { useCoreItemsStore } from '@/features/core-items';
 import { useGameSessionStore } from '@/entities/game-session';
 import { useSolverStore } from '@/features/look-ahead-solver';
 import { useTrackball } from '../model/useTrackball';
@@ -39,15 +40,15 @@ export const FooterConsole: React.FC<FooterConsoleProps> = ({
   const activeItem = useItemStore((state) => state.activeItem);
   const isToggled = useItemStore((state) => state.isToggled);
   const activeItemStage = useItemStore((state) => state.activeItemStage);
-  const targetTile = useItemStore((state) => state.targetTile);
-  const randomChooseOptions = useItemStore((state) => state.randomChooseOptions);
+  const targetTile = useCoreItemsStore((state) => state.targetTile);
+  const randomChooseOptions = useCoreItemsStore((state) => state.randomChooseOptions);
 
-  const toggleItem = useItemStore((state) => state.toggleItem);
-  const untoggle = useItemStore((state) => state.untoggle);
-  const confirmRandomChoose = useItemStore((state) => state.confirmRandomChoose);
-  const cancelTargetTile = useItemStore((state) => state.cancelTargetTile);
-  const triggerHintItem = useItemStore((state) => state.triggerHintItem);
-  const triggerShakeItem = useItemStore((state) => state.triggerShakeItem);
+  const toggleItem = useCoreItemsStore((state) => state.toggleItem);
+  const untoggle = useCoreItemsStore((state) => state.untoggle);
+  const confirmRandomChoose = useCoreItemsStore((state) => state.confirmRandomChoose);
+  const cancelTargetTile = useCoreItemsStore((state) => state.cancelTargetTile);
+  const triggerHintItem = useCoreItemsStore((state) => state.triggerHintItem);
+  const triggerShakeItem = useCoreItemsStore((state) => state.triggerShakeItem);
 
   // State for momentary visual success flash on Hint & Shake triggers
   const [hintSuccessFlash, setHintSuccessFlash] = useState(false);

@@ -7,6 +7,7 @@ import { useSelectionStore } from '@/features/select-tiles';
 import { useHintStore } from '@/features/free-triggered-hint';
 import { useGameSessionStore } from '@/entities/game-session';
 import { useItemStore } from '@/entities/item';
+import { useCoreItemsStore } from '@/features/core-items';
 import { useGameConfigStore } from '@/entities/game-config';
 import { useMacroLoopStore } from '@/entities/macro-loop';
 import { useDifficultyStore } from '@/entities/difficulty';
@@ -40,8 +41,8 @@ export const GamePage: React.FC = () => {
 
   // Item Store Selectors
   const isToggled = useItemStore((state) => state.isToggled);
-  const targetTile = useItemStore((state) => state.targetTile);
-  const handleBoardTileClick = useItemStore((state) => state.handleBoardTileClick);
+  const targetTile = useCoreItemsStore((state) => state.targetTile);
+  const handleBoardTileClick = useCoreItemsStore((state) => state.handleBoardTileClick);
 
   // Initial solver recalculation on mount
   useEffect(() => {
