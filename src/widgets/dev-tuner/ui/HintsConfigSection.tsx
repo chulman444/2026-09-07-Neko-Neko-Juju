@@ -1,13 +1,14 @@
 import React from 'react';
 import { useGameSessionStore } from '@/entities/game-session';
+import { useHintStore } from '@/features/free-triggered-hint';
 
 export const HintsConfigSection: React.FC = () => {
-  const maxFreeHints = useGameSessionStore((state) => state.maxFreeHints);
-  const freeHintInterval = useGameSessionStore((state) => state.freeHintInterval);
+  const maxFreeHints = useHintStore((state) => state.maxFreeHints);
+  const freeHintInterval = useHintStore((state) => state.freeHintInterval);
   const baseSecondsPerTile = useGameSessionStore((state) => state.baseSecondsPerTile);
 
-  const setMaxFreeHints = useGameSessionStore((state) => state.setMaxFreeHints);
-  const setFreeHintInterval = useGameSessionStore((state) => state.setFreeHintInterval);
+  const setMaxFreeHints = useHintStore((state) => state.setMaxFreeHints);
+  const setFreeHintInterval = useHintStore((state) => state.setFreeHintInterval);
   const setBaseSecondsPerTile = useGameSessionStore((state) => state.setBaseSecondsPerTile);
 
   return (

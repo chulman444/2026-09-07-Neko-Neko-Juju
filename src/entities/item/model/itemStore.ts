@@ -1,8 +1,13 @@
 import { create } from 'zustand';
 import { useBoardStore, type TileCoord, OMNITILE_VALUE } from '@/entities/board';
-import { useGameSessionStore } from '@/entities/game-session';
 import { generateSeed, seededRandomGenerator } from '@/shared/lib/prng';
 import type { ItemState, ItemCounts, ItemType } from './types';
+
+let hintTriggerHandler: (() => boolean) | null = null;
+
+export const registerHintTriggerHandler = (fn: (() => boolean) | null) => {
+  hintTriggerHandler = fn;
+};
 
 export const DEFAULT_ITEM_COUNTS: ItemCounts = {
   randomNumber: 5,
@@ -360,7 +365,7 @@ export const useItemStore = create<ItemState>((set, get) => ({
       return false;
     }
 
-    const success = useGameSessionStore.getState().triggerHint();
+    const success = hintTriggerHandler ? hintTriggerHandler() : false;
     if (success && !isFree) {
       set({
         counts: {

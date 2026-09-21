@@ -5,9 +5,10 @@ import { DevTunerWidget } from '@/widgets/dev-tuner';
 import { SolverPanelWidget } from '@/widgets/solver-panel';
 import { ItemsPanelWidget } from '@/widgets/items-panel';
 import { MacroLoopManagerWidget } from '@/widgets/macro-loop-manager';
-import type { SolverCombination } from '@/features/look-ahead-solver';
+import { type SolverCombination, useSolverStore } from '@/features/look-ahead-solver';
 import { useGameSessionStore } from '@/entities/game-session';
 import { useComboStore } from '@/features/combo-system';
+import { useHintStore } from '@/features/free-triggered-hint';
 import { useGameConfigStore } from '@/entities/game-config';
 import { Link } from '@/shared/lib/router';
 
@@ -23,9 +24,8 @@ export const SidePanel: React.FC<SidePanelProps> = ({ isOpen, onClose, defaultTa
   const [activeTab, setActiveTab] = useState<SidePanelTab>(defaultTab);
   const { generateBoard } = useBoardGeneratorActions();
   const enableItems = useGameConfigStore((state) => state.enableItems);
-  const setHighlightedTiles = useGameSessionStore((state) => state.setHighlightedTiles);
+  const setHighlightedTiles = useHintStore((state) => state.setHighlightedTiles);
   const registerMatch = useGameSessionStore((state) => state.registerMatch);
-  const removeClearedTiles = useGameSessionStore((state) => state.removeClearedTiles);
 
   if (!isOpen) return null;
 
@@ -37,7 +37,8 @@ export const SidePanel: React.FC<SidePanelProps> = ({ isOpen, onClose, defaultTa
       .getState()
       .registerMatch(coords.length, coords.length);
     registerMatch(coords.length, coords.length, scoreMultiplier, addTime);
-    removeClearedTiles(coords);
+    useHintStore.getState().removeClearedTiles(coords);
+    useSolverStore.getState().cascadeTiles(coords);
   };
 
   const handleTabWheel = (e: React.WheelEvent<HTMLDivElement>) => {

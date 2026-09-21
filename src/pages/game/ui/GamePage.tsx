@@ -6,6 +6,7 @@ import { useSolverStore } from '@/features/look-ahead-solver';
 import { DevHotkeys } from '@/features/dev-hotkeys';
 import { useSelectionStore } from '@/features/select-tiles';
 import { useComboStore } from '@/features/combo-system';
+import { useHintStore } from '@/features/free-triggered-hint';
 import { Link } from '@/shared/lib/router';
 import { useGameSessionStore } from '@/entities/game-session';
 import { useItemStore } from '@/entities/item';
@@ -66,14 +67,13 @@ export const GamePage: React.FC = () => {
   const countdown = useGameSessionStore((state) => state.countdown);
   const maxCountdown = useGameSessionStore((state) => state.maxCountdown);
   const isPaused = useGameSessionStore((state) => state.isPaused);
-  const isPhase1Over = useGameSessionStore((state) => state.isPhase1Over);
+  const isPhase1Over = useHintStore((state) => state.isPhase1Over);
   const retryAllowed = useGameSessionStore((state) => state.retryAllowed);
-  const highlightedTiles = useGameSessionStore((state) => state.highlightedTiles);
-  const noHintsAvailableMsg = useGameSessionStore((state) => state.noHintsAvailableMsg);
+  const highlightedTiles = useHintStore((state) => state.highlightedTiles);
+  const noHintsAvailableMsg = useHintStore((state) => state.noHintsAvailableMsg);
 
   // Store Actions
   const registerMatch = useGameSessionStore((state) => state.registerMatch);
-  const removeClearedTiles = useGameSessionStore((state) => state.removeClearedTiles);
   const resetSession = useGameSessionStore((state) => state.resetSession);
 
   const handleTilesCleared = useCallback(
@@ -85,15 +85,17 @@ export const GamePage: React.FC = () => {
         .getState()
         .registerMatch(nonZeroCount, tiles.length);
       registerMatch(nonZeroCount, tiles.length, scoreMultiplier, addTime);
-      removeClearedTiles(tiles);
+      useHintStore.getState().removeClearedTiles(tiles);
+      useSolverStore.getState().cascadeTiles(tiles);
     },
-    [registerMatch, removeClearedTiles]
+    [registerMatch]
   );
 
   const handleRetryGame = useCallback(() => {
     restartCurrentBoard();
     resetSession();
     useComboStore.getState().resetCombo();
+    useHintStore.getState().resetHintSession();
     useSelectionStore.getState().clearSelection();
     useSolverStore
       .getState()
@@ -104,6 +106,7 @@ export const GamePage: React.FC = () => {
     generateNewBoard();
     resetSession();
     useComboStore.getState().resetCombo();
+    useHintStore.getState().resetHintSession();
     useSelectionStore.getState().clearSelection();
     useSolverStore
       .getState()
