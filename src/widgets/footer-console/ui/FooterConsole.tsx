@@ -4,7 +4,7 @@ import { useItemStore } from '@/entities/item';
 import { useCoreItemsStore } from '@/features/core-items';
 import { useGameSessionStore } from '@/entities/game-session';
 import { useSolverStore } from '@/features/look-ahead-solver';
-import { useTrackball } from '../model/useTrackball';
+import { TrackballControl } from '@/features/trackball-pan';
 import { MechanicalItemButton } from './MechanicalItemButton';
 
 export interface FooterConsoleProps {
@@ -24,17 +24,6 @@ export const FooterConsole: React.FC<FooterConsoleProps> = ({
   const resetPanOffset = useBoardStore((state) => state.resetPanOffset);
   const isPanMode = useBoardStore((state) => state.isPanMode);
   const togglePanMode = useBoardStore((state) => state.togglePanMode);
-
-  // Trackball Hook
-  const {
-    knobOffset,
-    trackballPadRef,
-    handleTrackballPointerDown,
-    handleTrackballPointerMove,
-    handleTrackballPointerUpOrCancel,
-    handleTrackballDoubleClick,
-  } = useTrackball();
-
   // Item Store
   const counts = useItemStore((state) => state.counts);
   const activeItem = useItemStore((state) => state.activeItem);
@@ -335,25 +324,7 @@ export const FooterConsole: React.FC<FooterConsoleProps> = ({
           </div>
 
           {/* Center: Trackball Control Pad */}
-          <div className="flex flex-col items-center justify-center relative px-1">
-            <div
-              ref={trackballPadRef}
-              onPointerDown={handleTrackballPointerDown}
-              onPointerMove={handleTrackballPointerMove}
-              onPointerUp={handleTrackballPointerUpOrCancel}
-              onPointerCancel={handleTrackballPointerUpOrCancel}
-              onDoubleClick={handleTrackballDoubleClick}
-              className="w-[72px] h-[72px] rounded-full border-[3px] border-[#4a3422] dark:border-zinc-700 bg-[#fff9f1] dark:bg-zinc-950 flex items-center justify-center cursor-grab active:cursor-grabbing shadow-[inset_0_-4px_0px_#edd4b2] dark:shadow-[inset_0_-4px_0px_#27272a] touch-none transition-shadow"
-              title="Drag trackball to pan board view • Double-click to re-center"
-            >
-              <div
-                className="w-[26px] h-[26px] rounded-full border-[3px] border-[#4a3422] dark:border-zinc-700 bg-[#ffba53] shadow-[inset_0_-3px_0px_#c96a2e] pointer-events-none transition-transform duration-75"
-                style={{
-                  transform: `translate(${knobOffset.x}px, ${knobOffset.y}px)`,
-                }}
-              />
-            </div>
-          </div>
+          <TrackballControl />
 
           {/* Right Cluster: Hint & Re-Center Pan */}
           <div className="flex items-center justify-start gap-2.5">

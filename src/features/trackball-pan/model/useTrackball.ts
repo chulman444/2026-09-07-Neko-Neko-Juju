@@ -2,7 +2,7 @@ import { useRef, useState, useCallback } from 'react';
 import { useBoardStore } from '@/entities/board';
 import { usePlayerStore } from '@/entities/player';
 
-interface UseTrackballOptions {
+export interface UseTrackballOptions {
   sensitivity?: number;
   inverseMovement?: boolean;
 }

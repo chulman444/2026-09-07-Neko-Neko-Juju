@@ -16,6 +16,7 @@ import { usePhaseProgressionStore } from '@/features/phase-progression';
 import { useBoardGeneratorActions } from '@/widgets/board-generator';
 import { useGameSessionDriver } from '../model/useGameSessionDriver';
 import { FooterConsole } from '@/widgets/footer-console';
+import { TrackballControl } from '@/features/trackball-pan';
 import { PlayerSettingsModal } from '@/widgets/player-settings';
 import { SidePanel } from './SidePanel';
 import { GameHeaderBar } from './GameHeaderBar';
@@ -183,6 +184,13 @@ export const GamePage: React.FC = () => {
           isCollapsed={!showItemArea}
           onToggleCollapse={() => setShowItemArea((prev) => !prev)}
         />
+      )}
+
+      {/* Standalone Trackball Pan Control when Items / FooterConsole are disabled */}
+      {!enableItems && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-30 pointer-events-auto p-1 rounded-full bg-white/75 dark:bg-zinc-900/75 backdrop-blur-md shadow-xl border border-amber-900/20 dark:border-zinc-700 animate-in fade-in slide-in-from-bottom-2 duration-150">
+          <TrackballControl />
+        </div>
       )}
 
       {/* Floating Edge Trigger attached to viewport right when closed, or to side panel edge when open */}
