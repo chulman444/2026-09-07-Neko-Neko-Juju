@@ -1,13 +1,8 @@
-import React from 'react';
 import type { ItemBehavior } from '@/entities/item';
 import { useItemStore } from '@/entities/item';
 import { useGameSessionStore } from '@/entities/game-session';
 import { useCoreItemsStore, isBoardUnsolvable } from './coreItemsStore';
-import {
-  RandomNumberOverlay,
-  RandomChooseOverlay,
-  OmnitileOverlay,
-} from '../ui/ItemOverlays';
+import { RandomNumberOverlay, RandomChooseOverlay, OmnitileOverlay } from '../ui/ItemOverlays';
 
 export const randomNumberBehavior: ItemBehavior = {
   id: 'randomNumber',
@@ -30,9 +25,7 @@ export const randomNumberBehavior: ItemBehavior = {
       ? 'amber'
       : 'inactive',
   leftWingTitle: (ctx) =>
-    ctx.isToggled && ctx.activeItem === 'randomNumber'
-      ? 'Stage 1 Active (Single Use)'
-      : 'Disarmed',
+    ctx.isToggled && ctx.activeItem === 'randomNumber' ? 'Stage 1 Active (Single Use)' : 'Disarmed',
   rightWingTitle: (ctx) =>
     ctx.isToggled && ctx.activeItem === 'randomNumber' && ctx.activeItemStage === 2
       ? 'Stage 2 Active (Multi-Use Mode)'
@@ -63,9 +56,7 @@ export const randomChooseBehavior: ItemBehavior = {
       ? 'purple'
       : 'inactive',
   leftWingTitle: (ctx) =>
-    ctx.isToggled && ctx.activeItem === 'randomChoose'
-      ? 'Stage 1 Active (Single Use)'
-      : 'Disarmed',
+    ctx.isToggled && ctx.activeItem === 'randomChoose' ? 'Stage 1 Active (Single Use)' : 'Disarmed',
   rightWingTitle: (ctx) =>
     ctx.isToggled && ctx.activeItem === 'randomChoose' && ctx.activeItemStage === 2
       ? 'Stage 2 Active (Multi-Use Mode)'

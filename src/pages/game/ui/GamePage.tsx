@@ -16,6 +16,14 @@ import { usePhaseProgressionStore } from '@/features/phase-progression';
 import { useBoardGeneratorActions } from '@/widgets/board-generator';
 import { useGameSessionDriver } from '../model/useGameSessionDriver';
 import { FooterConsole } from '@/widgets/footer-console';
+import { ItemsToolbar } from '@/widgets/items-toolbar';
+import {
+  randomNumberBehavior,
+  randomChooseBehavior,
+  omnitileBehavior,
+  hintBehavior,
+  shakeBehavior,
+} from '@/features/core-items';
 import { TrackballControl } from '@/features/trackball-pan';
 import { PlayerSettingsModal } from '@/widgets/player-settings';
 import { SidePanel } from './SidePanel';
@@ -41,6 +49,7 @@ export const GamePage: React.FC = () => {
   const restartCurrentBoard = useBoardStore((state) => state.restartCurrentBoard);
 
   // Item Store Selectors
+  const itemCounts = useItemStore((state) => state.counts);
   const isToggled = useItemStore((state) => state.isToggled);
   const targetTile = useCoreItemsStore((state) => state.targetTile);
   const handleBoardTileClick = useCoreItemsStore((state) => state.handleBoardTileClick);
@@ -183,6 +192,19 @@ export const GamePage: React.FC = () => {
         <FooterConsole
           isCollapsed={!showItemArea}
           onToggleCollapse={() => setShowItemArea((prev) => !prev)}
+          centerSlot={<TrackballControl />}
+          leftSlot={
+            <ItemsToolbar
+              activeItems={[randomNumberBehavior, randomChooseBehavior, omnitileBehavior]}
+            />
+          }
+          rightSlot={<ItemsToolbar activeItems={[hintBehavior, shakeBehavior]} />}
+          collapsedContent={
+            <span className="text-[11px] font-mono text-zinc-500 dark:text-zinc-400">
+              (🎲 ×{itemCounts.randomNumber} · 🎰 ×{itemCounts.randomChoose} · ⭐ ×
+              {itemCounts.omnitile} · 💡 ×{itemCounts.hint} · 🔀 ×{itemCounts.shake})
+            </span>
+          }
         />
       )}
 

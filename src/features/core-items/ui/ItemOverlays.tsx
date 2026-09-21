@@ -14,7 +14,8 @@ export const RandomNumberOverlay: React.FC = () => {
     <div className="flex items-center gap-2 px-3 py-1 rounded-xl bg-amber-500/15 border border-amber-500/50 shadow-md animate-in fade-in duration-150 text-xs text-amber-950 dark:text-amber-200 backdrop-blur-md">
       <span className="inline-block w-2 h-2 rounded-full bg-amber-500 animate-ping shrink-0" />
       <span className="font-medium">
-        🎲 Click tile to roll ({activeItemStage === 2 ? 'Stage 2: Multi-Use' : 'Stage 1: Single Use'})
+        🎲 Click tile to roll (
+        {activeItemStage === 2 ? 'Stage 2: Multi-Use' : 'Stage 1: Single Use'})
       </span>
       <button
         type="button"
@@ -92,7 +93,8 @@ export const RandomChooseOverlay: React.FC = () => {
     <div className="flex items-center gap-2 px-3 py-1 rounded-xl bg-purple-500/15 border border-purple-500/50 shadow-md animate-in fade-in duration-150 text-xs text-purple-950 dark:text-purple-200 backdrop-blur-md">
       <span className="inline-block w-2 h-2 rounded-full bg-purple-500 animate-ping shrink-0" />
       <span className="font-medium">
-        🎰 Click target tile on board ({activeItemStage === 2 ? 'Stage 2: Multi-Use' : 'Stage 1: Single Use'})
+        🎰 Click target tile on board (
+        {activeItemStage === 2 ? 'Stage 2: Multi-Use' : 'Stage 1: Single Use'})
       </span>
       <button
         type="button"
@@ -117,7 +119,8 @@ export const OmnitileOverlay: React.FC = () => {
     <div className="flex items-center gap-2 px-3 py-1 rounded-xl bg-amber-500/15 border border-amber-500/50 shadow-md animate-in fade-in duration-150 text-xs text-amber-950 dark:text-amber-200 backdrop-blur-md">
       <span className="inline-block w-2 h-2 rounded-full bg-amber-500 animate-ping shrink-0" />
       <span className="font-medium">
-        ⭐ Click tile to convert to Omnitile (*) ({activeItemStage === 2 ? 'Stage 2: Multi-Use' : 'Stage 1: Single Use'})
+        ⭐ Click tile to convert to Omnitile (*) (
+        {activeItemStage === 2 ? 'Stage 2: Multi-Use' : 'Stage 1: Single Use'})
       </span>
       <button
         type="button"

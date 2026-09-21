@@ -14,9 +14,5 @@ export {
   hintBehavior,
   shakeBehavior,
 } from './model/coreItemBehaviors';
-export {
-  RandomNumberOverlay,
-  RandomChooseOverlay,
-  OmnitileOverlay,
-} from './ui/ItemOverlays';
+export { RandomNumberOverlay, RandomChooseOverlay, OmnitileOverlay } from './ui/ItemOverlays';
 export type { CoreItemsState, ToggleCheckConfig } from './model/types';
