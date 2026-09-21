@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { useBoardStore } from '@/entities/board';
+import { useBoardGenConfigStore } from '@/features/board-generator';
 import { useDifficultyStore } from '@/entities/difficulty';
 import { useGameSessionStore } from '@/entities/game-session';
 import { useBoardGeneratorActions } from './useBoardGeneratorActions';
@@ -69,7 +70,7 @@ describe('useBoardGeneratorActions', () => {
 
   it('generateBoard generates board matching selected size tier bounds', () => {
     const { generateBoard } = useBoardGeneratorActions();
-    useBoardStore.getState().setSelectedSizeTier('small');
+    useBoardGenConfigStore.getState().setSelectedSizeTier('small');
 
     generateBoard();
 

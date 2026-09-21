@@ -338,39 +338,4 @@ describe('boardStore - stacked tiles (layers)', () => {
     useBoardStore.getState().applyRotationCCW();
     expect(useBoardStore.getState().stacks['2,0']).toEqual([9]);
   });
-
-  it('updates boardSizeRanges min and max independently for each tier', () => {
-    useBoardStore.getState().setBoardSizeRange('small', 0, 4);
-    useBoardStore.getState().setBoardSizeRange('small', 1, 7);
-    expect(useBoardStore.getState().boardSizeRanges.small).toEqual([4, 7]);
-
-    useBoardStore.getState().setBoardSizeRange('medium', 0, 10);
-    useBoardStore.getState().setBoardSizeRange('medium', 1, 13);
-    expect(useBoardStore.getState().boardSizeRanges.medium).toEqual([10, 13]);
-
-    useBoardStore.getState().setBoardSizeRange('large', 0, 16);
-    useBoardStore.getState().setBoardSizeRange('large', 1, 20);
-    expect(useBoardStore.getState().boardSizeRanges.large).toEqual([16, 20]);
-
-    useBoardStore.getState().setBoardSizeRange('any', 0, 5);
-    useBoardStore.getState().setBoardSizeRange('any', 1, 19);
-    expect(useBoardStore.getState().boardSizeRanges.any).toEqual([5, 19]);
-  });
-
-  it('updates selectedSizeTier, per-tier bell curve parameters, and rollSeedOnGenerate', () => {
-    useBoardStore.getState().setSelectedSizeTier('small');
-    expect(useBoardStore.getState().selectedSizeTier).toBe('small');
-
-    useBoardStore.getState().setTierRatioMean('small', 1.05);
-    expect(useBoardStore.getState().tierAspectConfigs.small.ratioMean).toBe(1.05);
-
-    useBoardStore.getState().setTierRatioSpread('small', 0.18);
-    expect(useBoardStore.getState().tierAspectConfigs.small.ratioSpread).toBe(0.18);
-
-    // Medium remains unchanged
-    expect(useBoardStore.getState().tierAspectConfigs.medium.ratioMean).toBe(1.35);
-
-    useBoardStore.getState().setRollSeedOnGenerate(true);
-    expect(useBoardStore.getState().rollSeedOnGenerate).toBe(true);
-  });
 });

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useBoardStore } from '@/entities/board';
+import { useBoardGenConfigStore } from '@/features/board-generator';
 import { useDifficultyStore } from '@/entities/difficulty';
 import {
   useMacroLoopStore,
@@ -57,7 +58,7 @@ export const MacroLoopManagerWidget: React.FC<MacroLoopManagerWidgetProps> = ({
     startEditing(index);
 
     // Sync board config into generator / session stores
-    useBoardStore.getState().setSelectedSizeTier(board.sizeTier);
+    useBoardGenConfigStore.getState().setSelectedSizeTier(board.sizeTier);
     useDifficultyStore.getState().setSelectedDifficultyTier(board.difficultyTier);
     useBoardStore.getState().setSeed(board.seed);
 
@@ -69,7 +70,7 @@ export const MacroLoopManagerWidget: React.FC<MacroLoopManagerWidgetProps> = ({
 
   // Handle Save from Board Generator
   const handleSaveEditing = () => {
-    const currentSize = useBoardStore.getState().selectedSizeTier as MacroBoardSizeTier;
+    const currentSize = useBoardGenConfigStore.getState().selectedSizeTier as MacroBoardSizeTier;
     const currentDiff = useDifficultyStore.getState().selectedDifficultyTier as MacroDifficultyTier;
     const currentSeed = useBoardStore.getState().seed;
 
@@ -88,7 +89,7 @@ export const MacroLoopManagerWidget: React.FC<MacroLoopManagerWidgetProps> = ({
     if (!board) return;
 
     playBoard(index);
-    useBoardStore.getState().setSelectedSizeTier(board.sizeTier);
+    useBoardGenConfigStore.getState().setSelectedSizeTier(board.sizeTier);
     useDifficultyStore.getState().setSelectedDifficultyTier(board.difficultyTier);
     useBoardStore.getState().setSeed(board.seed);
 

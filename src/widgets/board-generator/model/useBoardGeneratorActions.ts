@@ -1,4 +1,5 @@
 import { useBoardStore, generateLinearTileWeights, sampleNormal } from '@/entities/board';
+import { useBoardGenConfigStore } from '@/features/board-generator';
 import { useDifficultyStore } from '@/entities/difficulty';
 import { useSolverStore } from '@/features/look-ahead-solver';
 import { useGameSessionStore } from '@/entities/game-session';
@@ -24,16 +25,17 @@ export function useBoardGeneratorActions() {
   };
 
   const generateBoard = () => {
-    const boardState = useBoardStore.getState();
+    const boardGenConfig = useBoardGenConfigStore.getState();
     const difficultyState = useDifficultyStore.getState();
 
-    const [minVal, maxVal] = boardState.boardSizeRanges[boardState.selectedSizeTier];
+    const [minVal, maxVal] = boardGenConfig.boardSizeRanges[boardGenConfig.selectedSizeTier];
     const low = Math.min(minVal, maxVal);
     const high = Math.max(minVal, maxVal);
     // The tier range bounds the longest side of the board
     const longestSide = Math.floor(Math.random() * (high - low + 1)) + low;
 
-    const { ratioMean, ratioSpread } = boardState.tierAspectConfigs[boardState.selectedSizeTier];
+    const { ratioMean, ratioSpread } =
+      boardGenConfig.tierAspectConfigs[boardGenConfig.selectedSizeTier];
     // Sample aspect ratio from normal distribution (bell curve)
     const sampledRatio = Math.max(0.3, Math.min(3.0, sampleNormal(ratioMean, ratioSpread)));
 
@@ -63,7 +65,7 @@ export function useBoardGeneratorActions() {
     const weights = generateLinearTileWeights(rolledTilt, difficultyState.difficultyNoiseSpread);
     useBoardStore.getState().setTileWeights(weights, rolledTilt);
 
-    if (boardState.rollSeedOnGenerate) {
+    if (boardGenConfig.rollSeedOnGenerate) {
       useBoardStore.getState().generateNewBoard();
     }
 
