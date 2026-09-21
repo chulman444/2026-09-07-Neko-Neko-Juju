@@ -84,7 +84,8 @@ export const GamePage: React.FC = () => {
       const { scoreMultiplier, addTime } = useComboStore
         .getState()
         .registerMatch(nonZeroCount, tiles.length);
-      registerMatch(nonZeroCount, tiles.length, scoreMultiplier, addTime);
+      const isPhase1Over = useHintStore.getState().isPhase1Over;
+      registerMatch(nonZeroCount, tiles.length, scoreMultiplier, addTime, !isPhase1Over);
       useHintStore.getState().removeClearedTiles(tiles);
       useSolverStore.getState().cascadeTiles(tiles);
     },

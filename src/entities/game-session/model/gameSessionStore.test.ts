@@ -59,6 +59,29 @@ describe('gameSessionStore', () => {
     });
   });
 
+  describe('Atomic Setters: addScore, addClearedTiles, addTime', () => {
+    it('increments score and phase scores atomically', () => {
+      const store = useGameSessionStore.getState();
+      store.addScore(5, true);
+      expect(useGameSessionStore.getState().score).toBe(5);
+      expect(useGameSessionStore.getState().phase1Score).toBe(5);
+      expect(useGameSessionStore.getState().phase2Score).toBe(0);
+
+      store.addScore(3, false);
+      expect(useGameSessionStore.getState().score).toBe(8);
+      expect(useGameSessionStore.getState().phase1Score).toBe(5);
+      expect(useGameSessionStore.getState().phase2Score).toBe(3);
+    });
+
+    it('tracks cleared tiles count', () => {
+      const store = useGameSessionStore.getState();
+      store.addClearedTiles(3);
+      expect(useGameSessionStore.getState().clearedTiles).toBe(3);
+      store.addClearedTiles(2);
+      expect(useGameSessionStore.getState().clearedTiles).toBe(5);
+    });
+  });
+
   describe('Match Registration & Points', () => {
     it('awards exactly 1 point per cleared tile without inflation and tracks clearedTiles', () => {
       expect(useGameSessionStore.getState().score).toBe(0);
@@ -94,22 +117,19 @@ describe('gameSessionStore', () => {
       expect(store.score).toBe(0);
 
       // Match during Phase 1
-      store.registerMatch(2);
+      store.registerMatch(2, undefined, 1, 0, true);
       expect(useGameSessionStore.getState().score).toBe(2);
       expect(useGameSessionStore.getState().phase1Score).toBe(2);
       expect(useGameSessionStore.getState().phase2Score).toBe(0);
 
       // Another match during Phase 1
-      store.registerMatch(3);
+      store.registerMatch(3, undefined, 1, 0, true);
       const phase1Total = useGameSessionStore.getState().phase1Score;
       expect(phase1Total).toBeGreaterThanOrEqual(5);
       expect(useGameSessionStore.getState().phase2Score).toBe(0);
 
-      // Transition to Phase 2 (isPhase1Over = true)
-      useGameSessionStore.getState().setIsPhase1Over(true);
-
-      // Match during Phase 2
-      store.registerMatch(2);
+      // Match during Phase 2 (isPhase1 = false)
+      store.registerMatch(2, undefined, 1, 0, false);
       const afterPhase2State = useGameSessionStore.getState();
       expect(afterPhase2State.phase1Score).toBe(phase1Total); // Frozen!
       expect(afterPhase2State.phase2Score).toBeGreaterThan(0);

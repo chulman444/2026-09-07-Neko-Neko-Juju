@@ -7,7 +7,6 @@ export interface GameSessionState {
   phase2Score: number;
   clearedTiles: number;
   retryAllowed: boolean;
-  isPhase1Over: boolean;
 
   // Main Survival Timer
   countdown: number;
@@ -18,16 +17,18 @@ export interface GameSessionState {
 
   // Actions
   tick: (deltaSeconds: number, isTimerPausedByExternal?: boolean) => void;
+  addScore: (points: number, isPhase1?: boolean) => void;
+  addClearedTiles: (count: number) => void;
+  addTime: (seconds: number) => void;
   setScore: (score: number | ((prev: number) => number)) => void;
   setPaused: (paused: boolean) => void;
   togglePause: () => void;
-  addTime: (seconds: number) => void;
-  setIsPhase1Over: (isOver: boolean) => void;
   registerMatch: (
     clearedTileCount: number,
     spanTileCount?: number,
     scoreMultiplier?: number,
-    addTimeBonus?: number
+    addTimeBonus?: number,
+    isPhase1?: boolean
   ) => void;
 
   // Tuning Setters
@@ -46,7 +47,6 @@ export const useGameSessionStore = create<GameSessionState>((set, get) => ({
   phase2Score: 0,
   clearedTiles: 0,
   retryAllowed: true,
-  isPhase1Over: false,
 
   // Main Survival Timer Initial State
   countdown: 6,
@@ -69,11 +69,23 @@ export const useGameSessionStore = create<GameSessionState>((set, get) => ({
     set((state) => ({ isPaused: !state.isPaused }));
   },
 
-  setIsPhase1Over: (isOver) => {
-    set({ isPhase1Over: isOver });
+  addScore: (points: number, isPhase1 = true) => {
+    if (points <= 0) return;
+    set((state) => ({
+      score: state.score + points,
+      phase1Score: isPhase1 ? state.phase1Score + points : state.phase1Score,
+      phase2Score: isPhase1 ? state.phase2Score : state.phase2Score + points,
+    }));
   },
 
-  addTime: (seconds) => {
+  addClearedTiles: (count: number) => {
+    if (count <= 0) return;
+    set((state) => ({
+      clearedTiles: state.clearedTiles + count,
+    }));
+  },
+
+  addTime: (seconds: number) => {
     if (seconds <= 0) return;
     set((state) => {
       const next = Math.min(state.countdown + seconds, state.maxCountdown);
@@ -88,43 +100,26 @@ export const useGameSessionStore = create<GameSessionState>((set, get) => ({
     clearedTileCount: number,
     spanTileCount?: number,
     scoreMultiplier = 1,
-    addTimeBonus = 0
+    addTimeBonus = 0,
+    isPhase1 = true
   ) => {
-    const state = get();
-    // Award base points with score multiplier
     const basePoints = spanTileCount ?? clearedTileCount;
     const points = Math.round(basePoints * Math.max(0, scoreMultiplier));
 
-    // In Phase 1, award time based on actual cleared tiles + addTimeBonus
-    let nextCountdown = state.countdown;
-    let nextDepleted = state.isDepleted;
-    if (!state.isPhase1Over) {
-      const addedTime = clearedTileCount * state.baseSecondsPerTile + Math.max(0, addTimeBonus);
-      nextCountdown = Math.min(state.countdown + addedTime, state.maxCountdown);
-      if (nextCountdown > 0) {
-        nextDepleted = false;
-      }
+    get().addScore(points, isPhase1);
+    get().addClearedTiles(clearedTileCount);
+
+    if (isPhase1) {
+      const addedTime = clearedTileCount * get().baseSecondsPerTile + Math.max(0, addTimeBonus);
+      get().addTime(addedTime);
     }
-
-    const nextPhase1Score = state.isPhase1Over ? state.phase1Score : state.phase1Score + points;
-    const nextPhase2Score = state.isPhase1Over ? state.phase2Score + points : state.phase2Score;
-
-    set({
-      score: state.score + points,
-      phase1Score: nextPhase1Score,
-      phase2Score: nextPhase2Score,
-      clearedTiles: state.clearedTiles + clearedTileCount,
-      countdown: nextCountdown,
-      isDepleted: nextDepleted,
-    });
   },
 
   tick: (deltaSeconds: number, isTimerPausedByExternal = false) => {
     const state = get();
-    if (state.isPaused || deltaSeconds <= 0) return;
+    if (state.isPaused || isTimerPausedByExternal || deltaSeconds <= 0) return;
 
-    // Survival Timer Countdown (if not depleted and not paused by external)
-    if (!state.isDepleted && !isTimerPausedByExternal) {
+    if (!state.isDepleted) {
       const nextCountdown = Math.max(0, state.countdown - deltaSeconds);
       set({
         countdown: nextCountdown,
@@ -159,7 +154,6 @@ export const useGameSessionStore = create<GameSessionState>((set, get) => ({
       countdown: state.maxCountdown,
       isPaused: false,
       isDepleted: false,
-      isPhase1Over: false,
     }));
   },
 }));

@@ -36,7 +36,8 @@ export const SidePanel: React.FC<SidePanelProps> = ({ isOpen, onClose, defaultTa
     const { scoreMultiplier, addTime } = useComboStore
       .getState()
       .registerMatch(coords.length, coords.length);
-    registerMatch(coords.length, coords.length, scoreMultiplier, addTime);
+    const isPhase1Over = useHintStore.getState().isPhase1Over;
+    registerMatch(coords.length, coords.length, scoreMultiplier, addTime, !isPhase1Over);
     useHintStore.getState().removeClearedTiles(coords);
     useSolverStore.getState().cascadeTiles(coords);
   };
