@@ -4,7 +4,7 @@ import { useBoardStore, type TileCoord } from '@/entities/board';
 import { useSolverStore } from '@/features/look-ahead-solver';
 import { DevHotkeys } from '@/features/dev-hotkeys';
 import { useSelectionStore } from '@/features/select-tiles';
-import { useHintStore } from '@/features/free-triggered-hint';
+import { useBoardHintsStore } from '@/features/board-hints';
 import { useGameSessionStore } from '@/entities/game-session';
 import { useItemStore } from '@/entities/item';
 import { useCoreItemsStore } from '@/features/core-items';
@@ -54,7 +54,7 @@ export const GamePage: React.FC = () => {
 
   // Game Session Selectors
   const isPaused = useGameSessionStore((state) => state.isPaused);
-  const highlightedTiles = useHintStore((state) => state.highlightedTiles);
+  const highlightedTiles = useBoardHintsStore((state) => state.highlightedTiles);
 
   // Game Orchestration Hook
   const { handleMatch, resetAllSessions } = useGameOrchestrator({

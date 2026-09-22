@@ -6,7 +6,7 @@ import { useGameSessionStore } from '@/entities/game-session';
 import { useSurvivalTimerStore } from '@/features/survival-timer';
 import { usePhaseProgressionStore } from '@/features/phase-progression';
 import { useGameConfigStore } from '@/entities/game-config';
-import { useHintStore } from '@/features/free-triggered-hint';
+import { useBoardHintsStore } from '@/features/board-hints';
 import { SettingsHeaderButton } from '@/widgets/player-settings';
 import { ComboBar } from './ComboBar';
 import { HintBar } from './HintBar';
@@ -49,7 +49,7 @@ export const GameHeaderBar: React.FC<GameHeaderBarProps> = ({
   const isPaused = useGameSessionStore((state) => state.isPaused);
   const retryAllowed = useGameSessionStore((state) => state.retryAllowed);
   const isPhase1Over = usePhaseProgressionStore((state) => state.isPhase1Over);
-  const noHintsAvailableMsg = useHintStore((state) => state.noHintsAvailableMsg);
+  const noHintsAvailableMsg = useBoardHintsStore((state) => state.noHintsAvailableMsg);
 
   // Derived Board Status
   const totalTiles = cols * rows;

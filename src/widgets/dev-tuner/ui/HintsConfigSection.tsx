@@ -1,14 +1,14 @@
 import React from 'react';
 import { useSurvivalTimerStore } from '@/features/survival-timer';
-import { useHintStore } from '@/features/free-triggered-hint';
+import { useFreeTriggeredHintStore } from '@/features/free-triggered-hint';
 
 export const HintsConfigSection: React.FC = () => {
-  const maxFreeHints = useHintStore((state) => state.maxFreeHints);
-  const freeHintInterval = useHintStore((state) => state.freeHintInterval);
+  const maxFreeHints = useFreeTriggeredHintStore((state) => state.maxFreeHints);
+  const freeHintInterval = useFreeTriggeredHintStore((state) => state.freeHintInterval);
   const baseSecondsPerTile = useSurvivalTimerStore((state) => state.baseSecondsPerTile);
 
-  const setMaxFreeHints = useHintStore((state) => state.setMaxFreeHints);
-  const setFreeHintInterval = useHintStore((state) => state.setFreeHintInterval);
+  const setMaxFreeHints = useFreeTriggeredHintStore((state) => state.setMaxFreeHints);
+  const setFreeHintInterval = useFreeTriggeredHintStore((state) => state.setFreeHintInterval);
   const setBaseSecondsPerTile = useSurvivalTimerStore((state) => state.setBaseSecondsPerTile);
 
   return (

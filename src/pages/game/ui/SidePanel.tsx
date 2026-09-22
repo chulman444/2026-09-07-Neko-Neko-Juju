@@ -7,7 +7,7 @@ import { ItemsPanelWidget } from '@/widgets/items-panel';
 import { MacroLoopManagerWidget } from '@/widgets/macro-loop-manager';
 import type { SolverCombination } from '@/features/look-ahead-solver';
 import { useGameOrchestrator } from '@/widgets/game-board';
-import { useHintStore } from '@/features/free-triggered-hint';
+import { useBoardHintsStore } from '@/features/board-hints';
 import { useGameConfigStore } from '@/entities/game-config';
 import { Link } from '@/shared/lib/router';
 
@@ -23,7 +23,7 @@ export const SidePanel: React.FC<SidePanelProps> = ({ isOpen, onClose, defaultTa
   const [activeTab, setActiveTab] = useState<SidePanelTab>(defaultTab);
   const { generateBoard } = useBoardGeneratorActions();
   const enableItems = useGameConfigStore((state) => state.enableItems);
-  const setHighlightedTiles = useHintStore((state) => state.setHighlightedTiles);
+  const setHighlightedTiles = useBoardHintsStore((state) => state.setHighlightedTiles);
   const { handleMatch } = useGameOrchestrator();
 
   if (!isOpen) return null;

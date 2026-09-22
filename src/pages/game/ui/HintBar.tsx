@@ -1,5 +1,5 @@
 import React from 'react';
-import { useHintStore } from '@/features/free-triggered-hint';
+import { useFreeTriggeredHintStore } from '@/features/free-triggered-hint';
 
 export interface HintBarProps {
   hintsRemaining?: number;
@@ -10,11 +10,11 @@ export interface HintBarProps {
 }
 
 export const HintBar: React.FC<HintBarProps> = (props) => {
-  const storeHintsRemaining = useHintStore((state) => state.hintsRemaining);
-  const storeHintCountdown = useHintStore((state) => state.hintCountdown);
-  const storeHintInterval = useHintStore((state) => state.freeHintInterval);
-  const storeHasStarted = useHintStore((state) => state.hintPhaseStarted);
-  const storeIsPhase1Over = useHintStore((state) => state.isPhase1Over);
+  const storeHintsRemaining = useFreeTriggeredHintStore((state) => state.hintsRemaining);
+  const storeHintCountdown = useFreeTriggeredHintStore((state) => state.hintCountdown);
+  const storeHintInterval = useFreeTriggeredHintStore((state) => state.freeHintInterval);
+  const storeHasStarted = useFreeTriggeredHintStore((state) => state.hintPhaseStarted);
+  const storeIsPhase1Over = useFreeTriggeredHintStore((state) => state.isPhase1Over);
 
   const hintsRemaining = props.hintsRemaining ?? storeHintsRemaining;
   const hintCountdown = props.hintCountdown ?? storeHintCountdown;

@@ -1,7 +1,2 @@
-export {
-  useHintStore,
-  setClearableHintsResolver,
-  getResolvedClearableHints,
-} from './model/hintStore';
-export { isHintComboValid } from './lib/hintMath';
-export type { HintState } from './model/types';
+export { useFreeTriggeredHintStore } from './model/freeTriggeredHintStore';
+export type { FreeTriggeredHintState } from './model/types';

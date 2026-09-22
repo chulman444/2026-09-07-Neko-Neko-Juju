@@ -4,7 +4,8 @@ import { useGameSessionStore } from '@/entities/game-session';
 import { useSurvivalTimerStore } from '@/features/survival-timer';
 import { usePhaseProgressionStore } from '@/features/phase-progression';
 import { useComboStore } from '@/features/combo-system';
-import { useHintStore } from '@/features/free-triggered-hint';
+import { useFreeTriggeredHintStore } from '@/features/free-triggered-hint';
+import { useBoardHintsStore } from '@/features/board-hints';
 import { useBoardStore } from '@/entities/board';
 import { useSolverStore } from '@/features/look-ahead-solver';
 import { useSelectionStore } from '@/features/select-tiles';
@@ -16,7 +17,8 @@ describe('useGameOrchestrator / createGameOrchestrator', () => {
     useSurvivalTimerStore.getState().resetTimer();
     usePhaseProgressionStore.getState().resetProgression();
     useComboStore.getState().resetCombo();
-    useHintStore.getState().resetHintSession();
+    useFreeTriggeredHintStore.getState().resetHintSession();
+    useBoardHintsStore.getState().resetBoardHints();
     useSelectionStore.getState().clearSelection();
     useSolverStore.getState().reset();
   });
@@ -49,7 +51,8 @@ describe('useGameOrchestrator / createGameOrchestrator', () => {
     useSurvivalTimerStore.setState({ countdown: 1, isDepleted: true });
     usePhaseProgressionStore.setState({ phase1Score: 50, currentPhase: 2, isPhase1Over: true });
     useComboStore.setState({ comboCount: 5 });
-    useHintStore.setState({ hintsRemaining: 0, isPhase1Over: true });
+    useFreeTriggeredHintStore.setState({ hintsRemaining: 0, isPhase1Over: true });
+    useBoardHintsStore.setState({ highlightedTiles: [{ row: 0, col: 0 }] });
     useSelectionStore.setState({ selectedSum: 10 });
     useRivalCatStore.setState({ rivalCatCountdown: 1.0 });
 
@@ -62,7 +65,8 @@ describe('useGameOrchestrator / createGameOrchestrator', () => {
     expect(usePhaseProgressionStore.getState().phase1Score).toBe(0);
     expect(usePhaseProgressionStore.getState().isPhase1Over).toBe(false);
     expect(useComboStore.getState().comboCount).toBe(0);
-    expect(useHintStore.getState().isPhase1Over).toBe(false);
+    expect(useFreeTriggeredHintStore.getState().isPhase1Over).toBe(false);
+    expect(useBoardHintsStore.getState().highlightedTiles).toHaveLength(0);
     expect(useRivalCatStore.getState().rivalCatCountdown).toBe(5);
     expect(useSelectionStore.getState().selectedSum).toBe(0);
   });
@@ -82,7 +86,7 @@ describe('useGameOrchestrator / createGameOrchestrator', () => {
   });
 
   it('skips hint tile clearing when enableFreeTriggeredHint is false', () => {
-    useHintStore.setState({
+    useBoardHintsStore.setState({
       highlightedTiles: [
         { row: 0, col: 0 },
         { row: 0, col: 1 },
@@ -96,7 +100,7 @@ describe('useGameOrchestrator / createGameOrchestrator', () => {
     ]);
 
     // Hint store highlighted tiles should remain untouched
-    expect(useHintStore.getState().highlightedTiles).toHaveLength(2);
+    expect(useBoardHintsStore.getState().highlightedTiles).toHaveLength(2);
 
     const orchestratorWithHints = createGameOrchestrator({ enableFreeTriggeredHint: true });
     orchestratorWithHints.handleMatch([
@@ -105,6 +109,6 @@ describe('useGameOrchestrator / createGameOrchestrator', () => {
     ]);
 
     // Hint store highlighted tiles should be cleared
-    expect(useHintStore.getState().highlightedTiles).toHaveLength(0);
+    expect(useBoardHintsStore.getState().highlightedTiles).toHaveLength(0);
   });
 });

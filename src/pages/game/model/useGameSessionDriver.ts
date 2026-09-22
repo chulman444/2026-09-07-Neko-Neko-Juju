@@ -3,7 +3,8 @@ import { useGameSessionStore } from '@/entities/game-session';
 import { useSurvivalTimerStore } from '@/features/survival-timer';
 import { usePhaseProgressionStore } from '@/features/phase-progression';
 import { useComboStore } from '@/features/combo-system';
-import { useHintStore, setClearableHintsResolver } from '@/features/free-triggered-hint';
+import { useFreeTriggeredHintStore } from '@/features/free-triggered-hint';
+import { useBoardHintsStore, setClearableHintsResolver } from '@/features/board-hints';
 import {
   useRivalCatStore,
   setRivalCatHintsResolver,
@@ -48,11 +49,11 @@ export const useGameSessionDriver = () => {
 
     registerRivalStealListener((tiles) => {
       useSolverStore.getState().cascadeTiles(tiles.map((t) => ({ row: t.row, col: t.col })));
-      useHintStore.getState().removeClearedTiles(tiles);
+      useBoardHintsStore.getState().removeClearedTiles(tiles);
     });
 
     registerHintTriggerHandler(() => {
-      return useHintStore.getState().triggerHint();
+      return useBoardHintsStore.getState().triggerHint();
     });
 
     setUnsolvableResolver(() => {
@@ -91,12 +92,16 @@ export const useGameSessionDriver = () => {
           useComboStore.getState().tick(clampedDelta);
         }
         if (enableTimer && enableFreeTriggeredHint) {
-          useHintStore.getState().tick(clampedDelta, isSurvivalDepleted, isTimerPaused);
+          useFreeTriggeredHintStore
+            .getState()
+            .tick(clampedDelta, isSurvivalDepleted, isTimerPaused, () =>
+              useBoardHintsStore.getState().triggerHint()
+            );
         }
         useRivalCatStore.getState().tick(clampedDelta, isTimerPaused);
 
         // Orchestrate Phase Progression
-        const isHintPhase1Over = useHintStore.getState().isPhase1Over;
+        const isHintPhase1Over = useFreeTriggeredHintStore.getState().isPhase1Over;
         if (isHintPhase1Over && !usePhaseProgressionStore.getState().isPhase1Over) {
           usePhaseProgressionStore.getState().setPhase(2);
         }

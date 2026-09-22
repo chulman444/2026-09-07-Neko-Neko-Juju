@@ -31,13 +31,15 @@ Export the public API.
 ### 2. `features/free-triggered-hint`
 Refactor this slice to purely handle the survival mode countdown mechanic (the "3 free hints" sequence).
 
-#### [MODIFY] src/features/free-triggered-hint/model/hintStore.ts
+#### [RENAME & MODIFY] src/features/free-triggered-hint/model/freeTriggeredHintStore.ts (formerly `hintStore.ts`)
+- **Rename**: `hintStore.ts` -> `freeTriggeredHintStore.ts` (and `hintStore.test.ts` -> `freeTriggeredHintStore.test.ts`).
+- **Hook Name**: Rename `useHintStore` -> `useFreeTriggeredHintStore` (optionally alias `useHintStore` if needed, but update consumers to `useFreeTriggeredHintStore`).
 - **Remove**: All highlighted tiles logic, `activeHintCombos`, `triggerHint`, `removeClearedTiles`, etc.
 - **Keep**: `maxFreeHints`, `freeHintInterval`, `hintsRemaining`, `hintCountdown`, `hintPhaseStarted`, `isPhase1Over`.
-- **Modify**: The `tick()` method will no longer call `get().triggerHint()` directly (which would be an FSD violation). Instead, we will pass a callback to `tick`: `tick(deltaSeconds, isSurvivalDepleted, isTimerPaused, tryTriggerHint: () => boolean)`. The orchestrator will inject the trigger callback.
+- **Modify**: The `tick()` method will no longer call `get().triggerHint()` directly. Instead, we pass `tryTriggerHint: () => boolean` callback: `tick(deltaSeconds, isSurvivalDepleted, isTimerPaused, tryTriggerHint?: () => boolean)`.
 
 #### [MODIFY] src/features/free-triggered-hint/index.ts
-Export the updated store. Also update `hintStore.test.ts` to reflect the new state shape.
+Export `useFreeTriggeredHintStore` (and alias `useHintStore` for transition) and types.
 
 ---
 
@@ -46,12 +48,13 @@ Wire the two separated features together at the Orchestrator layer.
 
 #### [MODIFY] src/pages/game/model/useGameSessionDriver.ts
 - Import `setClearableHintsResolver` and `useBoardHintsStore` from `@/features/board-hints`.
-- When ticking `useHintStore`, pass `() => useBoardHintsStore.getState().triggerHint()` as the `tryTriggerHint` callback.
+- Import `useFreeTriggeredHintStore` from `@/features/free-triggered-hint`.
+- When ticking `useFreeTriggeredHintStore`, pass `() => useBoardHintsStore.getState().triggerHint()` as the `tryTriggerHint` callback.
 - Update `registerRivalStealListener` to call `useBoardHintsStore.getState().removeClearedTiles()`.
 - Update `registerHintTriggerHandler` to call `useBoardHintsStore.getState().triggerHint()`.
 
 #### [MODIFY] UI Consumers
-Update the imports in the following files to pull `highlightedTiles`, `activeHintCombos`, and `noHintsAvailableMsg` from `features/board-hints` instead of `features/free-triggered-hint`:
+Update the imports in the following files to pull `highlightedTiles`, `activeHintCombos`, and `noHintsAvailableMsg` from `features/board-hints`, and update free-hint timer consumers to use `useFreeTriggeredHintStore`:
 - `src/pages/game/ui/GamePage.tsx`
 - `src/pages/game/ui/GameHeaderBar.tsx`
 - `src/pages/game/ui/HintBar.tsx`

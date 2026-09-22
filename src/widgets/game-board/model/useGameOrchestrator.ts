@@ -1,7 +1,8 @@
 import { useCallback } from 'react';
 import { useBoardStore, type TileCoord } from '@/entities/board';
 import { useComboStore } from '@/features/combo-system';
-import { useHintStore } from '@/features/free-triggered-hint';
+import { useFreeTriggeredHintStore } from '@/features/free-triggered-hint';
+import { useBoardHintsStore } from '@/features/board-hints';
 import { useSolverStore } from '@/features/look-ahead-solver';
 import { useSelectionStore } from '@/features/select-tiles';
 import { useSurvivalTimerStore } from '@/features/survival-timer';
@@ -56,7 +57,7 @@ export const createGameOrchestrator = (options: GameOrchestratorOptions = {}) =>
 
     // 4. Invalidate / update hints
     if (enableFreeTriggeredHint) {
-      useHintStore.getState().removeClearedTiles(tiles);
+      useBoardHintsStore.getState().removeClearedTiles(tiles);
     }
 
     // 5. Cascade solver
@@ -71,7 +72,8 @@ export const createGameOrchestrator = (options: GameOrchestratorOptions = {}) =>
     useSurvivalTimerStore.getState().resetTimer();
     usePhaseProgressionStore.getState().resetProgression();
     useComboStore.getState().resetCombo();
-    useHintStore.getState().resetHintSession();
+    useFreeTriggeredHintStore.getState().resetHintSession();
+    useBoardHintsStore.getState().resetBoardHints();
     useRivalCatStore.getState().resetCountdown();
     useSelectionStore.getState().clearSelection();
     useSolverStore
