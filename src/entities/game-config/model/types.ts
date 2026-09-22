@@ -6,7 +6,7 @@ export interface GameFeatureFlags {
   enableSolidBlocks: boolean;
   enableBounties: boolean;
   enableCombos: boolean;
-  enableHints: boolean;
+  enableFreeTriggeredHint: boolean;
   enableTimer: boolean;
   enableSelectionHUD: boolean;
 }

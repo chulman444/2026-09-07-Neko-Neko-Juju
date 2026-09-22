@@ -12,14 +12,14 @@ import { useRivalCatStore } from '@/features/rival-cats';
 export interface GameOrchestratorOptions {
   enableCombos?: boolean;
   enableTimer?: boolean;
-  enableHints?: boolean;
+  enableFreeTriggeredHint?: boolean;
 }
 
 /**
  * Pure ECS System helper that coordinates match events across decoupled stores.
  */
 export const createGameOrchestrator = (options: GameOrchestratorOptions = {}) => {
-  const { enableCombos = true, enableTimer = true, enableHints = true } = options;
+  const { enableCombos = true, enableTimer = true, enableFreeTriggeredHint = true } = options;
 
   const handleMatch = (tiles: TileCoord[], spanCount?: number, actualNonZeroCount?: number) => {
     const matrix = useBoardStore.getState().matrix;
@@ -55,7 +55,7 @@ export const createGameOrchestrator = (options: GameOrchestratorOptions = {}) =>
     }
 
     // 4. Invalidate / update hints
-    if (enableHints) {
+    if (enableFreeTriggeredHint) {
       useHintStore.getState().removeClearedTiles(tiles);
     }
 
@@ -89,17 +89,17 @@ export const createGameOrchestrator = (options: GameOrchestratorOptions = {}) =>
  * React hook wrapper for game orchestration.
  */
 export const useGameOrchestrator = (options: GameOrchestratorOptions = {}) => {
-  const { enableCombos = true, enableTimer = true, enableHints = true } = options;
+  const { enableCombos = true, enableTimer = true, enableFreeTriggeredHint = true } = options;
 
   const handleMatch = useCallback(
     (tiles: TileCoord[], spanCount?: number, actualNonZeroCount?: number) => {
-      createGameOrchestrator({ enableCombos, enableTimer, enableHints }).handleMatch(
+      createGameOrchestrator({ enableCombos, enableTimer, enableFreeTriggeredHint }).handleMatch(
         tiles,
         spanCount,
         actualNonZeroCount
       );
     },
-    [enableCombos, enableTimer, enableHints]
+    [enableCombos, enableTimer, enableFreeTriggeredHint]
   );
 
   const resetAllSessions = useCallback(() => {

@@ -12,7 +12,7 @@ export const FeatureFlagsSection: React.FC = () => {
     enableSolidBlocks: store.enableSolidBlocks,
     enableBounties: store.enableBounties,
     enableCombos: store.enableCombos,
-    enableHints: store.enableHints,
+    enableFreeTriggeredHint: store.enableFreeTriggeredHint,
     enableTimer: store.enableTimer,
     enableSelectionHUD: store.enableSelectionHUD,
   };
@@ -54,27 +54,41 @@ export const FeatureFlagsSection: React.FC = () => {
 
         {/* Live Toggles */}
         <div className="grid grid-cols-2 gap-y-2 gap-x-4">
-          {(Object.keys(flags) as Array<keyof GameFeatureFlags>).map((key) => (
-            <label key={key} className="flex items-center gap-2 cursor-pointer group">
-              <input
-                type="checkbox"
-                checked={flags[key]}
-                onChange={() => toggleFlag(key)}
-                className="w-4 h-4 rounded bg-zinc-900 border-zinc-700 text-amber-500 focus:ring-amber-500/50 focus:ring-offset-0 cursor-pointer"
-              />
-              <span className="text-xs text-zinc-400 group-hover:text-zinc-200 transition-colors select-none flex items-center gap-1 flex-wrap">
-                {key}
-                {key === 'enableDevTools' && (
-                  <span
-                    className="text-[10px] text-amber-400 font-semibold px-1 py-0.5 rounded bg-amber-500/10 border border-amber-500/30 whitespace-nowrap"
-                    title="Warning: Disabling this will immediately hide this Dev Tools panel!"
-                  >
-                    ⚠️ Hides panel
-                  </span>
-                )}
-              </span>
-            </label>
-          ))}
+          {(Object.keys(flags) as Array<keyof GameFeatureFlags>).map((key) => {
+            const isFreeHintDisabled = key === 'enableFreeTriggeredHint' && !flags.enableTimer;
+            return (
+              <label
+                key={key}
+                className={`flex items-center gap-2 group ${
+                  isFreeHintDisabled
+                    ? 'opacity-50 pointer-events-none cursor-not-allowed'
+                    : 'cursor-pointer'
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={flags[key]}
+                  disabled={isFreeHintDisabled}
+                  onChange={() => toggleFlag(key)}
+                  className="w-4 h-4 rounded bg-zinc-900 border-zinc-700 text-amber-500 focus:ring-amber-500/50 focus:ring-offset-0 cursor-pointer"
+                />
+                <span className="text-xs text-zinc-400 group-hover:text-zinc-200 transition-colors select-none flex items-center gap-1 flex-wrap">
+                  {key}
+                  {key === 'enableFreeTriggeredHint' && !flags.enableTimer && (
+                    <span className="text-[10px] text-zinc-400 italic">(Requires Timer)</span>
+                  )}
+                  {key === 'enableDevTools' && (
+                    <span
+                      className="text-[10px] text-amber-400 font-semibold px-1 py-0.5 rounded bg-amber-500/10 border border-amber-500/30 whitespace-nowrap"
+                      title="Warning: Disabling this will immediately hide this Dev Tools panel!"
+                    >
+                      ⚠️ Hides panel
+                    </span>
+                  )}
+                </span>
+              </label>
+            );
+          })}
         </div>
       </div>
     </div>

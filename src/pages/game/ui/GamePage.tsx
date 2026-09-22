@@ -33,7 +33,7 @@ export const GamePage: React.FC = () => {
   const enableItems = useGameConfigStore((state) => state.enableItems);
   const enableDevTools = useGameConfigStore((state) => state.enableDevTools);
   const enableCombos = useGameConfigStore((state) => state.enableCombos);
-  const enableHints = useGameConfigStore((state) => state.enableHints);
+  const enableFreeTriggeredHint = useGameConfigStore((state) => state.enableFreeTriggeredHint);
   const enableTimer = useGameConfigStore((state) => state.enableTimer);
 
   // Board Store Actions
@@ -60,7 +60,7 @@ export const GamePage: React.FC = () => {
   const { handleMatch, resetAllSessions } = useGameOrchestrator({
     enableCombos,
     enableTimer,
-    enableHints,
+    enableFreeTriggeredHint: enableTimer && enableFreeTriggeredHint,
   });
 
   const handleTilesCleared = useCallback(

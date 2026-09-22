@@ -16,7 +16,7 @@ describe('useGameConfigStore', () => {
     expect(state.enableSolidBlocks).toBe(false);
     expect(state.enableBounties).toBe(false);
     expect(state.enableCombos).toBe(true);
-    expect(state.enableHints).toBe(true);
+    expect(state.enableFreeTriggeredHint).toBe(true);
     expect(state.enableTimer).toBe(true);
     expect(state.enableSelectionHUD).toBe(true);
   });
@@ -27,7 +27,7 @@ describe('useGameConfigStore', () => {
     expect(state.preset).toBe('classic');
     expect(state.enableItems).toBe(false);
     expect(state.enableDevTools).toBe(true);
-    expect(state.enableHints).toBe(false);
+    expect(state.enableFreeTriggeredHint).toBe(false);
     expect(state.enableSelectionHUD).toBe(false);
     expect(state.enableCombos).toBe(true);
     expect(state.enableTimer).toBe(true);
@@ -39,7 +39,7 @@ describe('useGameConfigStore', () => {
     expect(state.preset).toBe('editor');
     expect(state.enableItems).toBe(false);
     expect(state.enableDevTools).toBe(true);
-    expect(state.enableHints).toBe(true);
+    expect(state.enableFreeTriggeredHint).toBe(true);
   });
 
   it('switches to roguelite preset and enables bounties and solid blocks', () => {
@@ -54,12 +54,12 @@ describe('useGameConfigStore', () => {
 
   it('allows overriding individual flags and resetting to preset', () => {
     useGameConfigStore.getState().setPreset('classic');
-    expect(useGameConfigStore.getState().enableHints).toBe(false);
+    expect(useGameConfigStore.getState().enableFreeTriggeredHint).toBe(false);
 
-    useGameConfigStore.getState().setFlag('enableHints', true);
-    expect(useGameConfigStore.getState().enableHints).toBe(true);
+    useGameConfigStore.getState().setFlag('enableFreeTriggeredHint', true);
+    expect(useGameConfigStore.getState().enableFreeTriggeredHint).toBe(true);
 
     useGameConfigStore.getState().resetToPreset();
-    expect(useGameConfigStore.getState().enableHints).toBe(false);
+    expect(useGameConfigStore.getState().enableFreeTriggeredHint).toBe(false);
   });
 });

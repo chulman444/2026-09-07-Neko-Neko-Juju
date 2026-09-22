@@ -80,4 +80,31 @@ describe('useGameOrchestrator / createGameOrchestrator', () => {
     // Base score awarded
     expect(useGameSessionStore.getState().score).toBe(2);
   });
+
+  it('skips hint tile clearing when enableFreeTriggeredHint is false', () => {
+    useHintStore.setState({
+      highlightedTiles: [
+        { row: 0, col: 0 },
+        { row: 0, col: 1 },
+      ],
+    });
+
+    const orchestrator = createGameOrchestrator({ enableFreeTriggeredHint: false });
+    orchestrator.handleMatch([
+      { row: 0, col: 0 },
+      { row: 0, col: 1 },
+    ]);
+
+    // Hint store highlighted tiles should remain untouched
+    expect(useHintStore.getState().highlightedTiles).toHaveLength(2);
+
+    const orchestratorWithHints = createGameOrchestrator({ enableFreeTriggeredHint: true });
+    orchestratorWithHints.handleMatch([
+      { row: 0, col: 0 },
+      { row: 0, col: 1 },
+    ]);
+
+    // Hint store highlighted tiles should be cleared
+    expect(useHintStore.getState().highlightedTiles).toHaveLength(0);
+  });
 });

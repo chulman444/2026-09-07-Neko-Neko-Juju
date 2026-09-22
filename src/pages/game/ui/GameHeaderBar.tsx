@@ -37,7 +37,6 @@ export const GameHeaderBar: React.FC<GameHeaderBarProps> = ({
   const enableItems = useGameConfigStore((state) => state.enableItems);
   const enableDevTools = useGameConfigStore((state) => state.enableDevTools);
   const enableCombos = useGameConfigStore((state) => state.enableCombos);
-  const enableHints = useGameConfigStore((state) => state.enableHints);
   const enableTimer = useGameConfigStore((state) => state.enableTimer);
   const enableSelectionHUD = useGameConfigStore((state) => state.enableSelectionHUD);
 
@@ -82,7 +81,7 @@ export const GameHeaderBar: React.FC<GameHeaderBarProps> = ({
             <TimerBar countdown={countdown} maxCountdown={maxCountdown} isPaused={isPaused} />
           </div>
         )}
-        {enableHints && <HintBar />}
+        <HintBar />
         {enableCombos && <ComboBar />}
         {enableSelectionHUD && <SelectionSumHUD />}
         {isBoardCleared ? (
@@ -90,7 +89,6 @@ export const GameHeaderBar: React.FC<GameHeaderBarProps> = ({
             🎉 Board Cleared!
           </div>
         ) : (
-          enableHints &&
           noHintsAvailableMsg && (
             <div className="text-[10px] font-bold text-zinc-500 bg-zinc-200/50 dark:bg-zinc-800/50 px-2 py-0.5 rounded-full border border-zinc-300 dark:border-zinc-700 animate-in fade-in duration-200">
               {noHintsAvailableMsg}

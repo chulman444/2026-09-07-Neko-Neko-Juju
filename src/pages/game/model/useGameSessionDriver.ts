@@ -16,6 +16,7 @@ import {
   registerBoardMutationListener,
 } from '@/features/core-items';
 import { useSolverStore, findClearableCombinationsOnly } from '@/features/look-ahead-solver';
+import { useGameConfigStore } from '@/entities/game-config';
 
 /**
  * Lightweight RAF driver that ticks the unified game session store, combo store, and hint store.
@@ -50,7 +51,13 @@ export const useGameSessionDriver = () => {
       useHintStore.getState().removeClearedTiles(tiles);
     });
 
-    registerHintTriggerHandler(() => useHintStore.getState().triggerHint());
+    registerHintTriggerHandler(() => {
+      const { enableTimer, enableFreeTriggeredHint } = useGameConfigStore.getState();
+      if (!enableTimer || !enableFreeTriggeredHint) {
+        return false;
+      }
+      return useHintStore.getState().triggerHint();
+    });
 
     setUnsolvableResolver(() => {
       const solverStore = useSolverStore.getState();
@@ -78,9 +85,18 @@ export const useGameSessionDriver = () => {
         const isTimerPaused = isComboPaused || isSessionPaused;
         const isSurvivalDepleted = useSurvivalTimerStore.getState().isDepleted;
 
-        useSurvivalTimerStore.getState().tick(clampedDelta, isTimerPaused);
-        useComboStore.getState().tick(clampedDelta);
-        useHintStore.getState().tick(clampedDelta, isSurvivalDepleted, isTimerPaused);
+        const { enableTimer, enableCombos, enableFreeTriggeredHint } =
+          useGameConfigStore.getState();
+
+        if (enableTimer) {
+          useSurvivalTimerStore.getState().tick(clampedDelta, isTimerPaused);
+        }
+        if (enableCombos) {
+          useComboStore.getState().tick(clampedDelta);
+        }
+        if (enableTimer && enableFreeTriggeredHint) {
+          useHintStore.getState().tick(clampedDelta, isSurvivalDepleted, isTimerPaused);
+        }
         useRivalCatStore.getState().tick(clampedDelta, isTimerPaused);
 
         // Orchestrate Phase Progression
