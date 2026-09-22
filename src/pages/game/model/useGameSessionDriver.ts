@@ -52,10 +52,6 @@ export const useGameSessionDriver = () => {
     });
 
     registerHintTriggerHandler(() => {
-      const { enableTimer, enableFreeTriggeredHint } = useGameConfigStore.getState();
-      if (!enableTimer || !enableFreeTriggeredHint) {
-        return false;
-      }
       return useHintStore.getState().triggerHint();
     });
 
