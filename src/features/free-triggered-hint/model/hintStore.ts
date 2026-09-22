@@ -49,7 +49,7 @@ export const useHintStore = create<HintState>((set, get) => ({
   setHighlightedTiles: (tiles) => {
     set((state) => {
       const nextTiles = typeof tiles === 'function' ? tiles(state.highlightedTiles) : tiles;
-      
+
       if (nextTiles.length === 0 && state.activeHintCombos.length > 0) {
         const allCoords: TileCoord[] = [];
         state.activeHintCombos.forEach((c) => {
