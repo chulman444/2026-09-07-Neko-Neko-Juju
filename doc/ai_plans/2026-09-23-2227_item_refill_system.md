@@ -25,8 +25,8 @@ This plan introduces the new refillable item mechanics, configurable max stacks,
 ### 3. `src/widgets/footer-console` (Isolated UI)
 - **[NEW] `ui/RechargeableItemButton.tsx`**:
   - A brand new component parallel to `GenericItemButton`.
-  - Applies `opacity-50 grayscale` only to the inner icon/label when stacks are 0, allowing the cooldown overlay to remain vivid.
-  - Adds the **Refill Gauge Overlay** (`wipe` or `spin` CSS based on config).
+  - **Visual State Logic (LoL-style)**: The icon and button are fully colored and "active" as long as `stacks > 0`. It is ONLY grayed out (`opacity-50 grayscale`) when `stacks === 0` (recharging from 0 to 1).
+  - **Refill Gauge Overlay**: Adds a sweeping gauge (`wipe` or `spin` CSS). The overlay itself is purely for the recharge animation and is **not** responsible for graying out or darkening the icon. It just runs the animation on top/behind the button while it charges to the next stack.
   - Moves the label to the bottom-right showing stacks (`Current/Max`).
   - Adds a Cooldown Text Indicator at the bottom-left (`Math.ceil(remainingSeconds)` or remaining actions).
 - **[MODIFY] `ui/FooterConsole.tsx`**:
