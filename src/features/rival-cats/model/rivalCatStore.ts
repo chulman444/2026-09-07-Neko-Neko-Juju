@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { useBoardStore, type TileCoord } from '@/entities/board';
+import { orchestrator } from '@/shared/lib/orchestrator';
 import type { CatPhase, CatType, DefeatCondition, RivalCat, RivalCatState } from './types';
 
 let hintsResolver: (() => TileCoord[][]) | null = null;
@@ -10,8 +11,8 @@ export const setRivalCatHintsResolver = (resolver: (() => TileCoord[][]) | null)
 };
 
 export const getRivalCatHints = (): TileCoord[][] => {
-  if (!hintsResolver) return [];
-  return hintsResolver();
+  if (hintsResolver) return hintsResolver();
+  return orchestrator.getClearableHints();
 };
 
 export const registerRivalStealListener = (listener: ((tiles: TileCoord[]) => void) | null) => {
@@ -431,11 +432,12 @@ export const useRivalCatStore = create<RivalCatState>((set, get) => ({
         if (nextCountdown <= 0) {
           // Execute steal
           const targetCombo = cat.targetMatch!;
-          const cleared = useBoardStore.getState().clearTiles(targetCombo);
-          const stolenAmount = cleared > 0 ? cleared : targetCombo.length;
-          additionalStolen += stolenAmount;
-
-          notifyRivalSteal(targetCombo);
+          const handled = orchestrator.executeRivalSteal(targetCombo);
+          if (!handled) {
+            useBoardStore.getState().clearTiles(targetCombo);
+            notifyRivalSteal(targetCombo);
+          }
+          additionalStolen += targetCombo.length;
 
           currentCats[i] = {
             ...cat,
@@ -490,10 +492,12 @@ export const useRivalCatStore = create<RivalCatState>((set, get) => ({
       return false;
     }
 
-    const cleared = useBoardStore.getState().clearTiles(targetCombo);
-    const stolenAmount = cleared > 0 ? cleared : targetCombo.length;
-
-    notifyRivalSteal(targetCombo);
+    const handled = orchestrator.executeRivalSteal(targetCombo);
+    if (!handled) {
+      useBoardStore.getState().clearTiles(targetCombo);
+      notifyRivalSteal(targetCombo);
+    }
+    const stolenAmount = targetCombo.length;
 
     const updatedCats = state.cats.map((c, idx) =>
       idx === catIndex

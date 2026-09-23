@@ -14,7 +14,7 @@ export const getResolvedClearableHints = (): TileCoord[][] => {
   return clearableHintsResolver();
 };
 
-export const useBoardHintsStore = create<BoardHintsState>((set, get) => ({
+export const useBoardHintsStore = create<BoardHintsState>((set, _get) => ({
   activeHintCombos: [],
   highlightedTiles: [],
   noHintsAvailableMsg: null,
@@ -156,16 +156,6 @@ export const useBoardHintsStore = create<BoardHintsState>((set, get) => ({
         highlightedTiles: nextHighlighted,
       };
     });
-
-    // Re-evaluate clearable hints message after clearing tiles
-    const clearables = getResolvedClearableHints();
-    if (clearables.length > 0) {
-      if (get().noHintsAvailableMsg) {
-        set({ noHintsAvailableMsg: null });
-      }
-    } else {
-      set({ noHintsAvailableMsg: 'No more hints available.' });
-    }
   },
 
   resetBoardHints: () => {
@@ -176,11 +166,3 @@ export const useBoardHintsStore = create<BoardHintsState>((set, get) => ({
     });
   },
 }));
-
-let lastMatrix = useBoardStore.getState().matrix;
-useBoardStore.subscribe((state) => {
-  if (state.matrix !== lastMatrix) {
-    lastMatrix = state.matrix;
-    useBoardHintsStore.getState().validateActiveHints();
-  }
-});

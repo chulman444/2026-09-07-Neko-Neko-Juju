@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { createGameOrchestrator } from './useGameOrchestrator';
 import { useGameSessionStore } from '@/entities/game-session';
 import { useSurvivalTimerStore } from '@/features/survival-timer';
@@ -9,7 +9,7 @@ import { useBoardHintsStore } from '@/features/board-hints';
 import { useBoardStore } from '@/entities/board';
 import { useSolverStore } from '@/features/look-ahead-solver';
 import { useSelectionStore } from '@/features/select-tiles';
-import { useRivalCatStore } from '@/features/rival-cats';
+import { useRivalCatStore, registerRivalStealListener } from '@/features/rival-cats';
 
 describe('useGameOrchestrator / createGameOrchestrator', () => {
   beforeEach(() => {
@@ -21,6 +21,7 @@ describe('useGameOrchestrator / createGameOrchestrator', () => {
     useBoardHintsStore.getState().resetBoardHints();
     useSelectionStore.getState().clearSelection();
     useSolverStore.getState().reset();
+    registerRivalStealListener(null);
   });
 
   it('dispatches match events across combo, session, hint, and solver stores', () => {
@@ -32,10 +33,14 @@ describe('useGameOrchestrator / createGameOrchestrator', () => {
 
     const orchestrator = createGameOrchestrator();
 
-    orchestrator.handleMatch([
+    orchestrator.executePlayerMatch([
       { row: 0, col: 0 },
       { row: 0, col: 1 },
     ]);
+
+    // Board tiles cleared
+    expect(useBoardStore.getState().matrix[0]?.[0]).toBe(0);
+    expect(useBoardStore.getState().matrix[0]?.[1]).toBe(0);
 
     // Combo store was updated
     expect(useComboStore.getState().comboCount).toBe(1);
@@ -44,6 +49,9 @@ describe('useGameOrchestrator / createGameOrchestrator', () => {
     expect(useGameSessionStore.getState().score).toBeGreaterThanOrEqual(2);
     expect(useGameSessionStore.getState().clearedTiles).toBe(2);
     expect(usePhaseProgressionStore.getState().phase1Score).toBeGreaterThanOrEqual(2);
+
+    // No more hints available message triggered since board is now empty
+    expect(useBoardHintsStore.getState().noHintsAvailableMsg).toBe('No more hints available.');
   });
 
   it('resets all decoupled stores on resetAllSessions', () => {
@@ -110,5 +118,72 @@ describe('useGameOrchestrator / createGameOrchestrator', () => {
 
     // Hint store highlighted tiles should be cleared
     expect(useBoardHintsStore.getState().highlightedTiles).toHaveLength(0);
+  });
+
+  it('executes rival steal by clearing tiles and notifying listeners without awarding points', () => {
+    const matrix = [
+      [3, 7, 2],
+      [8, 0, 0],
+    ];
+    useBoardStore.getState().setMatrix(matrix);
+    useSolverStore.getState().recalculate(matrix);
+
+    const stealSpy = vi.fn();
+    registerRivalStealListener(stealSpy);
+
+    const orchestrator = createGameOrchestrator();
+    const stolenCombo = [
+      { row: 0, col: 0 },
+      { row: 0, col: 1 },
+    ];
+
+    const result = orchestrator.executeRivalSteal(stolenCombo);
+    expect(result).toBe(true);
+
+    // Tiles cleared on board
+    expect(useBoardStore.getState().matrix[0]?.[0]).toBe(0);
+    expect(useBoardStore.getState().matrix[0]?.[1]).toBe(0);
+
+    // Listener notified
+    expect(stealSpy).toHaveBeenCalledWith(stolenCombo);
+
+    // No score or combo awarded to player
+    expect(useGameSessionStore.getState().score).toBe(0);
+    expect(useComboStore.getState().comboCount).toBe(0);
+  });
+
+  it('executes highlight hint by finding a combination from the solver and updating hints store', () => {
+    const matrix = [
+      [4, 6, 0],
+      [0, 0, 0],
+    ];
+    useBoardStore.getState().setMatrix(matrix);
+    useSolverStore.getState().recalculate(matrix);
+
+    const orchestrator = createGameOrchestrator();
+    const success = orchestrator.executeHighlightHint();
+
+    expect(success).toBe(true);
+    expect(useBoardHintsStore.getState().activeHintCombos).toHaveLength(1);
+    expect(useBoardHintsStore.getState().highlightedTiles).toEqual([
+      { col: 0, row: 0 },
+      { col: 1, row: 0 },
+    ]);
+    expect(useBoardHintsStore.getState().noHintsAvailableMsg).toBeNull();
+  });
+
+  it('sets noHintsAvailableMsg when executeHighlightHint is called on an unsolvable board', () => {
+    const matrix = [
+      [1, 1, 0],
+      [0, 0, 0],
+    ];
+    useBoardStore.getState().setMatrix(matrix);
+    useSolverStore.getState().recalculate(matrix);
+
+    const orchestrator = createGameOrchestrator();
+    const success = orchestrator.executeHighlightHint();
+
+    expect(success).toBe(false);
+    expect(useBoardHintsStore.getState().noHintsAvailableMsg).toBe('No more hints available.');
   });
 });

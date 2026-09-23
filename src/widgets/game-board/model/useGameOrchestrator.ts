@@ -1,14 +1,20 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useBoardStore, type TileCoord } from '@/entities/board';
 import { useComboStore } from '@/features/combo-system';
 import { useFreeTriggeredHintStore } from '@/features/free-triggered-hint';
 import { useBoardHintsStore } from '@/features/board-hints';
-import { useSolverStore } from '@/features/look-ahead-solver';
+import { useSolverStore, findClearableCombinationsOnly } from '@/features/look-ahead-solver';
 import { useSelectionStore } from '@/features/select-tiles';
 import { useSurvivalTimerStore } from '@/features/survival-timer';
 import { usePhaseProgressionStore } from '@/features/phase-progression';
 import { useGameSessionStore } from '@/entities/game-session';
-import { useRivalCatStore } from '@/features/rival-cats';
+import { useRivalCatStore, notifyRivalSteal } from '@/features/rival-cats';
+import { useGameConfigStore } from '@/entities/game-config';
+import {
+  setGameOrchestrator,
+  type GameOrchestrator,
+  type TileCoordinate,
+} from '@/shared/lib/orchestrator';
 
 export interface GameOrchestratorOptions {
   enableCombos?: boolean;
@@ -16,20 +22,56 @@ export interface GameOrchestratorOptions {
   enableFreeTriggeredHint?: boolean;
 }
 
+export const getClearableCombinations = (): TileCoord[][] => {
+  const solverStore = useSolverStore.getState();
+  if (solverStore.hintMode === 'default' && solverStore.isCalculated) {
+    return solverStore.combinations.map((c) => c.required.map((t) => ({ col: t.col, row: t.row })));
+  }
+  if (solverStore.isCalculated) {
+    return solverStore.combinations
+      .filter((c) => c.isActive && c.blockers.length === 0)
+      .map((c) => c.required.map((t) => ({ col: t.col, row: t.row })));
+  }
+  const matrix = useBoardStore.getState().matrix;
+  return findClearableCombinationsOnly(matrix).map((c) =>
+    c.required.map((t) => ({ col: t.col, row: t.row }))
+  );
+};
+
 /**
  * Pure ECS System helper that coordinates match events across decoupled stores.
  */
-export const createGameOrchestrator = (options: GameOrchestratorOptions = {}) => {
-  const { enableCombos = true, enableTimer = true, enableFreeTriggeredHint = true } = options;
+export const createGameOrchestrator = (options?: GameOrchestratorOptions): GameOrchestrator => {
+  const getOptions = (): Required<GameOrchestratorOptions> => {
+    const config = useGameConfigStore.getState();
+    return {
+      enableCombos: options?.enableCombos ?? config.enableCombos ?? true,
+      enableTimer: options?.enableTimer ?? config.enableTimer ?? true,
+      enableFreeTriggeredHint:
+        options?.enableFreeTriggeredHint ??
+        ((options?.enableTimer ?? config.enableTimer ?? true) &&
+          (config.enableFreeTriggeredHint ?? true)),
+    };
+  };
 
-  const handleMatch = (tiles: TileCoord[], spanCount?: number, actualNonZeroCount?: number) => {
+  const executePlayerMatch = (
+    tiles: TileCoordinate[],
+    spanCount?: number,
+    actualNonZeroCount?: number
+  ): boolean => {
+    if (!tiles || tiles.length === 0) return false;
+
+    const { enableCombos, enableTimer, enableFreeTriggeredHint } = getOptions();
     const matrix = useBoardStore.getState().matrix;
     const calculatedCount = tiles.filter((t) => (matrix[t.row]?.[t.col] ?? 0) > 0).length;
     const nonZeroCount =
       actualNonZeroCount ?? (calculatedCount > 0 ? calculatedCount : tiles.length);
     const spanTileCount = spanCount ?? tiles.length;
 
-    // 1. Combo progression
+    // 1. Clear tiles from board
+    useBoardStore.getState().clearTiles(tiles);
+
+    // 2. Combo progression
     let scoreMultiplier = 1;
     let addTimeBonus = 0;
     if (enableCombos) {
@@ -38,7 +80,7 @@ export const createGameOrchestrator = (options: GameOrchestratorOptions = {}) =>
       addTimeBonus = comboResult.addTime;
     }
 
-    // 2. Score & Session points
+    // 3. Score & Session points
     const isPhase1Over = usePhaseProgressionStore.getState().isPhase1Over;
     const isPhase1 = !isPhase1Over;
     const basePoints = spanTileCount;
@@ -48,23 +90,87 @@ export const createGameOrchestrator = (options: GameOrchestratorOptions = {}) =>
     useGameSessionStore.getState().addClearedTiles(nonZeroCount);
     usePhaseProgressionStore.getState().addScore(points, isPhase1);
 
-    // 3. Timer bonus in Phase 1 (if timer enabled)
+    // 4. Timer bonus in Phase 1 (if timer enabled)
     if (enableTimer && isPhase1) {
       const timerStore = useSurvivalTimerStore.getState();
       const addedTime = nonZeroCount * timerStore.baseSecondsPerTile + Math.max(0, addTimeBonus);
       timerStore.addTime(addedTime);
     }
 
-    // 4. Invalidate / update hints
+    // 5. Invalidate / update hints
     if (enableFreeTriggeredHint) {
       useBoardHintsStore.getState().removeClearedTiles(tiles);
     }
 
-    // 5. Cascade solver
+    // 6. Cascade solver
     useSolverStore.getState().cascadeTiles(tiles);
 
-    // 6. Notify rival cats of player cleared tiles (counter-play & pushback)
+    // 7. Notify rival cats of player cleared tiles (counter-play & pushback)
     useRivalCatStore.getState().onPlayerClearedTiles(tiles);
+
+    // 8. Check for zero remaining hints to reliably trigger 'No more hints available'
+    const remaining = getClearableCombinations();
+    if (remaining.length === 0) {
+      useBoardHintsStore.getState().setNoHintsAvailableMsg('No more hints available.');
+    } else if (useBoardHintsStore.getState().noHintsAvailableMsg) {
+      useBoardHintsStore.getState().setNoHintsAvailableMsg(null);
+    }
+
+    return true;
+  };
+
+  const executeRivalSteal = (tiles: TileCoordinate[]): boolean => {
+    if (!tiles || tiles.length === 0) return false;
+
+    // 1. Clear board tiles
+    useBoardStore.getState().clearTiles(tiles);
+
+    // 2. Cascade solver
+    useSolverStore.getState().cascadeTiles(tiles);
+
+    // 3. Remove cleared tiles from active hint highlights
+    useBoardHintsStore.getState().removeClearedTiles(tiles);
+
+    // 4. Trigger steal notification for listeners/animations
+    notifyRivalSteal(tiles);
+
+    // 5. Check for zero remaining hints
+    const remaining = getClearableCombinations();
+    if (remaining.length === 0) {
+      useBoardHintsStore.getState().setNoHintsAvailableMsg('No more hints available.');
+    } else if (useBoardHintsStore.getState().noHintsAvailableMsg) {
+      useBoardHintsStore.getState().setNoHintsAvailableMsg(null);
+    }
+
+    return true;
+  };
+
+  const executeHighlightHint = (_isFree = false): boolean => {
+    const clearables = getClearableCombinations();
+
+    if (clearables.length === 0) {
+      useBoardHintsStore.getState().setNoHintsAvailableMsg('No more hints available.');
+      return false;
+    }
+
+    const hintsStore = useBoardHintsStore.getState();
+    const highlighted = hintsStore.highlightedTiles;
+
+    // Find clearable combinations whose tiles are not yet fully highlighted
+    const unhighlightedCombos = clearables.filter((combo) =>
+      combo.some((req) => !highlighted.some((p) => p.row === req.row && p.col === req.col))
+    );
+
+    const candidates = unhighlightedCombos.length > 0 ? unhighlightedCombos : clearables;
+    const randomIndex = Math.floor(Math.random() * candidates.length);
+    const targetCombo = candidates[randomIndex];
+    if (!targetCombo) {
+      hintsStore.setNoHintsAvailableMsg('No more hints available.');
+      return false;
+    }
+
+    hintsStore.triggerHint([targetCombo]);
+    return true;
   };
 
   const resetAllSessions = () => {
@@ -81,35 +187,79 @@ export const createGameOrchestrator = (options: GameOrchestratorOptions = {}) =>
       .recalculate(useBoardStore.getState().matrix, useBoardStore.getState().seed);
   };
 
+  const onBoardMutated = () => {
+    const matrix = useBoardStore.getState().matrix;
+    const seed = useBoardStore.getState().seed;
+    useSolverStore.getState().recalculate(matrix, seed);
+  };
+
+  const isBoardUnsolvable = (): boolean => {
+    return getClearableCombinations().length === 0;
+  };
+
   return {
-    handleMatch,
+    executePlayerMatch,
+    handleMatch: executePlayerMatch,
+    executeRivalSteal,
+    executeHighlightHint,
+    getClearableHints: getClearableCombinations,
+    isBoardUnsolvable,
+    onBoardMutated,
     resetAllSessions,
   };
 };
 
+export const defaultOrchestrator: GameOrchestrator = createGameOrchestrator();
+setGameOrchestrator(defaultOrchestrator);
+
 /**
  * React hook wrapper for game orchestration.
  */
-export const useGameOrchestrator = (options: GameOrchestratorOptions = {}) => {
-  const { enableCombos = true, enableTimer = true, enableFreeTriggeredHint = true } = options;
+export const useGameOrchestrator = (options?: GameOrchestratorOptions) => {
+  const orchestratorInstance = createGameOrchestrator(options);
+
+  useEffect(() => {
+    setGameOrchestrator(orchestratorInstance);
+    return () => {
+      setGameOrchestrator(defaultOrchestrator);
+    };
+  }, [orchestratorInstance]);
 
   const handleMatch = useCallback(
-    (tiles: TileCoord[], spanCount?: number, actualNonZeroCount?: number) => {
-      createGameOrchestrator({ enableCombos, enableTimer, enableFreeTriggeredHint }).handleMatch(
-        tiles,
-        spanCount,
-        actualNonZeroCount
-      );
+    (tiles: TileCoordinate[], spanCount?: number, actualNonZeroCount?: number) => {
+      return orchestratorInstance.executePlayerMatch(tiles, spanCount, actualNonZeroCount);
     },
-    [enableCombos, enableTimer, enableFreeTriggeredHint]
+    [orchestratorInstance]
+  );
+
+  const executePlayerMatch = handleMatch;
+
+  const executeRivalSteal = useCallback(
+    (tiles: TileCoordinate[]) => {
+      return orchestratorInstance.executeRivalSteal(tiles);
+    },
+    [orchestratorInstance]
+  );
+
+  const executeHighlightHint = useCallback(
+    (isFree = false) => {
+      return orchestratorInstance.executeHighlightHint(isFree);
+    },
+    [orchestratorInstance]
   );
 
   const resetAllSessions = useCallback(() => {
-    createGameOrchestrator().resetAllSessions();
-  }, []);
+    orchestratorInstance.resetAllSessions();
+  }, [orchestratorInstance]);
 
   return {
     handleMatch,
+    executePlayerMatch,
+    executeRivalSteal,
+    executeHighlightHint,
     resetAllSessions,
+    getClearableHints: orchestratorInstance.getClearableHints,
+    isBoardUnsolvable: orchestratorInstance.isBoardUnsolvable,
+    onBoardMutated: orchestratorInstance.onBoardMutated,
   };
 };

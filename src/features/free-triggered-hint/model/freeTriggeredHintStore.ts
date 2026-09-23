@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { orchestrator } from '@/shared/lib/orchestrator';
 import type { FreeTriggeredHintState } from './types';
 
 export const useFreeTriggeredHintStore = create<FreeTriggeredHintState>((set, get) => ({
@@ -47,7 +48,9 @@ export const useFreeTriggeredHintStore = create<FreeTriggeredHintState>((set, ge
     // 1. Transition frame into Hint Phase: Survival timer depleted, Hint #1 triggers atomically
     if (isSurvivalDepleted && !nextHintPhaseStarted && !nextIsPhase1Over) {
       if (nextHintsRemaining > 0) {
-        const triggered = tryTriggerHint ? tryTriggerHint() : true;
+        const triggered = tryTriggerHint
+          ? tryTriggerHint()
+          : orchestrator.executeHighlightHint(true);
         if (triggered) {
           nextHintPhaseStarted = true;
           nextHintsRemaining = nextHintsRemaining - 1;
@@ -65,7 +68,9 @@ export const useFreeTriggeredHintStore = create<FreeTriggeredHintState>((set, ge
         nextHintCountdown = state.hintCountdown - deltaSeconds;
 
         if (nextHintCountdown <= 0) {
-          const triggered = tryTriggerHint ? tryTriggerHint() : true;
+          const triggered = tryTriggerHint
+            ? tryTriggerHint()
+            : orchestrator.executeHighlightHint(true);
           if (triggered) {
             nextHintsRemaining = nextHintsRemaining - 1;
             if (nextHintsRemaining <= 0) {

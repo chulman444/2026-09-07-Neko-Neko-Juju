@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { useBoardStore, type TileCoord, OMNITILE_VALUE } from '@/entities/board';
 import { useItemStore } from '@/entities/item';
 import { generateSeed, seededRandomGenerator } from '@/shared/lib/prng';
+import { orchestrator } from '@/shared/lib/orchestrator';
 import type { CoreItemsState } from './types';
 
 let hintTriggerHandler: (() => boolean) | null = null;
@@ -17,7 +18,7 @@ export const setUnsolvableResolver = (fn: (() => boolean) | null) => {
 };
 
 export const isBoardUnsolvable = (): boolean => {
-  return unsolvableResolver ? unsolvableResolver() : false;
+  return unsolvableResolver ? unsolvableResolver() : orchestrator.isBoardUnsolvable();
 };
 
 let boardMutationListener: (() => void) | null = null;
@@ -27,6 +28,7 @@ export const registerBoardMutationListener = (fn: (() => void) | null) => {
 };
 
 export const notifyBoardMutated = (): void => {
+  orchestrator.onBoardMutated();
   boardMutationListener?.();
 };
 
@@ -384,7 +386,9 @@ export const useCoreItemsStore = create<CoreItemsState>((set, get) => ({
       return false;
     }
 
-    const success = hintTriggerHandler ? hintTriggerHandler() : false;
+    const success =
+      orchestrator.executeHighlightHint(isFree) ||
+      (hintTriggerHandler ? hintTriggerHandler() : false);
     if (success && !isFree) {
       itemStore.consumeItem('hint', 1);
     }
