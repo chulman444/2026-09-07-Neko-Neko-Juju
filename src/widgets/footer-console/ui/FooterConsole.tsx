@@ -11,7 +11,9 @@ import {
   shakeBehavior,
 } from '@/features/core-items';
 import { TrackballControl } from '@/features/trackball-pan';
+import { useGameConfigStore } from '@/entities/game-config';
 import { GenericItemButton } from './GenericItemButton';
+import { RechargeableItemButton } from './RechargeableItemButton';
 import { ReCenterButton } from './ReCenterButton';
 import { PanModeButton } from './PanModeButton';
 
@@ -31,6 +33,8 @@ export const FooterConsole: React.FC<FooterConsoleProps> = ({
   const activeItemStage = useItemStore((state) => state.activeItemStage);
   const isToggled = useItemStore((state) => state.isToggled);
   const isPaused = useGameSessionStore((state) => state.isPaused);
+  const enableItemRefills = useGameConfigStore((state) => state.enableItemRefills);
+  const itemRefillStyle = useGameConfigStore((state) => state.itemRefillStyle);
 
   const context: ItemRenderContext = {
     counts,
@@ -43,6 +47,20 @@ export const FooterConsole: React.FC<FooterConsoleProps> = ({
   const activeBehavior = coreItemBehaviors.find((it) => it.id === activeItem);
   const overlay =
     isToggled && activeBehavior?.renderOverlay ? activeBehavior.renderOverlay(context) : null;
+
+  const renderItemButton = (behavior: (typeof coreItemBehaviors)[number], size?: 'sm' | 'md') => {
+    if (enableItemRefills) {
+      return (
+        <RechargeableItemButton
+          behavior={behavior}
+          context={context}
+          size={size}
+          refillStyle={itemRefillStyle}
+        />
+      );
+    }
+    return <GenericItemButton behavior={behavior} context={context} size={size} />;
+  };
 
   // If collapsed, show compact floating trigger pill with dynamic item counts
   if (isCollapsed) {
@@ -88,8 +106,8 @@ export const FooterConsole: React.FC<FooterConsoleProps> = ({
         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2.5 w-full">
           {/* Left: Random Number & Random Choose */}
           <div className="flex items-center justify-end gap-2.5">
-            <GenericItemButton behavior={randomNumberBehavior} context={context} />
-            <GenericItemButton behavior={randomChooseBehavior} context={context} />
+            {renderItemButton(randomNumberBehavior)}
+            {renderItemButton(randomChooseBehavior)}
           </div>
 
           {/* Center: Trackball Control */}
@@ -99,7 +117,7 @@ export const FooterConsole: React.FC<FooterConsoleProps> = ({
 
           {/* Right: Hint & Re-Center Pan */}
           <div className="flex items-center justify-start gap-2.5">
-            <GenericItemButton behavior={hintBehavior} context={context} />
+            {renderItemButton(hintBehavior)}
             <ReCenterButton />
           </div>
         </div>
@@ -108,7 +126,7 @@ export const FooterConsole: React.FC<FooterConsoleProps> = ({
         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2.5 w-full pt-1.5 border-t border-[#edd4b2]/60 dark:border-zinc-800">
           {/* Left: Omnitile */}
           <div className="flex items-center justify-end">
-            <GenericItemButton behavior={omnitileBehavior} context={context} size="sm" />
+            {renderItemButton(omnitileBehavior, 'sm')}
           </div>
 
           {/* Center: Pan Mode Toggle */}
@@ -118,7 +136,7 @@ export const FooterConsole: React.FC<FooterConsoleProps> = ({
 
           {/* Right: Shake Item */}
           <div className="flex items-center justify-start">
-            <GenericItemButton behavior={shakeBehavior} context={context} size="sm" />
+            {renderItemButton(shakeBehavior, 'sm')}
           </div>
         </div>
 

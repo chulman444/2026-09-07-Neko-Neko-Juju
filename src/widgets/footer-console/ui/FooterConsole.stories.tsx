@@ -28,6 +28,15 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
+export const ClassicMode: Story = {
+  decorators: [
+    (Story) => {
+      // In classic mode, item refills is disabled
+      return <Story />;
+    },
+  ],
+};
+
 export const Collapsed: Story = {
   args: {
     isCollapsed: true,

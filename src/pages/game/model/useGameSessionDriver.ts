@@ -6,6 +6,7 @@ import { useComboStore } from '@/features/combo-system';
 import { useFreeTriggeredHintStore } from '@/features/free-triggered-hint';
 import { useRivalCatStore } from '@/features/rival-cats';
 import { useGameConfigStore } from '@/entities/game-config';
+import { useRechargeableItemStore } from '@/entities/item';
 
 /**
  * Lightweight RAF driver that ticks the unified game session store, combo store, and hint store.
@@ -28,8 +29,10 @@ export const useGameSessionDriver = () => {
         const isTimerPaused = isComboPaused || isSessionPaused;
         const isSurvivalDepleted = useSurvivalTimerStore.getState().isDepleted;
 
-        const { enableTimer, enableCombos, enableFreeTriggeredHint } =
+        const { enableTimer, enableCombos, enableFreeTriggeredHint, enableItemRefills } =
           useGameConfigStore.getState();
+
+        useRechargeableItemStore.getState().setEnabled(enableItemRefills);
 
         if (enableTimer) {
           useSurvivalTimerStore.getState().tick(clampedDelta, isTimerPaused);
@@ -41,6 +44,9 @@ export const useGameSessionDriver = () => {
           useFreeTriggeredHintStore
             .getState()
             .tick(clampedDelta, isSurvivalDepleted, isTimerPaused);
+        }
+        if (enableItemRefills) {
+          useRechargeableItemStore.getState().tickGauges(clampedDelta, isTimerPaused);
         }
         useRivalCatStore.getState().tick(clampedDelta, isTimerPaused);
 

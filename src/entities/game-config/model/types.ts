@@ -2,6 +2,8 @@ export type GamePreset = 'classic' | 'editor' | 'arcade' | 'roguelite';
 
 export interface GameFeatureFlags {
   enableItems: boolean;
+  enableItemRefills: boolean;
+  itemRefillStyle: 'wipe' | 'spin';
   enableDevTools: boolean;
   enableSolidBlocks: boolean;
   enableBounties: boolean;

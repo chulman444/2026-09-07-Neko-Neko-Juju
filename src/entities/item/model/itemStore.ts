@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { ItemState, ItemCounts } from './types';
+import { useRechargeableItemStore } from './rechargeableItemStore';
 
 export const DEFAULT_ITEM_COUNTS: ItemCounts = {
   randomNumber: 5,
@@ -40,6 +41,7 @@ export const useItemStore = create<ItemState>((set, get) => ({
         [item]: Math.max(0, state.counts[item] - amount),
       },
     }));
+    useRechargeableItemStore.getState().onItemConsumed(item, amount);
     return true;
   },
 

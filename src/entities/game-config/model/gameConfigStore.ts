@@ -4,6 +4,8 @@ import type { GameConfigState, GameFeatureFlags, GamePreset } from './types';
 export const PRESET_CONFIGS: Record<GamePreset, GameFeatureFlags> = {
   classic: {
     enableItems: false,
+    enableItemRefills: false,
+    itemRefillStyle: 'spin',
     enableDevTools: true,
     enableSolidBlocks: false,
     enableBounties: false,
@@ -14,6 +16,8 @@ export const PRESET_CONFIGS: Record<GamePreset, GameFeatureFlags> = {
   },
   editor: {
     enableItems: false,
+    enableItemRefills: false,
+    itemRefillStyle: 'spin',
     enableDevTools: true,
     enableSolidBlocks: false,
     enableBounties: false,
@@ -24,6 +28,8 @@ export const PRESET_CONFIGS: Record<GamePreset, GameFeatureFlags> = {
   },
   arcade: {
     enableItems: true,
+    enableItemRefills: true,
+    itemRefillStyle: 'spin',
     enableDevTools: true,
     enableSolidBlocks: false,
     enableBounties: false,
@@ -34,6 +40,8 @@ export const PRESET_CONFIGS: Record<GamePreset, GameFeatureFlags> = {
   },
   roguelite: {
     enableItems: true,
+    enableItemRefills: true,
+    itemRefillStyle: 'spin',
     enableDevTools: true,
     enableSolidBlocks: true,
     enableBounties: true,

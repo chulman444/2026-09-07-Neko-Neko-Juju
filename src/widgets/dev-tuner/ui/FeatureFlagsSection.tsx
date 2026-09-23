@@ -2,9 +2,9 @@ import React from 'react';
 import { useGameConfigStore, type GamePreset, type GameFeatureFlags } from '@/entities/game-config';
 
 interface FlagItem {
-  key: keyof GameFeatureFlags;
+  key: keyof Omit<GameFeatureFlags, 'itemRefillStyle'>;
   isSubItem?: boolean;
-  requiresKey?: keyof GameFeatureFlags;
+  requiresKey?: keyof Omit<GameFeatureFlags, 'itemRefillStyle'>;
   requiresNote?: string;
   warningBadge?: string;
 }
@@ -32,8 +32,18 @@ const CATEGORIES: FlagCategory[] = [
   },
   {
     name: 'Mechanics',
-    layout: 'grid',
-    items: [{ key: 'enableItems' }, { key: 'enableSolidBlocks' }, { key: 'enableBounties' }],
+    layout: 'stack',
+    items: [
+      { key: 'enableItems' },
+      {
+        key: 'enableItemRefills',
+        isSubItem: true,
+        requiresKey: 'enableItems',
+        requiresNote: 'Requires Items',
+      },
+      { key: 'enableSolidBlocks' },
+      { key: 'enableBounties' },
+    ],
   },
   {
     name: 'UI & Tools',
@@ -53,8 +63,9 @@ export const FeatureFlagsSection: React.FC = () => {
   const { preset, setPreset, setFlag } = store;
 
   // Pluck flags manually or iterate
-  const flags: Record<keyof GameFeatureFlags, boolean> = {
+  const flags: Record<keyof Omit<GameFeatureFlags, 'itemRefillStyle'>, boolean> = {
     enableItems: store.enableItems,
+    enableItemRefills: store.enableItemRefills,
     enableDevTools: store.enableDevTools,
     enableSolidBlocks: store.enableSolidBlocks,
     enableBounties: store.enableBounties,
@@ -68,7 +79,7 @@ export const FeatureFlagsSection: React.FC = () => {
     setPreset(e.target.value as GamePreset);
   };
 
-  const toggleFlag = (key: keyof GameFeatureFlags) => {
+  const toggleFlag = (key: keyof Omit<GameFeatureFlags, 'itemRefillStyle'>) => {
     setFlag(key, !flags[key]);
   };
 
@@ -76,34 +87,48 @@ export const FeatureFlagsSection: React.FC = () => {
     const isRequirementMissing = item.requiresKey ? !flags[item.requiresKey] : false;
 
     return (
-      <label
-        key={item.key}
-        className={`flex items-center gap-2 group ${
-          item.isSubItem ? 'ml-3 pl-2.5 border-l-2 border-zinc-700/70 py-0.5' : ''
-        } ${isRequirementMissing ? 'opacity-40 pointer-events-none cursor-not-allowed' : 'cursor-pointer'}`}
-      >
-        <input
-          type="checkbox"
-          checked={flags[item.key]}
-          disabled={isRequirementMissing}
-          onChange={() => toggleFlag(item.key)}
-          className="w-4 h-4 rounded bg-zinc-900 border-zinc-700 text-amber-500 focus:ring-amber-500/50 focus:ring-offset-0 cursor-pointer"
-        />
-        <span className="text-xs text-zinc-400 group-hover:text-zinc-200 transition-colors select-none flex items-center gap-1 flex-wrap">
-          {item.key}
-          {isRequirementMissing && item.requiresNote && (
-            <span className="text-[10px] text-zinc-400 italic">({item.requiresNote})</span>
-          )}
-          {item.warningBadge && (
-            <span
-              className="text-[10px] text-amber-400 font-semibold px-1 py-0.5 rounded bg-amber-500/10 border border-amber-500/30 whitespace-nowrap"
-              title="Warning: Disabling this will immediately hide this Dev Tools panel!"
+      <React.Fragment key={item.key}>
+        <label
+          className={`flex items-center gap-2 group ${
+            item.isSubItem ? 'ml-3 pl-2.5 border-l-2 border-zinc-700/70 py-0.5' : ''
+          } ${isRequirementMissing ? 'opacity-40 pointer-events-none cursor-not-allowed' : 'cursor-pointer'}`}
+        >
+          <input
+            type="checkbox"
+            checked={flags[item.key]}
+            disabled={isRequirementMissing}
+            onChange={() => toggleFlag(item.key)}
+            className="w-4 h-4 rounded bg-zinc-900 border-zinc-700 text-amber-500 focus:ring-amber-500/50 focus:ring-offset-0 cursor-pointer"
+          />
+          <span className="text-xs text-zinc-400 group-hover:text-zinc-200 transition-colors select-none flex items-center gap-1 flex-wrap">
+            {item.key}
+            {isRequirementMissing && item.requiresNote && (
+              <span className="text-[10px] text-zinc-400 italic">({item.requiresNote})</span>
+            )}
+            {item.warningBadge && (
+              <span
+                className="text-[10px] text-amber-400 font-semibold px-1 py-0.5 rounded bg-amber-500/10 border border-amber-500/30 whitespace-nowrap"
+                title="Warning: Disabling this will immediately hide this Dev Tools panel!"
+              >
+                {item.warningBadge}
+              </span>
+            )}
+          </span>
+        </label>
+        {item.key === 'enableItemRefills' && flags.enableItemRefills && !isRequirementMissing && (
+          <div className="flex items-center justify-between text-xs text-zinc-300 ml-6 pl-2.5 border-l-2 border-zinc-700/70 py-1">
+            <span className="text-[11px] text-zinc-400">Refill Style:</span>
+            <select
+              value={store.itemRefillStyle}
+              onChange={(e) => setFlag('itemRefillStyle', e.target.value as 'wipe' | 'spin')}
+              className="bg-zinc-900 border border-zinc-700 text-zinc-200 text-[11px] rounded px-1.5 py-0.5"
             >
-              {item.warningBadge}
-            </span>
-          )}
-        </span>
-      </label>
+              <option value="spin">Spin (Clockwise)</option>
+              <option value="wipe">Wipe (Vertical)</option>
+            </select>
+          </div>
+        )}
+      </React.Fragment>
     );
   };
 

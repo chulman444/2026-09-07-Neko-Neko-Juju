@@ -8,10 +8,14 @@ describe('useGameConfigStore', () => {
 
   it('initializes with default preset arcade flags', () => {
     expect(PRESET_CONFIGS.arcade.enableItems).toBe(true);
+    expect(PRESET_CONFIGS.arcade.enableItemRefills).toBe(true);
     expect(PRESET_CONFIGS.classic.enableItems).toBe(false);
+    expect(PRESET_CONFIGS.classic.enableItemRefills).toBe(false);
     const state = useGameConfigStore.getState();
     expect(state.preset).toBe('arcade');
     expect(state.enableItems).toBe(true);
+    expect(state.enableItemRefills).toBe(true);
+    expect(state.itemRefillStyle).toBe('spin');
     expect(state.enableDevTools).toBe(true);
     expect(state.enableSolidBlocks).toBe(false);
     expect(state.enableBounties).toBe(false);
