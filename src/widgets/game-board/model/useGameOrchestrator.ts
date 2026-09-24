@@ -61,7 +61,7 @@ export const createGameOrchestrator = (options?: GameOrchestratorOptions): GameO
   ): boolean => {
     if (!tiles || tiles.length === 0) return false;
 
-    const { enableCombos, enableTimer, enableFreeTriggeredHint } = getOptions();
+    const { enableCombos, enableTimer } = getOptions();
     const matrix = useBoardStore.getState().matrix;
     const calculatedCount = tiles.filter((t) => (matrix[t.row]?.[t.col] ?? 0) > 0).length;
     const nonZeroCount =
@@ -98,9 +98,7 @@ export const createGameOrchestrator = (options?: GameOrchestratorOptions): GameO
     }
 
     // 5. Invalidate / update hints
-    if (enableFreeTriggeredHint) {
-      useBoardHintsStore.getState().removeClearedTiles(tiles);
-    }
+    useBoardHintsStore.getState().removeClearedTiles(tiles);
 
     // 6. Cascade solver
     useSolverStore.getState().cascadeTiles(tiles);

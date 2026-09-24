@@ -93,7 +93,7 @@ describe('useGameOrchestrator / createGameOrchestrator', () => {
     expect(useGameSessionStore.getState().score).toBe(2);
   });
 
-  it('skips hint tile clearing when enableFreeTriggeredHint is false', () => {
+  it('always clears hint tiles on match even when enableFreeTriggeredHint is false', () => {
     useBoardHintsStore.setState({
       highlightedTiles: [
         { row: 0, col: 0 },
@@ -107,16 +107,7 @@ describe('useGameOrchestrator / createGameOrchestrator', () => {
       { row: 0, col: 1 },
     ]);
 
-    // Hint store highlighted tiles should remain untouched
-    expect(useBoardHintsStore.getState().highlightedTiles).toHaveLength(2);
-
-    const orchestratorWithHints = createGameOrchestrator({ enableFreeTriggeredHint: true });
-    orchestratorWithHints.handleMatch([
-      { row: 0, col: 0 },
-      { row: 0, col: 1 },
-    ]);
-
-    // Hint store highlighted tiles should be cleared
+    // Hint store highlighted tiles should always be cleared on match
     expect(useBoardHintsStore.getState().highlightedTiles).toHaveLength(0);
   });
 
