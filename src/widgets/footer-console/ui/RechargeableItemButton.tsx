@@ -8,6 +8,9 @@ export interface RechargeableItemButtonProps {
   size?: 'sm' | 'md';
   className?: string;
   refillStyle?: 'wipe' | 'spin';
+  badgePlacement?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
+  cdDirection?: 'left' | 'right';
+  cdFormat?: 'integer' | 'decimal';
   onClick?: () => void;
 }
 
@@ -33,6 +36,9 @@ export const RechargeableItemButton: React.FC<RechargeableItemButtonProps> = ({
   size,
   className = '',
   refillStyle = 'spin',
+  badgePlacement = 'bottom-right',
+  cdDirection = 'left',
+  cdFormat = 'integer',
   onClick,
 }) => {
   const item = behavior.id as ItemType;
@@ -42,17 +48,24 @@ export const RechargeableItemButton: React.FC<RechargeableItemButtonProps> = ({
   const gauge = useRechargeableItemStore((state) => state.gauges[item] ?? 0);
   const refillTimer = useRechargeableItemStore((state) => state.refillTimers[item] ?? 0);
   const refillActions = useRechargeableItemStore((state) => state.refillActions[item] ?? 0);
+  const activeSpamTimer = useRechargeableItemStore((state) => state.activeSpamTimers[item] ?? 0);
+  const spamCooldown = useRechargeableItemStore((state) => state.spamCooldowns[item] ?? 0);
 
   const finalSize = behavior.size ?? size ?? 'md';
   const isSm = finalSize === 'sm';
 
+  const isFull = stacks >= maxStacks;
   const isRecharging = stacks < maxStacks;
 
   let cooldownText: string | null = null;
   if (isRecharging) {
     if (refillTimer > 0) {
-      const remainingSeconds = Math.max(1, Math.ceil((1 - gauge) * refillTimer));
-      cooldownText = `${remainingSeconds}s`;
+      const remainingSeconds = Math.max(0, (1 - gauge) * refillTimer);
+      if (cdFormat === 'decimal') {
+        cooldownText = `${remainingSeconds.toFixed(1)}s`;
+      } else {
+        cooldownText = `${Math.max(1, Math.ceil(remainingSeconds))}s`;
+      }
     } else if (refillActions > 0) {
       const remainingHits = Math.max(1, Math.ceil((1 - gauge) * refillActions));
       cooldownText = `${remainingHits}`;
@@ -81,8 +94,10 @@ export const RechargeableItemButton: React.FC<RechargeableItemButtonProps> = ({
       ? behavior.disabled(context)
       : (behavior.disabled ?? false);
 
-  // LoL-Style visual logic: only disabled & grayed out when stacks === 0
-  const isDisabled = behaviorDisabled || stacks === 0;
+  // Usability & dark overlay logic
+  const isUnusable = stacks === 0 || activeSpamTimer > 0;
+  const isDisabled = behaviorDisabled || isUnusable;
+  const isGrayedOut = behaviorDisabled || stacks === 0;
 
   const handleClick = () => {
     if (isDisabled) return;
@@ -96,21 +111,100 @@ export const RechargeableItemButton: React.FC<RechargeableItemButtonProps> = ({
   const baseTitle = typeof behavior.title === 'function' ? behavior.title(context) : behavior.title;
   const refillTooltip = isRecharging
     ? refillTimer > 0
-      ? `Recharging: ${Math.ceil((1 - gauge) * refillTimer)}s`
+      ? `Recharging: ${cdFormat === 'decimal' ? ((1 - gauge) * refillTimer).toFixed(1) : Math.ceil((1 - gauge) * refillTimer)}s`
       : `Recharging: ${Math.ceil((1 - gauge) * refillActions)} actions left`
     : 'Full charge';
   const tooltip = `${baseTitle} (${stacks}/${maxStacks} stacks - ${refillTooltip})`;
 
-  const progressDeg = Math.min(360, Math.max(0, gauge * 360));
-  const wipeRemainingPercent = Math.max(0, Math.min(100, (1 - gauge) * 100));
+  // Progress sweep only triggers when isUnusable is true
+  let showOverlay = false;
+  let overlayProgress = 0;
+  if (activeSpamTimer > 0 && spamCooldown > 0) {
+    showOverlay = true;
+    overlayProgress = Math.max(0, Math.min(1, 1 - activeSpamTimer / spamCooldown));
+  } else if (stacks === 0) {
+    showOverlay = true;
+    overlayProgress = Math.max(0, Math.min(1, gauge));
+  }
+
+  const progressDeg = Math.min(360, Math.max(0, overlayProgress * 360));
+  const wipeRemainingPercent = Math.max(0, Math.min(100, (1 - overlayProgress) * 100));
+
+  const placementClass = {
+    'bottom-right': 'bottom-0.5 right-0.5',
+    'bottom-left': 'bottom-0.5 left-0.5',
+    'top-right': 'top-0.5 right-0.5',
+    'top-left': 'top-0.5 left-0.5',
+  }[badgePlacement];
+
+  const isTopBadge = badgePlacement.startsWith('top');
+
+  const cdTab = (
+    <div
+      className={`h-4.5 flex items-center justify-center bg-[#fff9f1]/95 dark:bg-zinc-800/95 border border-[#4a3422]/60 dark:border-zinc-600 z-0 transition-all duration-300 ease-in-out overflow-hidden ${
+        cdDirection === 'left'
+          ? 'rounded-l-full -mr-1.5 origin-right'
+          : 'rounded-r-full -ml-1.5 origin-left'
+      } ${
+        isFull
+          ? `max-w-0 opacity-0 px-0 scale-x-0 ${cdDirection === 'left' ? '-mr-0' : '-ml-0'}`
+          : `max-w-[48px] opacity-100 scale-x-100 shadow-sm ${
+              cdDirection === 'left' ? 'pl-1.5 pr-2' : 'pl-2 pr-1.5'
+            }`
+      }`}
+    >
+      <span className="text-[8px] font-mono font-black text-amber-700 dark:text-amber-400 whitespace-nowrap">
+        {cooldownText ?? ''}
+      </span>
+    </div>
+  );
+
+  const circularIndicator = (
+    <div className="relative z-10 w-5 h-5 flex items-center justify-center rounded-full bg-[#fff9f1] dark:bg-zinc-900 border border-[#4a3422]/70 dark:border-zinc-600 shadow-sm shrink-0">
+      <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 20 20">
+        <circle
+          cx="10"
+          cy="10"
+          r="8"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          className="text-[#4a3422]/15 dark:text-zinc-700"
+        />
+        <circle
+          cx="10"
+          cy="10"
+          r="8"
+          fill="none"
+          stroke={isFull ? '#10b981' : '#f59e0b'}
+          strokeWidth="2"
+          strokeDasharray={50.265}
+          strokeDashoffset={50.265 * (1 - (isFull ? 1 : Math.max(0, Math.min(1, gauge))))}
+          strokeLinecap="round"
+          className="transition-[stroke-dashoffset] duration-150"
+        />
+      </svg>
+      <span
+        className={`relative z-10 text-[8px] font-mono font-black leading-none ${
+          stacks === 0
+            ? 'text-zinc-400 dark:text-zinc-500'
+            : isFull
+              ? 'text-emerald-700 dark:text-emerald-400'
+              : 'text-[#4a3422] dark:text-zinc-100'
+        }`}
+      >
+        {stacks}/{maxStacks}
+      </span>
+    </div>
+  );
 
   return (
     <div
       className={`inline-flex items-stretch select-none transition-transform duration-100 ${
         isSm ? 'h-8 text-xs' : 'h-11 text-sm'
-      } ${
+      } ${isGrayedOut ? 'opacity-50 grayscale' : ''} ${
         isDisabled
-          ? 'opacity-50 grayscale cursor-not-allowed pointer-events-none'
+          ? 'cursor-not-allowed pointer-events-none'
           : 'cursor-pointer active:translate-y-0.5 hover:-translate-y-0.5'
       } ${className}`}
       title={tooltip}
@@ -142,11 +236,11 @@ export const RechargeableItemButton: React.FC<RechargeableItemButtonProps> = ({
             : 'min-w-[64px] h-full border-[2.5px] px-2 text-sm'
         } border-[#4a3422] dark:border-zinc-700 font-mono font-bold flex flex-col items-center justify-center shadow-[inset_0_-3px_0px_#edd4b2] dark:shadow-[inset_0_-3px_0px_#27272a] text-[#4a3422] dark:text-zinc-100`}
       >
-        {/* Refill Gauge Overlay (Animated Sweep) */}
-        {isRecharging &&
+        {/* Dark Refill / Spam Lockout Overlay (Animated Sweep) */}
+        {showOverlay &&
           (refillStyle === 'wipe' ? (
             <div
-              className="pointer-events-none absolute inset-x-0 top-0 z-[1] bg-black/40 border-b border-amber-400/80 transition-[height] duration-75"
+              className="pointer-events-none absolute inset-x-0 top-0 z-[1] bg-black/45 border-b border-amber-400/80 transition-[height] duration-75"
               style={{ height: `${wipeRemainingPercent}%` }}
             />
           ) : (
@@ -161,27 +255,25 @@ export const RechargeableItemButton: React.FC<RechargeableItemButtonProps> = ({
         {/* Central Icon */}
         <span
           className={`relative z-[2] ${
-            isSm ? 'text-sm -translate-y-1' : 'text-base -translate-y-1'
+            isSm
+              ? isTopBadge
+                ? 'text-sm translate-y-1'
+                : 'text-sm -translate-y-1'
+              : isTopBadge
+                ? 'text-base translate-y-1'
+                : 'text-base -translate-y-1'
           } leading-none select-none`}
         >
           {behavior.icon}
         </span>
 
-        {/* Bottom Sub-HUD: Cooldown Indicator (Bottom-Left) & Stacks (Bottom-Right) */}
-        <div className="absolute inset-x-1 bottom-0.5 z-[2] flex items-center justify-between pointer-events-none leading-none">
-          {/* Bottom-Left: Cooldown Countdown or Action Hits */}
-          <span className="text-[9px] font-mono font-black text-amber-600 dark:text-amber-400 drop-shadow">
-            {cooldownText ?? ''}
-          </span>
-
-          {/* Bottom-Right: Current/Max Stacks */}
-          <span
-            className={`text-[9px] font-mono font-black ${
-              stacks === 0 ? 'text-zinc-400' : 'text-[#4a3422] dark:text-zinc-200'
-            } drop-shadow`}
-          >
-            {stacks}/{maxStacks}
-          </span>
+        {/* Joint Badge: Circular Charge Indicator & Docked CD Tab */}
+        <div
+          className={`absolute ${placementClass} z-[3] flex items-center pointer-events-none select-none`}
+        >
+          {cdDirection === 'left' && cdTab}
+          {circularIndicator}
+          {cdDirection === 'right' && cdTab}
         </div>
       </div>
 

@@ -97,4 +97,36 @@ describe('useRechargeableItemStore', () => {
     useRechargeableItemStore.getState().onItemConsumed('hint');
     expect(useRechargeableItemStore.getState().gauges.shake).toBe(0);
   });
+
+  it('triggers activeSpamTimers on item consumption and decrements on tickGauges', () => {
+    useRechargeableItemStore.getState().setSpamCooldown('randomNumber', 1.0);
+    expect(useRechargeableItemStore.getState().spamCooldowns.randomNumber).toBe(1.0);
+    expect(useRechargeableItemStore.getState().activeSpamTimers.randomNumber).toBe(0);
+
+    // Consume item
+    useRechargeableItemStore.getState().onItemConsumed('randomNumber');
+    expect(useRechargeableItemStore.getState().activeSpamTimers.randomNumber).toBe(1.0);
+
+    // Tick by 0.4s
+    useRechargeableItemStore.getState().tickGauges(0.4, false);
+    expect(useRechargeableItemStore.getState().activeSpamTimers.randomNumber).toBeCloseTo(0.6);
+
+    // Tick past 0
+    useRechargeableItemStore.getState().tickGauges(0.8, false);
+    expect(useRechargeableItemStore.getState().activeSpamTimers.randomNumber).toBe(0);
+  });
+
+  it('resets spam timers on resetGauges and resetAll', () => {
+    useRechargeableItemStore.getState().setSpamCooldown('randomNumber', 2.0);
+    useRechargeableItemStore.getState().onItemConsumed('randomNumber');
+    expect(useRechargeableItemStore.getState().activeSpamTimers.randomNumber).toBe(2.0);
+
+    useRechargeableItemStore.getState().resetGauges();
+    expect(useRechargeableItemStore.getState().activeSpamTimers.randomNumber).toBe(0);
+    expect(useRechargeableItemStore.getState().spamCooldowns.randomNumber).toBe(2.0);
+
+    useRechargeableItemStore.getState().resetAll();
+    expect(useRechargeableItemStore.getState().spamCooldowns.randomNumber).toBe(0.5);
+    expect(useRechargeableItemStore.getState().activeSpamTimers.randomNumber).toBe(0);
+  });
 });

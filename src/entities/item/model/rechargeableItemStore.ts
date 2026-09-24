@@ -34,17 +34,36 @@ export const DEFAULT_GAUGES: Record<ItemType, number> = {
   hint: 0,
 };
 
+export const DEFAULT_SPAM_COOLDOWNS: Record<ItemType, number> = {
+  randomNumber: 0.5,
+  randomChoose: 0.5,
+  omnitile: 0.5,
+  shake: 0.5,
+  hint: 0.5,
+};
+
+export const DEFAULT_ACTIVE_SPAM_TIMERS: Record<ItemType, number> = {
+  randomNumber: 0,
+  randomChoose: 0,
+  omnitile: 0,
+  shake: 0,
+  hint: 0,
+};
+
 export interface RechargeableItemState {
   enabled: boolean;
   maxStacks: Record<ItemType, number>;
   gauges: Record<ItemType, number>;
   refillTimers: Record<ItemType, number>;
   refillActions: Record<ItemType, number>;
+  spamCooldowns: Record<ItemType, number>;
+  activeSpamTimers: Record<ItemType, number>;
 
   setEnabled: (enabled: boolean) => void;
   setMaxStacks: (item: ItemType, max: number) => void;
   setRefillTimer: (item: ItemType, seconds: number) => void;
   setRefillActions: (item: ItemType, actions: number) => void;
+  setSpamCooldown: (item: ItemType, seconds: number) => void;
 
   addGauge: (item: ItemType, amount: number) => void;
   tickGauges: (deltaSeconds: number, isPaused?: boolean) => void;
@@ -59,6 +78,8 @@ export const useRechargeableItemStore = create<RechargeableItemState>((set, get)
   gauges: { ...DEFAULT_GAUGES },
   refillTimers: { ...DEFAULT_REFILL_TIMERS },
   refillActions: { ...DEFAULT_REFILL_ACTIONS },
+  spamCooldowns: { ...DEFAULT_SPAM_COOLDOWNS },
+  activeSpamTimers: { ...DEFAULT_ACTIVE_SPAM_TIMERS },
 
   setEnabled: (enabled: boolean) => {
     set({ enabled });
@@ -87,6 +108,15 @@ export const useRechargeableItemStore = create<RechargeableItemState>((set, get)
       refillActions: {
         ...state.refillActions,
         [item]: Math.max(0, actions),
+      },
+    }));
+  },
+
+  setSpamCooldown: (item: ItemType, seconds: number) => {
+    set((state) => ({
+      spamCooldowns: {
+        ...state.spamCooldowns,
+        [item]: Math.max(0, seconds),
       },
     }));
   },
@@ -135,7 +165,7 @@ export const useRechargeableItemStore = create<RechargeableItemState>((set, get)
 
   tickGauges: (deltaSeconds: number, isPaused = false) => {
     if (isPaused || !get().enabled || deltaSeconds <= 0) return;
-    const { refillTimers, maxStacks, gauges } = get();
+    const { refillTimers, maxStacks, gauges, activeSpamTimers } = get();
     const counts = useItemStore.getState().counts;
 
     let hasChanged = false;
@@ -178,17 +208,41 @@ export const useRechargeableItemStore = create<RechargeableItemState>((set, get)
       }
     });
 
+    const nextSpamTimers = { ...activeSpamTimers };
+    let spamChanged = false;
+    (Object.keys(nextSpamTimers) as ItemType[]).forEach((item) => {
+      if (nextSpamTimers[item] > 0) {
+        nextSpamTimers[item] = Math.max(0, nextSpamTimers[item] - deltaSeconds);
+        spamChanged = true;
+      }
+    });
+
     Object.entries(itemsToAdd).forEach(([item, amount]) => {
       useItemStore.getState().addItem(item as ItemType, amount);
     });
 
-    if (hasChanged) {
-      set({ gauges: nextGauges });
+    if (hasChanged || spamChanged) {
+      set({
+        ...(hasChanged ? { gauges: nextGauges } : {}),
+        ...(spamChanged ? { activeSpamTimers: nextSpamTimers } : {}),
+      });
     }
   },
 
   onItemConsumed: (consumedItem: ItemType, amount = 1) => {
-    if (!get().enabled || consumedItem === 'shake' || amount <= 0) return;
+    if (!get().enabled || amount <= 0) return;
+
+    const cd = get().spamCooldowns[consumedItem] ?? 0;
+    if (cd > 0) {
+      set((state) => ({
+        activeSpamTimers: {
+          ...state.activeSpamTimers,
+          [consumedItem]: cd,
+        },
+      }));
+    }
+
+    if (consumedItem === 'shake') return;
     const actions = get().refillActions.shake;
     if (actions > 0) {
       get().addGauge('shake', amount / actions);
@@ -198,6 +252,7 @@ export const useRechargeableItemStore = create<RechargeableItemState>((set, get)
   resetGauges: () => {
     set({
       gauges: { ...DEFAULT_GAUGES },
+      activeSpamTimers: { ...DEFAULT_ACTIVE_SPAM_TIMERS },
     });
   },
 
@@ -207,6 +262,8 @@ export const useRechargeableItemStore = create<RechargeableItemState>((set, get)
       gauges: { ...DEFAULT_GAUGES },
       refillTimers: { ...DEFAULT_REFILL_TIMERS },
       refillActions: { ...DEFAULT_REFILL_ACTIONS },
+      spamCooldowns: { ...DEFAULT_SPAM_COOLDOWNS },
+      activeSpamTimers: { ...DEFAULT_ACTIVE_SPAM_TIMERS },
     });
   },
 }));

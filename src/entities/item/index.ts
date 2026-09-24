@@ -5,6 +5,8 @@ export {
   DEFAULT_REFILL_TIMERS,
   DEFAULT_REFILL_ACTIONS,
   DEFAULT_GAUGES,
+  DEFAULT_SPAM_COOLDOWNS,
+  DEFAULT_ACTIVE_SPAM_TIMERS,
 } from './model/rechargeableItemStore';
 export type { RechargeableItemState } from './model/rechargeableItemStore';
 export type {

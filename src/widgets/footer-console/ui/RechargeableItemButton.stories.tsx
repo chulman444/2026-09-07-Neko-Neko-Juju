@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
+import { fn } from 'storybook/test';
 import type { ItemBehavior, ItemRenderContext } from '@/entities/item';
 import { useRechargeableItemStore } from '@/entities/item';
 import { RechargeableItemButton } from './RechargeableItemButton';
@@ -35,7 +36,10 @@ const meta = {
     context: dummyContext,
     size: 'md',
     refillStyle: 'spin',
-    onClick: () => {},
+    badgePlacement: 'bottom-right',
+    cdDirection: 'left',
+    cdFormat: 'integer',
+    onClick: fn(),
   },
   decorators: [
     (Story) => (
@@ -60,6 +64,7 @@ export const FullCharges: Story = {
     useRechargeableItemStore.setState((state) => ({
       ...state,
       gauges: { ...state.gauges, randomNumber: 0 },
+      activeSpamTimers: { ...state.activeSpamTimers, randomNumber: 0 },
     }));
   },
 };
@@ -76,6 +81,7 @@ export const RechargingSpin: Story = {
     useRechargeableItemStore.setState((state) => ({
       ...state,
       gauges: { ...state.gauges, randomNumber: 0.4 },
+      activeSpamTimers: { ...state.activeSpamTimers, randomNumber: 0 },
     }));
   },
 };
@@ -92,6 +98,7 @@ export const RechargingWipe: Story = {
     useRechargeableItemStore.setState((state) => ({
       ...state,
       gauges: { ...state.gauges, randomNumber: 0.65 },
+      activeSpamTimers: { ...state.activeSpamTimers, randomNumber: 0 },
     }));
   },
 };
@@ -108,6 +115,78 @@ export const DepletedRecharging: Story = {
     useRechargeableItemStore.setState((state) => ({
       ...state,
       gauges: { ...state.gauges, randomNumber: 0.2 },
+      activeSpamTimers: { ...state.activeSpamTimers, randomNumber: 0 },
+    }));
+  },
+};
+
+export const SpamLockout: Story = {
+  args: {
+    refillStyle: 'spin',
+    context: {
+      ...dummyContext,
+      counts: { ...dummyContext.counts, randomNumber: 2 },
+    },
+  },
+  beforeEach: () => {
+    useRechargeableItemStore.setState((state) => ({
+      ...state,
+      gauges: { ...state.gauges, randomNumber: 0.3 },
+      spamCooldowns: { ...state.spamCooldowns, randomNumber: 0.5 },
+      activeSpamTimers: { ...state.activeSpamTimers, randomNumber: 0.25 },
+    }));
+  },
+};
+
+export const DecimalCountdown: Story = {
+  args: {
+    cdFormat: 'decimal',
+    context: {
+      ...dummyContext,
+      counts: { ...dummyContext.counts, randomNumber: 1 },
+    },
+  },
+  beforeEach: () => {
+    useRechargeableItemStore.setState((state) => ({
+      ...state,
+      gauges: { ...state.gauges, randomNumber: 0.42 },
+      activeSpamTimers: { ...state.activeSpamTimers, randomNumber: 0 },
+    }));
+  },
+};
+
+export const BadgeTopLeftCdRight: Story = {
+  args: {
+    badgePlacement: 'top-left',
+    cdDirection: 'right',
+    context: {
+      ...dummyContext,
+      counts: { ...dummyContext.counts, randomNumber: 1 },
+    },
+  },
+  beforeEach: () => {
+    useRechargeableItemStore.setState((state) => ({
+      ...state,
+      gauges: { ...state.gauges, randomNumber: 0.5 },
+      activeSpamTimers: { ...state.activeSpamTimers, randomNumber: 0 },
+    }));
+  },
+};
+
+export const BadgeBottomLeftCdRight: Story = {
+  args: {
+    badgePlacement: 'bottom-left',
+    cdDirection: 'right',
+    context: {
+      ...dummyContext,
+      counts: { ...dummyContext.counts, randomNumber: 1 },
+    },
+  },
+  beforeEach: () => {
+    useRechargeableItemStore.setState((state) => ({
+      ...state,
+      gauges: { ...state.gauges, randomNumber: 0.5 },
+      activeSpamTimers: { ...state.activeSpamTimers, randomNumber: 0 },
     }));
   },
 };
@@ -131,6 +210,7 @@ export const ActionBasedShake: Story = {
     useRechargeableItemStore.setState((state) => ({
       ...state,
       gauges: { ...state.gauges, shake: 0.4 },
+      activeSpamTimers: { ...state.activeSpamTimers, shake: 0 },
     }));
   },
 };
