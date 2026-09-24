@@ -9,7 +9,7 @@ export interface RechargeableItemButtonProps {
   className?: string;
   refillStyle?: 'wipe' | 'spin';
   badgePlacement?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
-  cdDirection?: 'left' | 'right';
+  cdDirection?: 'left' | 'right' | 'top' | 'bottom';
   cdFormat?: 'integer' | 'decimal';
   onClick?: () => void;
 }
@@ -138,22 +138,35 @@ export const RechargeableItemButton: React.FC<RechargeableItemButtonProps> = ({
   }[badgePlacement];
 
   const isTopBadge = badgePlacement.startsWith('top');
+  const isVertical = cdDirection === 'top' || cdDirection === 'bottom';
 
   const cdTab = (
     <div
-      className={`h-4.5 flex items-center justify-center bg-[#fff9f1]/95 dark:bg-zinc-800/95 border border-[#4a3422]/60 dark:border-zinc-600 z-0 transition-all duration-300 ease-in-out overflow-hidden ${
-        cdDirection === 'left'
-          ? 'rounded-l-full -mr-1.5 origin-right'
-          : 'rounded-r-full -ml-1.5 origin-left'
+      className={`flex items-center justify-center bg-[#fff9f1]/95 dark:bg-zinc-800/95 border border-[#4a3422]/60 dark:border-zinc-600 z-0 transition-all duration-300 ease-in-out overflow-hidden ${
+        isVertical
+          ? cdDirection === 'top'
+            ? 'w-auto min-w-[18px] px-0.5 rounded-t-full -mb-1.5 origin-bottom'
+            : 'w-auto min-w-[18px] px-0.5 rounded-b-full -mt-1.5 origin-top'
+          : `h-4.5 ${
+              cdDirection === 'left'
+                ? 'rounded-l-full -mr-1.5 origin-right'
+                : 'rounded-r-full -ml-1.5 origin-left'
+            }`
       } ${
         isFull
-          ? `max-w-0 opacity-0 px-0 scale-x-0 ${cdDirection === 'left' ? '-mr-0' : '-ml-0'}`
-          : `max-w-[48px] opacity-100 scale-x-100 shadow-sm ${
-              cdDirection === 'left' ? 'pl-1.5 pr-2' : 'pl-2 pr-1.5'
-            }`
+          ? isVertical
+            ? `max-h-0 py-0 scale-y-0 opacity-0 ${cdDirection === 'top' ? '-mb-0' : '-mt-0'}`
+            : `max-w-0 opacity-0 px-0 scale-x-0 ${cdDirection === 'left' ? '-mr-0' : '-ml-0'}`
+          : isVertical
+            ? `max-h-[24px] scale-y-100 opacity-100 shadow-sm ${
+                cdDirection === 'top' ? 'pt-1 pb-2' : 'pt-2 pb-1'
+              }`
+            : `max-w-[48px] opacity-100 scale-x-100 shadow-sm ${
+                cdDirection === 'left' ? 'pl-1.5 pr-2' : 'pl-2 pr-1.5'
+              }`
       }`}
     >
-      <span className="text-[8px] font-mono font-black text-amber-700 dark:text-amber-400 whitespace-nowrap">
+      <span className="text-[8px] font-mono font-black leading-none text-amber-700 dark:text-amber-400 whitespace-nowrap">
         {cooldownText ?? ''}
       </span>
     </div>
@@ -269,11 +282,13 @@ export const RechargeableItemButton: React.FC<RechargeableItemButtonProps> = ({
 
         {/* Joint Badge: Circular Charge Indicator & Docked CD Tab */}
         <div
-          className={`absolute ${placementClass} z-[3] flex items-center pointer-events-none select-none`}
+          className={`absolute ${placementClass} z-[3] flex ${
+            isVertical ? 'flex-col' : 'flex-row'
+          } items-center pointer-events-none select-none`}
         >
-          {cdDirection === 'left' && cdTab}
+          {['left', 'top'].includes(cdDirection) && cdTab}
           {circularIndicator}
-          {cdDirection === 'right' && cdTab}
+          {['right', 'bottom'].includes(cdDirection) && cdTab}
         </div>
       </div>
 

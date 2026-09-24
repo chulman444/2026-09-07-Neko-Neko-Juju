@@ -277,11 +277,15 @@ export const ItemRefillsConfigSection: React.FC = () => {
             <span className="text-[11px] text-zinc-400">Cooldown Direction:</span>
             <select
               value={itemCdDirection}
-              onChange={(e) => setFlag('itemCdDirection', e.target.value as 'left' | 'right')}
+              onChange={(e) =>
+                setFlag('itemCdDirection', e.target.value as 'left' | 'right' | 'top' | 'bottom')
+              }
               className="bg-zinc-900 border border-zinc-700 text-zinc-200 text-[11px] rounded px-2 py-0.5 outline-none focus:border-amber-500 cursor-pointer"
             >
               <option value="left">Left (Default)</option>
               <option value="right">Right</option>
+              <option value="top">Top</option>
+              <option value="bottom">Bottom</option>
             </select>
           </div>
 

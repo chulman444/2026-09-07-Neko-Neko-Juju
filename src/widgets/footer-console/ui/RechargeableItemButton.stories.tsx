@@ -191,6 +191,42 @@ export const BadgeBottomLeftCdRight: Story = {
   },
 };
 
+export const BadgeBottomRightCdTop: Story = {
+  args: {
+    badgePlacement: 'bottom-right',
+    cdDirection: 'top',
+    context: {
+      ...dummyContext,
+      counts: { ...dummyContext.counts, randomNumber: 1 },
+    },
+  },
+  beforeEach: () => {
+    useRechargeableItemStore.setState((state) => ({
+      ...state,
+      gauges: { ...state.gauges, randomNumber: 0.5 },
+      activeSpamTimers: { ...state.activeSpamTimers, randomNumber: 0 },
+    }));
+  },
+};
+
+export const BadgeTopRightCdBottom: Story = {
+  args: {
+    badgePlacement: 'top-right',
+    cdDirection: 'bottom',
+    context: {
+      ...dummyContext,
+      counts: { ...dummyContext.counts, randomNumber: 1 },
+    },
+  },
+  beforeEach: () => {
+    useRechargeableItemStore.setState((state) => ({
+      ...state,
+      gauges: { ...state.gauges, randomNumber: 0.5 },
+      activeSpamTimers: { ...state.activeSpamTimers, randomNumber: 0 },
+    }));
+  },
+};
+
 export const ActionBasedShake: Story = {
   args: {
     behavior: {
