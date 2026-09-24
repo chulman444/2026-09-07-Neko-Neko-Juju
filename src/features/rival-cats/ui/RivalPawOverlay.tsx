@@ -53,7 +53,7 @@ export const RivalPawOverlay: React.FC<RivalPawOverlayProps> = ({ className = ''
                 return (
                   <div
                     key={`${cat.id}-tile-${tile.row}-${tile.col}`}
-                    className={`absolute rounded-xl transition-all duration-150 ${
+                    className={`absolute rounded-xl flex items-center justify-center transition-all duration-150 ${
                       isTough
                         ? 'border-2 border-dashed border-rose-500/80 bg-rose-500/15 shadow-[0_0_8px_rgba(244,63,94,0.3)]'
                         : 'border-2 border-dashed border-pink-400/80 bg-pink-400/15 shadow-[0_0_8px_rgba(244,114,182,0.25)]'
@@ -64,7 +64,9 @@ export const RivalPawOverlay: React.FC<RivalPawOverlayProps> = ({ className = ''
                       width: `${shapeSize}px`,
                       height: `${shapeSize}px`,
                     }}
-                  />
+                  >
+                    <span className="text-base select-none pointer-events-none opacity-80">🐾</span>
+                  </div>
                 );
               })}
 
@@ -91,6 +93,9 @@ export const RivalPawOverlay: React.FC<RivalPawOverlayProps> = ({ className = ''
                   height: `${progress * 100}%`,
                 }}
               />
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none">
+                <span className="text-base select-none pointer-events-none opacity-80">🐾</span>
+              </div>
             </div>
 
             {/* Countdown Timer Badge positioned slightly below the tile */}

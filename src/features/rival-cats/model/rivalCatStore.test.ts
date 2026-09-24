@@ -5,6 +5,7 @@ import {
   useRivalCatStore,
   setRivalCatHintsResolver,
   registerRivalStealListener,
+  spawnReactions,
 } from './rivalCatStore';
 
 describe('rivalCatStore', () => {
@@ -445,5 +446,155 @@ describe('rivalCatStore', () => {
     expect(state.cats[0].type).toBe('normal');
     expect(state.cats[0].phase).toBe('idle');
     expect(state.stolenTilesCount).toBe(0);
+  });
+
+  it('updates showExternalBreakPathReactions via setter', () => {
+    expect(useRivalCatStore.getState().showExternalBreakPathReactions).toBe(true);
+    useRivalCatStore.getState().setShowExternalBreakPathReactions(false);
+    expect(useRivalCatStore.getState().showExternalBreakPathReactions).toBe(false);
+    useRivalCatStore.getState().setShowExternalBreakPathReactions(true);
+    expect(useRivalCatStore.getState().showExternalBreakPathReactions).toBe(true);
+  });
+
+  it('spawnReactions helper creates weary cat and paw reactions for player_clear', () => {
+    useBoardStore.setState({ clearingAnimations: [] });
+    const cat = {
+      id: 'cat-test',
+      type: 'normal' as const,
+      phase: 'targeting' as const,
+      countdown: 3.0,
+      targetMatch: [
+        { col: 0, row: 0 },
+        { col: 1, row: 0 },
+      ],
+    };
+
+    spawnReactions(cat, 'player_clear', [{ col: 0, row: 0 }]);
+
+    const anims = useBoardStore.getState().clearingAnimations;
+    expect(anims).toHaveLength(2);
+    expect(anims[0]).toMatchObject({
+      col: 0,
+      row: 0,
+      type: 'reaction',
+      emoji: '🙀',
+      duration: 800,
+      bounceSpeed: 0,
+    });
+    expect(anims[1]).toMatchObject({
+      col: 1,
+      row: 0,
+      type: 'reaction',
+      emoji: '🐾',
+      duration: 800,
+      bounceSpeed: 0,
+    });
+  });
+
+  it('spawnReactions helper creates impact and path reactions for external_break', () => {
+    useBoardStore.setState({ clearingAnimations: [] });
+    const cat = {
+      id: 'cat-test',
+      type: 'normal' as const,
+      phase: 'targeting' as const,
+      countdown: 3.0,
+      targetMatch: [
+        { col: 0, row: 0 },
+        { col: 1, row: 0 },
+      ],
+    };
+
+    // Case 1: showExternalBreakPathReactions is true
+    spawnReactions(cat, 'external_break', undefined, true);
+    let anims = useBoardStore.getState().clearingAnimations;
+    expect(anims).toHaveLength(2);
+    expect(anims[0]).toMatchObject({
+      col: 0,
+      row: 0,
+      type: 'reaction',
+      emoji: '💥',
+    });
+    expect(anims[1]).toMatchObject({
+      col: 1,
+      row: 0,
+      type: 'reaction',
+      emoji: '🐾',
+    });
+
+    // Case 2: showExternalBreakPathReactions is false -> only start tile receives 💥
+    useBoardStore.setState({ clearingAnimations: [] });
+    spawnReactions(cat, 'external_break', undefined, false);
+    anims = useBoardStore.getState().clearingAnimations;
+    expect(anims).toHaveLength(1);
+    expect(anims[0]).toMatchObject({
+      col: 0,
+      row: 0,
+      type: 'reaction',
+      emoji: '💥',
+    });
+  });
+
+  it('dispatches reaction animations when cat is defeated or broken by player clear', () => {
+    useRivalCatStore.getState().setIsEnabled(true);
+    useBoardStore.setState({ clearingAnimations: [] });
+
+    const targetCombo = [
+      { col: 0, row: 0 },
+      { col: 1, row: 0 },
+    ];
+
+    useRivalCatStore.setState({
+      defeatCondition: 'any_overlap',
+      cats: [
+        {
+          id: 'cat-normal',
+          type: 'normal',
+          phase: 'targeting',
+          countdown: 3.0,
+          targetMatch: targetCombo,
+        },
+      ],
+    });
+
+    useRivalCatStore.getState().onPlayerClearedTiles([{ col: 0, row: 0 }]);
+
+    const anims = useBoardStore.getState().clearingAnimations;
+    expect(anims).toHaveLength(2);
+    expect(anims[0].emoji).toBe('🙀');
+    expect(anims[1].emoji).toBe('🐾');
+  });
+
+  it('dispatches reaction animations when cat target is broken externally on tick', () => {
+    useRivalCatStore.getState().setIsEnabled(true);
+    useBoardStore.setState({ clearingAnimations: [] });
+
+    const targetCombo = [
+      { col: 0, row: 0 },
+      { col: 1, row: 0 },
+    ];
+
+    useRivalCatStore.setState({
+      cats: [
+        {
+          id: 'cat-normal',
+          type: 'normal',
+          phase: 'targeting',
+          countdown: 3.0,
+          targetMatch: targetCombo,
+        },
+      ],
+    });
+
+    // Invalidate combo: change value at (0, 0) so 2 + 9 != 10
+    const matrix = useBoardStore.getState().matrix.map((row) => [...row]);
+    matrix[0][0] = 2;
+    useBoardStore.getState().setMatrix(matrix);
+
+    useRivalCatStore.getState().tick(0.1, false);
+
+    const anims = useBoardStore.getState().clearingAnimations;
+    expect(anims.length).toBeGreaterThanOrEqual(1);
+    expect(anims[0].emoji).toBe('💥');
+    expect(anims[1].emoji).toBe('🐾');
   });
 });

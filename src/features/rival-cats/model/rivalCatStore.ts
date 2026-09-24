@@ -84,6 +84,45 @@ export const evaluatePlayerClear = (
   return 'none';
 };
 
+export const spawnReactions = (
+  cat: RivalCat,
+  cause: 'player_clear' | 'external_break',
+  clearedTiles?: TileCoord[],
+  showExternalBreakPathReactions = true
+) => {
+  if (!cat.targetMatch || cat.targetMatch.length === 0) return;
+  const now = performance.now();
+  const boardStore = useBoardStore.getState();
+
+  cat.targetMatch.forEach((tile, index) => {
+    let emoji: string | null = null;
+    if (cause === 'player_clear') {
+      const isCleared = clearedTiles?.some((c) => c.row === tile.row && c.col === tile.col);
+      emoji = isCleared ? '🙀' : '🐾';
+    } else if (cause === 'external_break') {
+      if (index === 0) {
+        emoji = '💥';
+      } else if (showExternalBreakPathReactions) {
+        emoji = '🐾';
+      }
+    }
+
+    if (emoji) {
+      boardStore.addClearingAnimation({
+        id: `reaction-${tile.col}-${tile.row}-${now}-${index}`,
+        col: tile.col,
+        row: tile.row,
+        val: 0,
+        type: 'reaction',
+        emoji,
+        startTime: now,
+        duration: 800,
+        bounceSpeed: 0,
+      });
+    }
+  });
+};
+
 const createDefaultCat = (id = 'cat-1', type: CatType = 'normal', countdown = 5): RivalCat => ({
   id,
   type,
@@ -104,6 +143,7 @@ export const useRivalCatStore = create<RivalCatState>((set, get) => ({
   stolenTilesCount: 0,
   showTargets: true,
   showTimer: true,
+  showExternalBreakPathReactions: true,
 
   // Backward compatibility aliases
   rivalCatInterval: 5,
@@ -120,6 +160,10 @@ export const useRivalCatStore = create<RivalCatState>((set, get) => ({
 
   setShowTimer: (show: boolean) => {
     set({ showTimer: show });
+  },
+
+  setShowExternalBreakPathReactions: (show: boolean) => {
+    set({ showExternalBreakPathReactions: show });
   },
 
   setDefeatCondition: (condition: DefeatCondition) => {
@@ -263,6 +307,10 @@ export const useRivalCatStore = create<RivalCatState>((set, get) => ({
       if (cat.phase === 'targeting' && cat.targetMatch) {
         const result = evaluatePlayerClear(cat, clearedTiles, state.defeatCondition);
 
+        if (result === 'defeated' || result === 'broken') {
+          spawnReactions(cat, 'player_clear', clearedTiles, state.showExternalBreakPathReactions);
+        }
+
         if (result === 'defeated') {
           changed = true;
           if (cat.type === 'normal') {
@@ -395,6 +443,7 @@ export const useRivalCatStore = create<RivalCatState>((set, get) => ({
           orchestrator.isComboValid(cat.targetMatch);
 
         if (!isStillValid) {
+          spawnReactions(cat, 'external_break', undefined, state.showExternalBreakPathReactions);
           // Target was broken externally (e.g. shuffle item or bomb)
           if (cat.type === 'normal') {
             currentCats[i] = {

@@ -120,8 +120,29 @@ export const createGameOrchestrator = (options?: GameOrchestratorOptions): GameO
   const executeRivalSteal = (tiles: TileCoordinate[]): boolean => {
     if (!tiles || tiles.length === 0) return false;
 
+    // 0. Trigger clearing animations for stolen tiles
+    const now = performance.now();
+    const boardStore = useBoardStore.getState();
+    const matrix = boardStore.matrix;
+    tiles.forEach((t) => {
+      const val = matrix[t.row]?.[t.col] ?? 0;
+      if (val > 0) {
+        boardStore.addClearingAnimation({
+          id: `rival-steal-${t.col}-${t.row}-${now}`,
+          col: t.col,
+          row: t.row,
+          val,
+          type: 'rival-steal',
+          emoji: '😼',
+          startTime: now,
+          duration: 600,
+          bounceSpeed: 80,
+        });
+      }
+    });
+
     // 1. Clear board tiles
-    useBoardStore.getState().clearTiles(tiles);
+    boardStore.clearTiles(tiles);
 
     // 2. Cascade solver
     useSolverStore.getState().cascadeTiles(tiles);

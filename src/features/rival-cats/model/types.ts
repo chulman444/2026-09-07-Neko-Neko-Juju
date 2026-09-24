@@ -24,6 +24,7 @@ export interface RivalCatState {
   stolenTilesCount: number;
   showTargets: boolean;
   showTimer: boolean;
+  showExternalBreakPathReactions: boolean;
 
   // Backward compatibility aliases
   rivalCatInterval: number;
@@ -34,6 +35,7 @@ export interface RivalCatState {
   setIsEnabled: (enabled: boolean) => void;
   setShowTargets: (show: boolean) => void;
   setShowTimer: (show: boolean) => void;
+  setShowExternalBreakPathReactions: (show: boolean) => void;
   setDefeatCondition: (condition: DefeatCondition) => void;
   setDormantDuration: (val: number) => void;
   setSpawnInterval: (val: number) => void;

@@ -607,13 +607,30 @@ export class GameBoardRenderer {
       const anim = clearingAnimations[i];
       if (!anim) continue;
       const elapsed = this.now - anim.startTime;
-      if (elapsed >= anim.duration) continue;
+      if (elapsed < 0 || elapsed >= anim.duration) continue;
 
       const progress = elapsed / anim.duration;
       const cellX = anim.col * this.pitch + tileBorder;
       const cellY = anim.row * this.pitch + tileBorder;
       const cx = (anim.col + 0.5) * this.pitch;
       const cy = (anim.row + 0.5) * this.pitch;
+
+      if (anim.type === 'reaction') {
+        const opacity = Math.max(0, 1 - progress);
+        const floatOffset = -progress * 20;
+
+        this.ctx.save();
+        this.ctx.globalAlpha = opacity;
+        if (anim.emoji) {
+          const fontSize = Math.round(shapeSize * 0.55);
+          this.ctx.font = `${fontSize}px sans-serif`;
+          this.ctx.textAlign = 'center';
+          this.ctx.textBaseline = 'middle';
+          this.ctx.fillText(anim.emoji, cx, cy + floatOffset);
+        }
+        this.ctx.restore();
+        continue;
+      }
 
       let opacity = 1;
       let bounceOffset = 0;
@@ -635,7 +652,14 @@ export class GameBoardRenderer {
         this.ctx.drawImage(gameAssets.bowl, cellX, cellY, shapeSize, shapeSize);
       }
 
-      if (gameAssets.catHead.complete && gameAssets.catHead.naturalWidth > 0) {
+      if (anim.type === 'rival-steal') {
+        const emoji = anim.emoji || '😼';
+        const fontSize = Math.round(shapeSize * 0.6);
+        this.ctx.font = `${fontSize}px sans-serif`;
+        this.ctx.textAlign = 'center';
+        this.ctx.textBaseline = 'middle';
+        this.ctx.fillText(emoji, cx, cy + bounceOffset);
+      } else if (gameAssets.catHead.complete && gameAssets.catHead.naturalWidth > 0) {
         this.ctx.drawImage(
           gameAssets.catHead,
           cellX + headOffset,
@@ -645,12 +669,14 @@ export class GameBoardRenderer {
         );
       }
 
-      if (anim.val !== undefined) {
+      if (anim.val !== undefined && anim.val > 0) {
         const isOmni = isOmniTile(anim.val);
         const textToDraw = isOmni ? '*' : anim.val.toString();
         const effectiveSize = isOmni ? Math.round(textSize * 1.5) : textSize;
         const textOffsetY = isOmni ? cy + Math.round(textSize * 0.35) : cy + 2;
 
+        this.ctx.textAlign = 'center';
+        this.ctx.textBaseline = 'middle';
         this.ctx.font = `900 ${effectiveSize}px 'Segoe UI', sans-serif`;
         this.ctx.lineWidth = isOmni ? 4 : 3;
         this.ctx.strokeStyle = isOmni ? '#78350f' : textBorderColor;

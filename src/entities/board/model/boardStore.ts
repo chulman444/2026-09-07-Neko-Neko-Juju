@@ -483,9 +483,10 @@ export const useBoardStore = create<BoardState>((set, get) => ({
 
   removeExpiredAnimations: (now) => {
     set((state) => ({
-      clearingAnimations: state.clearingAnimations.filter(
-        (anim) => now - anim.startTime < anim.duration
-      ),
+      clearingAnimations: state.clearingAnimations.filter((anim) => {
+        const elapsed = now - anim.startTime;
+        return elapsed >= -1000 && elapsed < anim.duration;
+      }),
     }));
   },
 }));

@@ -8,7 +8,8 @@ export interface ClearingAnimation {
   col: number;
   row: number;
   val: number;
-  type: 'munching' | 'fadeout';
+  type: 'munching' | 'fadeout' | 'reaction' | 'rival-steal';
+  emoji?: string;
   startTime: number;
   duration: number;
   bounceSpeed: number;

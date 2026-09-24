@@ -138,6 +138,28 @@ describe('useGameOrchestrator / createGameOrchestrator', () => {
     // Listener notified
     expect(stealSpy).toHaveBeenCalledWith(stolenCombo);
 
+    // Clearing animations created for rival steal
+    const animations = useBoardStore.getState().clearingAnimations;
+    expect(animations).toHaveLength(2);
+    expect(animations[0]).toMatchObject({
+      col: 0,
+      row: 0,
+      val: 3,
+      type: 'rival-steal',
+      emoji: '😼',
+      duration: 600,
+      bounceSpeed: 80,
+    });
+    expect(animations[1]).toMatchObject({
+      col: 1,
+      row: 0,
+      val: 7,
+      type: 'rival-steal',
+      emoji: '😼',
+      duration: 600,
+      bounceSpeed: 80,
+    });
+
     // No score or combo awarded to player
     expect(useGameSessionStore.getState().score).toBe(0);
     expect(useComboStore.getState().comboCount).toBe(0);
