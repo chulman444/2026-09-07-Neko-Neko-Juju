@@ -35,6 +35,9 @@ export const FooterConsole: React.FC<FooterConsoleProps> = ({
   const isPaused = useGameSessionStore((state) => state.isPaused);
   const enableItemRefills = useGameConfigStore((state) => state.enableItemRefills);
   const itemRefillStyle = useGameConfigStore((state) => state.itemRefillStyle);
+  const itemBadgePlacement = useGameConfigStore((state) => state.itemBadgePlacement);
+  const itemCdDirection = useGameConfigStore((state) => state.itemCdDirection);
+  const itemCdFormat = useGameConfigStore((state) => state.itemCdFormat);
 
   const context: ItemRenderContext = {
     counts,
@@ -56,6 +59,9 @@ export const FooterConsole: React.FC<FooterConsoleProps> = ({
           context={context}
           size={size}
           refillStyle={itemRefillStyle}
+          badgePlacement={itemBadgePlacement}
+          cdDirection={itemCdDirection}
+          cdFormat={itemCdFormat}
         />
       );
     }

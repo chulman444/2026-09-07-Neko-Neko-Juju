@@ -1,10 +1,14 @@
 import React from 'react';
 import { useGameConfigStore, type GamePreset, type GameFeatureFlags } from '@/entities/game-config';
 
+type BooleanFeatureFlag = {
+  [K in keyof GameFeatureFlags]: GameFeatureFlags[K] extends boolean ? K : never;
+}[keyof GameFeatureFlags];
+
 interface FlagItem {
-  key: keyof Omit<GameFeatureFlags, 'itemRefillStyle'>;
+  key: BooleanFeatureFlag;
   isSubItem?: boolean;
-  requiresKey?: keyof Omit<GameFeatureFlags, 'itemRefillStyle'>;
+  requiresKey?: BooleanFeatureFlag;
   requiresNote?: string;
   warningBadge?: string;
 }
@@ -63,7 +67,7 @@ export const FeatureFlagsSection: React.FC = () => {
   const { preset, setPreset, setFlag } = store;
 
   // Pluck flags manually or iterate
-  const flags: Record<keyof Omit<GameFeatureFlags, 'itemRefillStyle'>, boolean> = {
+  const flags: Record<BooleanFeatureFlag, boolean> = {
     enableItems: store.enableItems,
     enableItemRefills: store.enableItemRefills,
     enableDevTools: store.enableDevTools,
@@ -79,7 +83,7 @@ export const FeatureFlagsSection: React.FC = () => {
     setPreset(e.target.value as GamePreset);
   };
 
-  const toggleFlag = (key: keyof Omit<GameFeatureFlags, 'itemRefillStyle'>) => {
+  const toggleFlag = (key: BooleanFeatureFlag) => {
     setFlag(key, !flags[key]);
   };
 

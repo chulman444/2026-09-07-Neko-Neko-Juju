@@ -2,6 +2,7 @@ import React from 'react';
 import { ItemFreeTriggersSection } from './ItemFreeTriggersSection';
 import { ItemHistoryConstraintSection } from './ItemHistoryConstraintSection';
 import { ItemsInventorySection } from './ItemsInventorySection';
+import { ItemRefillsConfigSection } from './ItemRefillsConfigSection';
 import { ItemSeedSection } from './ItemSeedSection';
 
 export const ItemsPanelWidget: React.FC = () => {
@@ -27,6 +28,9 @@ export const ItemsPanelWidget: React.FC = () => {
 
       {/* Inventory & Stock Setting Section */}
       <ItemsInventorySection />
+
+      {/* Rechargeable Items & Button Layout Config Section */}
+      <ItemRefillsConfigSection />
 
       {/* PRNG & Seed Room Section */}
       <ItemSeedSection />

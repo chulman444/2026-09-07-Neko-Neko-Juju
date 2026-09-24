@@ -4,6 +4,9 @@ export interface GameFeatureFlags {
   enableItems: boolean;
   enableItemRefills: boolean;
   itemRefillStyle: 'wipe' | 'spin';
+  itemBadgePlacement: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
+  itemCdDirection: 'left' | 'right';
+  itemCdFormat: 'integer' | 'decimal';
   enableDevTools: boolean;
   enableSolidBlocks: boolean;
   enableBounties: boolean;
