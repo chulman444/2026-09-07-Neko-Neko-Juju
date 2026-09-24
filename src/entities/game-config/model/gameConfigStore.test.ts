@@ -16,6 +16,8 @@ describe('useGameConfigStore', () => {
     expect(state.enableItems).toBe(true);
     expect(state.enableItemRefills).toBe(true);
     expect(state.itemRefillStyle).toBe('spin');
+    expect(state.itemButtonVariant).toBe('classic');
+    expect(state.itemSplitStyle).toBe('cell');
     expect(state.itemBadgePlacement).toBe('bottom-right');
     expect(state.itemCdDirection).toBe('left');
     expect(state.itemCdFormat).toBe('integer');

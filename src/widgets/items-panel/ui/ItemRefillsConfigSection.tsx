@@ -43,6 +43,8 @@ export const ItemRefillsConfigSection: React.FC = () => {
   const resetAllRechargeables = useRechargeableItemStore((state) => state.resetAll);
 
   // Game config store (UI Flags)
+  const itemButtonVariant = useGameConfigStore((state) => state.itemButtonVariant);
+  const itemSplitStyle = useGameConfigStore((state) => state.itemSplitStyle);
   const itemBadgePlacement = useGameConfigStore((state) => state.itemBadgePlacement);
   const itemCdDirection = useGameConfigStore((state) => state.itemCdDirection);
   const itemCdFormat = useGameConfigStore((state) => state.itemCdFormat);
@@ -251,6 +253,34 @@ export const ItemRefillsConfigSection: React.FC = () => {
           <span className="text-xs font-semibold text-zinc-200 border-b border-zinc-800 pb-1.5">
             🎨 Button UI & Cooldown Layout (Global)
           </span>
+
+          {/* Layout Variant */}
+          <div className="flex items-center justify-between text-xs text-zinc-300">
+            <span className="text-[11px] text-zinc-400">Layout Variant:</span>
+            <select
+              value={itemButtonVariant}
+              onChange={(e) => setFlag('itemButtonVariant', e.target.value as 'classic' | 'split')}
+              className="bg-zinc-900 border border-zinc-700 text-zinc-200 text-[11px] rounded px-2 py-0.5 outline-none focus:border-amber-500 cursor-pointer"
+            >
+              <option value="classic">Classic (Overlapping)</option>
+              <option value="split">Split (Separated Icon)</option>
+            </select>
+          </div>
+
+          {/* Split Style */}
+          {itemButtonVariant === 'split' && (
+            <div className="flex items-center justify-between text-xs text-zinc-300">
+              <span className="text-[11px] text-zinc-400">Split Style:</span>
+              <select
+                value={itemSplitStyle}
+                onChange={(e) => setFlag('itemSplitStyle', e.target.value as 'cell' | 'badge')}
+                className="bg-zinc-900 border border-zinc-700 text-zinc-200 text-[11px] rounded px-2 py-0.5 outline-none focus:border-amber-500 cursor-pointer"
+              >
+                <option value="cell">Cell (Grid Divider)</option>
+                <option value="badge">Badge (Floating UI)</option>
+              </select>
+            </div>
+          )}
 
           {/* Badge Placement */}
           <div className="flex items-center justify-between text-xs text-zinc-300">

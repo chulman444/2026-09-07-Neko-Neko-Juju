@@ -250,3 +250,151 @@ export const ActionBasedShake: Story = {
     }));
   },
 };
+
+export const SplitCellRecharging: Story = {
+  args: {
+    variant: 'split',
+    splitStyle: 'cell',
+    context: {
+      ...dummyContext,
+      counts: { ...dummyContext.counts, randomNumber: 2 },
+    },
+  },
+  beforeEach: () => {
+    useRechargeableItemStore.setState((state) => ({
+      ...state,
+      gauges: { ...state.gauges, randomNumber: 0.5 },
+      activeSpamTimers: { ...state.activeSpamTimers, randomNumber: 0 },
+    }));
+  },
+};
+
+export const SplitCellFull: Story = {
+  args: {
+    variant: 'split',
+    splitStyle: 'cell',
+    context: {
+      ...dummyContext,
+      counts: { ...dummyContext.counts, randomNumber: 3 },
+    },
+  },
+  beforeEach: () => {
+    useRechargeableItemStore.setState((state) => ({
+      ...state,
+      gauges: { ...state.gauges, randomNumber: 0 },
+      activeSpamTimers: { ...state.activeSpamTimers, randomNumber: 0 },
+    }));
+  },
+};
+
+export const SplitCellDepleted: Story = {
+  args: {
+    variant: 'split',
+    splitStyle: 'cell',
+    refillStyle: 'spin',
+    context: {
+      ...dummyContext,
+      counts: { ...dummyContext.counts, randomNumber: 0 },
+    },
+  },
+  beforeEach: () => {
+    useRechargeableItemStore.setState((state) => ({
+      ...state,
+      gauges: { ...state.gauges, randomNumber: 0.3 },
+      activeSpamTimers: { ...state.activeSpamTimers, randomNumber: 0 },
+    }));
+  },
+};
+
+export const SplitBadgeRecharging: Story = {
+  args: {
+    variant: 'split',
+    splitStyle: 'badge',
+    context: {
+      ...dummyContext,
+      counts: { ...dummyContext.counts, randomNumber: 1 },
+    },
+  },
+  beforeEach: () => {
+    useRechargeableItemStore.setState((state) => ({
+      ...state,
+      gauges: { ...state.gauges, randomNumber: 0.4 },
+      activeSpamTimers: { ...state.activeSpamTimers, randomNumber: 0 },
+    }));
+  },
+};
+
+export const SplitBadgeFull: Story = {
+  args: {
+    variant: 'split',
+    splitStyle: 'badge',
+    context: {
+      ...dummyContext,
+      counts: { ...dummyContext.counts, randomNumber: 3 },
+    },
+  },
+  beforeEach: () => {
+    useRechargeableItemStore.setState((state) => ({
+      ...state,
+      gauges: { ...state.gauges, randomNumber: 0 },
+      activeSpamTimers: { ...state.activeSpamTimers, randomNumber: 0 },
+    }));
+  },
+};
+
+export const SplitBadgeDepleted: Story = {
+  args: {
+    variant: 'split',
+    splitStyle: 'badge',
+    refillStyle: 'spin',
+    context: {
+      ...dummyContext,
+      counts: { ...dummyContext.counts, randomNumber: 0 },
+    },
+  },
+  beforeEach: () => {
+    useRechargeableItemStore.setState((state) => ({
+      ...state,
+      gauges: { ...state.gauges, randomNumber: 0.3 },
+      activeSpamTimers: { ...state.activeSpamTimers, randomNumber: 0 },
+    }));
+  },
+};
+
+export const SplitCellSmall: Story = {
+  args: {
+    size: 'sm',
+    variant: 'split',
+    splitStyle: 'cell',
+    context: {
+      ...dummyContext,
+      counts: { ...dummyContext.counts, randomNumber: 2 },
+    },
+  },
+  beforeEach: () => {
+    useRechargeableItemStore.setState((state) => ({
+      ...state,
+      gauges: { ...state.gauges, randomNumber: 0.6 },
+      activeSpamTimers: { ...state.activeSpamTimers, randomNumber: 0 },
+    }));
+  },
+};
+
+export const SplitBadgeSmall: Story = {
+  args: {
+    size: 'sm',
+    variant: 'split',
+    splitStyle: 'badge',
+    context: {
+      ...dummyContext,
+      counts: { ...dummyContext.counts, randomNumber: 2 },
+    },
+  },
+  beforeEach: () => {
+    useRechargeableItemStore.setState((state) => ({
+      ...state,
+      gauges: { ...state.gauges, randomNumber: 0.6 },
+      activeSpamTimers: { ...state.activeSpamTimers, randomNumber: 0 },
+    }));
+  },
+};

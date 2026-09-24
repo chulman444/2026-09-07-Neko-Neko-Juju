@@ -120,16 +120,44 @@ export const FeatureFlagsSection: React.FC = () => {
           </span>
         </label>
         {item.key === 'enableItemRefills' && flags.enableItemRefills && !isRequirementMissing && (
-          <div className="flex items-center justify-between text-xs text-zinc-300 ml-6 pl-2.5 border-l-2 border-zinc-700/70 py-1">
-            <span className="text-[11px] text-zinc-400">Refill Style:</span>
-            <select
-              value={store.itemRefillStyle}
-              onChange={(e) => setFlag('itemRefillStyle', e.target.value as 'wipe' | 'spin')}
-              className="bg-zinc-900 border border-zinc-700 text-zinc-200 text-[11px] rounded px-1.5 py-0.5"
-            >
-              <option value="spin">Spin (Clockwise)</option>
-              <option value="wipe">Wipe (Vertical)</option>
-            </select>
+          <div className="flex flex-col gap-1.5 ml-6 pl-2.5 border-l-2 border-zinc-700/70 py-1">
+            <div className="flex items-center justify-between text-xs text-zinc-300">
+              <span className="text-[11px] text-zinc-400">Refill Style:</span>
+              <select
+                value={store.itemRefillStyle}
+                onChange={(e) => setFlag('itemRefillStyle', e.target.value as 'wipe' | 'spin')}
+                className="bg-zinc-900 border border-zinc-700 text-zinc-200 text-[11px] rounded px-1.5 py-0.5"
+              >
+                <option value="spin">Spin (Clockwise)</option>
+                <option value="wipe">Wipe (Vertical)</option>
+              </select>
+            </div>
+            <div className="flex items-center justify-between text-xs text-zinc-300">
+              <span className="text-[11px] text-zinc-400">Layout:</span>
+              <select
+                value={store.itemButtonVariant}
+                onChange={(e) =>
+                  setFlag('itemButtonVariant', e.target.value as 'classic' | 'split')
+                }
+                className="bg-zinc-900 border border-zinc-700 text-zinc-200 text-[11px] rounded px-1.5 py-0.5"
+              >
+                <option value="classic">Classic (Overlapping)</option>
+                <option value="split">Split (Separated)</option>
+              </select>
+            </div>
+            {store.itemButtonVariant === 'split' && (
+              <div className="flex items-center justify-between text-xs text-zinc-300">
+                <span className="text-[11px] text-zinc-400">Split Style:</span>
+                <select
+                  value={store.itemSplitStyle}
+                  onChange={(e) => setFlag('itemSplitStyle', e.target.value as 'cell' | 'badge')}
+                  className="bg-zinc-900 border border-zinc-700 text-zinc-200 text-[11px] rounded px-1.5 py-0.5"
+                >
+                  <option value="cell">Cell (Grid Divider)</option>
+                  <option value="badge">Badge (Floating UI)</option>
+                </select>
+              </div>
+            )}
           </div>
         )}
       </React.Fragment>

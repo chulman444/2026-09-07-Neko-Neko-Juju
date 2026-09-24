@@ -35,6 +35,8 @@ export const FooterConsole: React.FC<FooterConsoleProps> = ({
   const isPaused = useGameSessionStore((state) => state.isPaused);
   const enableItemRefills = useGameConfigStore((state) => state.enableItemRefills);
   const itemRefillStyle = useGameConfigStore((state) => state.itemRefillStyle);
+  const itemButtonVariant = useGameConfigStore((state) => state.itemButtonVariant);
+  const itemSplitStyle = useGameConfigStore((state) => state.itemSplitStyle);
   const itemBadgePlacement = useGameConfigStore((state) => state.itemBadgePlacement);
   const itemCdDirection = useGameConfigStore((state) => state.itemCdDirection);
   const itemCdFormat = useGameConfigStore((state) => state.itemCdFormat);
@@ -58,6 +60,8 @@ export const FooterConsole: React.FC<FooterConsoleProps> = ({
           behavior={behavior}
           context={context}
           size={size}
+          variant={itemButtonVariant}
+          splitStyle={itemSplitStyle}
           refillStyle={itemRefillStyle}
           badgePlacement={itemBadgePlacement}
           cdDirection={itemCdDirection}

@@ -7,6 +7,8 @@ export interface RechargeableItemButtonProps {
   context: ItemRenderContext;
   size?: 'sm' | 'md';
   className?: string;
+  variant?: 'classic' | 'split';
+  splitStyle?: 'cell' | 'badge';
   refillStyle?: 'wipe' | 'spin';
   badgePlacement?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
   cdDirection?: 'left' | 'right' | 'top' | 'bottom';
@@ -35,6 +37,8 @@ export const RechargeableItemButton: React.FC<RechargeableItemButtonProps> = ({
   context,
   size,
   className = '',
+  variant = 'classic',
+  splitStyle = 'cell',
   refillStyle = 'spin',
   badgePlacement = 'bottom-right',
   cdDirection = 'left',
@@ -211,6 +215,37 @@ export const RechargeableItemButton: React.FC<RechargeableItemButtonProps> = ({
     </div>
   );
 
+  const isSplit = variant === 'split';
+  const deckMinWClass = isSplit
+    ? isSm
+      ? 'min-w-[64px]'
+      : 'min-w-[76px]'
+    : isSm
+      ? 'min-w-[56px]'
+      : 'min-w-[64px]';
+  const deckPaddingClass = isSplit ? 'p-0' : isSm ? 'px-1.5' : 'px-2';
+  const deckFlexClass = isSplit
+    ? 'flex flex-row items-stretch'
+    : 'flex flex-col items-center justify-center';
+  const rightContainerWidth = isSm ? 'w-[28px]' : 'w-[32px]';
+
+  const renderDarkOverlay = () => {
+    if (!showOverlay) return null;
+    return refillStyle === 'wipe' ? (
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 z-[1] bg-black/45 border-b border-amber-400/80 transition-[height] duration-75"
+        style={{ height: `${wipeRemainingPercent}%` }}
+      />
+    ) : (
+      <div
+        className="pointer-events-none absolute inset-0 z-[1]"
+        style={{
+          background: `conic-gradient(from 0deg at 50% 50%, transparent ${progressDeg}deg, rgba(0, 0, 0, 0.45) ${progressDeg}deg 360deg)`,
+        }}
+      />
+    );
+  };
+
   return (
     <div
       className={`inline-flex items-stretch select-none transition-transform duration-100 ${
@@ -243,53 +278,115 @@ export const RechargeableItemButton: React.FC<RechargeableItemButtonProps> = ({
 
       {/* Center Core Button Deck */}
       <div
-        className={`relative overflow-hidden bg-[#fff9f1] dark:bg-zinc-900 ${
-          isSm
-            ? 'min-w-[56px] h-full border-2 px-1.5 text-xs'
-            : 'min-w-[64px] h-full border-[2.5px] px-2 text-sm'
-        } border-[#4a3422] dark:border-zinc-700 font-mono font-bold flex flex-col items-center justify-center shadow-[inset_0_-3px_0px_#edd4b2] dark:shadow-[inset_0_-3px_0px_#27272a] text-[#4a3422] dark:text-zinc-100`}
+        className={`relative overflow-hidden bg-[#fff9f1] dark:bg-zinc-900 ${deckMinWClass} h-full ${
+          isSm ? 'border-2 text-xs' : 'border-[2.5px] text-sm'
+        } ${deckPaddingClass} border-[#4a3422] dark:border-zinc-700 font-mono font-bold ${deckFlexClass} shadow-[inset_0_-3px_0px_#edd4b2] dark:shadow-[inset_0_-3px_0px_#27272a] text-[#4a3422] dark:text-zinc-100`}
       >
-        {/* Dark Refill / Spam Lockout Overlay (Animated Sweep) */}
-        {showOverlay &&
-          (refillStyle === 'wipe' ? (
-            <div
-              className="pointer-events-none absolute inset-x-0 top-0 z-[1] bg-black/45 border-b border-amber-400/80 transition-[height] duration-75"
-              style={{ height: `${wipeRemainingPercent}%` }}
-            />
-          ) : (
-            <div
-              className="pointer-events-none absolute inset-0 z-[1]"
-              style={{
-                background: `conic-gradient(from 0deg at 50% 50%, transparent ${progressDeg}deg, rgba(0, 0, 0, 0.45) ${progressDeg}deg 360deg)`,
-              }}
-            />
-          ))}
+        {/* Dark Refill / Spam Lockout Overlay for Classic or Split Badge */}
+        {(!isSplit || splitStyle === 'badge') && renderDarkOverlay()}
 
-        {/* Central Icon */}
-        <span
-          className={`relative z-[2] ${
-            isSm
-              ? isTopBadge
-                ? 'text-sm translate-y-1'
-                : 'text-sm -translate-y-1'
-              : isTopBadge
-                ? 'text-base translate-y-1'
-                : 'text-base -translate-y-1'
-          } leading-none select-none`}
-        >
-          {behavior.icon}
-        </span>
+        {isSplit ? (
+          <>
+            {/* Left Container: Centered Icon */}
+            <div className="relative flex-1 h-full flex items-center justify-center overflow-hidden">
+              {splitStyle === 'cell' && renderDarkOverlay()}
+              <span
+                className={`relative z-[2] ${
+                  isSm ? 'text-sm' : 'text-base'
+                } leading-none select-none`}
+              >
+                {behavior.icon}
+              </span>
+            </div>
 
-        {/* Joint Badge: Circular Charge Indicator & Docked CD Tab */}
-        <div
-          className={`absolute ${placementClass} z-[3] flex ${
-            isVertical ? 'flex-col' : 'flex-row'
-          } items-center pointer-events-none select-none`}
-        >
-          {['left', 'top'].includes(cdDirection) && cdTab}
-          {circularIndicator}
-          {['right', 'bottom'].includes(cdDirection) && cdTab}
-        </div>
+            {/* Right Container: Cooldown & Charges */}
+            {splitStyle === 'cell' ? (
+              <div
+                className={`relative z-[2] ${rightContainerWidth} shrink-0 h-full flex flex-col border-l-2 border-[#4a3422] dark:border-zinc-700 select-none`}
+              >
+                {/* Top Half (CD) */}
+                <div className="flex-1 flex items-center justify-center border-b-2 border-[#4a3422] dark:border-zinc-700 px-0.5 overflow-hidden">
+                  <span
+                    className={`text-[8px] font-mono font-black leading-none whitespace-nowrap ${
+                      isFull
+                        ? 'text-emerald-700 dark:text-emerald-400'
+                        : 'text-amber-700 dark:text-amber-400'
+                    }`}
+                  >
+                    {isFull ? 'MAX' : (cooldownText ?? 'MAX')}
+                  </span>
+                </div>
+
+                {/* Bottom Half (C/M) */}
+                <div className="flex-1 flex items-center justify-center px-0.5 overflow-hidden">
+                  <span
+                    className={`text-[8px] font-mono font-black leading-none whitespace-nowrap ${
+                      stacks === 0
+                        ? 'text-zinc-400 dark:text-zinc-500'
+                        : isFull
+                          ? 'text-emerald-700 dark:text-emerald-400'
+                          : 'text-[#4a3422] dark:text-zinc-100'
+                    }`}
+                  >
+                    {stacks}/{maxStacks}
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <div
+                className={`relative z-[2] ${rightContainerWidth} shrink-0 h-full flex flex-col items-center justify-around select-none py-0.5`}
+              >
+                {/* Top Half (Floating CD Tab Pill) */}
+                <div className="flex-1 flex items-center justify-center w-full overflow-hidden">
+                  <div
+                    className={`flex items-center justify-center bg-[#fff9f1]/95 dark:bg-zinc-800/95 border border-[#4a3422]/60 dark:border-zinc-600 rounded-full ${
+                      isSm ? 'px-1 py-px' : 'px-1.5 py-0.5'
+                    } shadow-sm transition-all duration-300 ease-in-out ${
+                      isFull ? 'opacity-0 scale-75 pointer-events-none' : 'opacity-100 scale-100'
+                    }`}
+                  >
+                    <span className="text-[8px] font-mono font-black leading-none text-amber-700 dark:text-amber-400 whitespace-nowrap">
+                      {cooldownText ?? ''}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Bottom Half (Circular Indicator) */}
+                <div className="flex-1 flex items-center justify-center w-full">
+                  <div className={isSm ? 'scale-75' : ''}>{circularIndicator}</div>
+                </div>
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+            {/* Central Icon */}
+            <span
+              className={`relative z-[2] ${
+                isSm
+                  ? isTopBadge
+                    ? 'text-sm translate-y-1'
+                    : 'text-sm -translate-y-1'
+                  : isTopBadge
+                    ? 'text-base translate-y-1'
+                    : 'text-base -translate-y-1'
+              } leading-none select-none`}
+            >
+              {behavior.icon}
+            </span>
+
+            {/* Joint Badge: Circular Charge Indicator & Docked CD Tab */}
+            <div
+              className={`absolute ${placementClass} z-[3] flex ${
+                isVertical ? 'flex-col' : 'flex-row'
+              } items-center pointer-events-none select-none`}
+            >
+              {['left', 'top'].includes(cdDirection) && cdTab}
+              {circularIndicator}
+              {['right', 'bottom'].includes(cdDirection) && cdTab}
+            </div>
+          </>
+        )}
       </div>
 
       {/* Right Wing Indicator */}
