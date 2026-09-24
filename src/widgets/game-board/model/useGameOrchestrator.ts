@@ -2,7 +2,7 @@ import { useCallback, useEffect } from 'react';
 import { useBoardStore, type TileCoord } from '@/entities/board';
 import { useComboStore } from '@/features/combo-system';
 import { useFreeTriggeredHintStore } from '@/features/free-triggered-hint';
-import { useBoardHintsStore } from '@/features/board-hints';
+import { useBoardHintsStore, isHintComboValid } from '@/features/board-hints';
 import { useSolverStore, findClearableCombinationsOnly } from '@/features/look-ahead-solver';
 import { useSelectionStore } from '@/features/select-tiles';
 import { useSurvivalTimerStore } from '@/features/survival-timer';
@@ -195,6 +195,10 @@ export const createGameOrchestrator = (options?: GameOrchestratorOptions): GameO
     return getClearableCombinations().length === 0;
   };
 
+  const isComboValid = (tiles: TileCoordinate[]): boolean => {
+    return isHintComboValid(tiles, useBoardStore.getState().matrix);
+  };
+
   return {
     executePlayerMatch,
     handleMatch: executePlayerMatch,
@@ -202,6 +206,7 @@ export const createGameOrchestrator = (options?: GameOrchestratorOptions): GameO
     executeHighlightHint,
     getClearableHints: getClearableCombinations,
     isBoardUnsolvable,
+    isComboValid,
     onBoardMutated,
     resetAllSessions,
   };
@@ -258,6 +263,7 @@ export const useGameOrchestrator = (options?: GameOrchestratorOptions) => {
     resetAllSessions,
     getClearableHints: orchestratorInstance.getClearableHints,
     isBoardUnsolvable: orchestratorInstance.isBoardUnsolvable,
+    isComboValid: orchestratorInstance.isComboValid,
     onBoardMutated: orchestratorInstance.onBoardMutated,
   };
 };

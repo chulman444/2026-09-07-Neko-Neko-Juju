@@ -334,7 +334,6 @@ export const useRivalCatStore = create<RivalCatState>((set, get) => ({
     const state = get();
     if (!state.isEnabled || isPaused || deltaSeconds <= 0) return;
 
-    const matrix = useBoardStore.getState().matrix;
     let changed = false;
     let additionalStolen = 0;
 
@@ -389,11 +388,11 @@ export const useRivalCatStore = create<RivalCatState>((set, get) => ({
           changed = true;
         }
       } else if (cat.phase === 'targeting') {
-        // Target Validation Check: check if all target tiles still have positive values
+        // Target Validation Check: check if target tiles still form a valid match
         const isStillValid =
           cat.targetMatch &&
           cat.targetMatch.length > 0 &&
-          cat.targetMatch.every((t) => (matrix[t.row]?.[t.col] ?? 0) > 0);
+          orchestrator.isComboValid(cat.targetMatch);
 
         if (!isStillValid) {
           // Target was broken externally (e.g. shuffle item or bomb)

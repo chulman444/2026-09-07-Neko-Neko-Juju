@@ -177,4 +177,38 @@ describe('useGameOrchestrator / createGameOrchestrator', () => {
     expect(success).toBe(false);
     expect(useBoardHintsStore.getState().noHintsAvailableMsg).toBe('No more hints available.');
   });
+
+  it('validates combos via isComboValid correctly', () => {
+    const matrix = [
+      [3, 7, 0],
+      [4, 5, 0],
+    ];
+    useBoardStore.getState().setMatrix(matrix);
+
+    const orchestrator = createGameOrchestrator();
+
+    // 3 + 7 = 10 -> valid
+    expect(
+      orchestrator.isComboValid([
+        { row: 0, col: 0 },
+        { row: 0, col: 1 },
+      ])
+    ).toBe(true);
+
+    // 3 + 4 = 7 != 10 -> invalid
+    expect(
+      orchestrator.isComboValid([
+        { row: 0, col: 0 },
+        { row: 1, col: 0 },
+      ])
+    ).toBe(false);
+
+    // 3 + 0 (empty tile) -> invalid
+    expect(
+      orchestrator.isComboValid([
+        { row: 0, col: 0 },
+        { row: 0, col: 2 },
+      ])
+    ).toBe(false);
+  });
 });

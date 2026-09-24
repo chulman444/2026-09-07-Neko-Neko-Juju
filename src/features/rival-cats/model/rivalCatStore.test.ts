@@ -1,5 +1,6 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { useBoardStore } from '@/entities/board';
+import { setGameOrchestrator } from '@/shared/lib/orchestrator';
 import {
   useRivalCatStore,
   setRivalCatHintsResolver,
@@ -8,6 +9,28 @@ import {
 
 describe('rivalCatStore', () => {
   beforeEach(() => {
+    setGameOrchestrator({
+      executePlayerMatch: () => false,
+      handleMatch: () => false,
+      executeRivalSteal: () => false,
+      executeHighlightHint: () => false,
+      getClearableHints: () => [],
+      isBoardUnsolvable: () => false,
+      isComboValid: (tiles) => {
+        const matrix = useBoardStore.getState().matrix;
+        if (!tiles || tiles.length === 0) return false;
+        let sum = 0;
+        for (const t of tiles) {
+          const val = matrix[t.row]?.[t.col] ?? 0;
+          if (val <= 0) return false;
+          sum += val;
+        }
+        return sum === 10;
+      },
+      onBoardMutated: () => {},
+      resetAllSessions: () => {},
+    });
+
     useRivalCatStore.setState({
       isEnabled: false,
       defeatCondition: 'any_overlap',
@@ -37,6 +60,10 @@ describe('rivalCatStore', () => {
       [3, 7, 4],
       [5, 5, 6],
     ]);
+  });
+
+  afterEach(() => {
+    setGameOrchestrator(null);
   });
 
   it('initializes with default values and variants', () => {
@@ -359,6 +386,39 @@ describe('rivalCatStore', () => {
     // Tough cat picks new hint
     expect(toughCat.phase).toBe('targeting');
     expect(toughCat.targetMatch).toEqual(newHint);
+  });
+
+  it('detects mathematically broken targets on tick when tile values change and drops target', () => {
+    useRivalCatStore.getState().setIsEnabled(true);
+
+    const targetCombo = [
+      { col: 0, row: 0 },
+      { col: 1, row: 0 },
+    ];
+    // Matrix initially has [1, 9, 2] at row 0 (1 + 9 = 10)
+    useRivalCatStore.setState({
+      cats: [
+        {
+          id: 'cat-normal',
+          type: 'normal',
+          phase: 'targeting',
+          countdown: 3.0,
+          targetMatch: targetCombo,
+        },
+      ],
+    });
+
+    // Tile (0, 0) value changes from 1 to 2 (e.g. by an item). Both tiles are still > 0, but 2 + 9 = 11 != 10
+    const matrix = useBoardStore.getState().matrix.map((row) => [...row]);
+    matrix[0][0] = 2;
+    useBoardStore.getState().setMatrix(matrix);
+
+    useRivalCatStore.getState().tick(0.1, false);
+
+    const normalCat = useRivalCatStore.getState().cats.find((c) => c.id === 'cat-normal')!;
+    // Target is dropped because 2 + 9 != 10
+    expect(normalCat.phase).toBe('idle');
+    expect(normalCat.targetMatch).toBeNull();
   });
 
   it('allows adding and removing cats with minimum boundary', () => {

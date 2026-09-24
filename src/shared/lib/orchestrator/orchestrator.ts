@@ -18,6 +18,7 @@ export interface GameOrchestrator {
   executeHighlightHint: (isFree?: boolean) => boolean;
   getClearableHints: () => TileCoordinate[][];
   isBoardUnsolvable: () => boolean;
+  isComboValid: (tiles: TileCoordinate[]) => boolean;
   onBoardMutated: () => void;
   resetAllSessions: () => void;
 }
@@ -50,6 +51,9 @@ export const orchestrator: GameOrchestrator = {
   },
   isBoardUnsolvable: () => {
     return activeOrchestrator?.isBoardUnsolvable() ?? false;
+  },
+  isComboValid: (tiles) => {
+    return activeOrchestrator?.isComboValid(tiles) ?? false;
   },
   onBoardMutated: () => {
     activeOrchestrator?.onBoardMutated();
